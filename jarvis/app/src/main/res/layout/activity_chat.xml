@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/surface_dark"
+            app:titleTextColor="@color/text_primary"
+            app:subtitleTextColor="@color/text_secondary" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Status bar (model loading / errors) -->
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/accent_dark"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:gravity="center"
+            android:visibility="gone" />
+
+        <!-- Messages list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMessages"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="8dp" />
+
+        <!-- Input area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/surface_dark"
+            android:padding="8dp"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/btnMic"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_mic"
+                android:contentDescription="Microfone"
+                android:tint="@color/accent_blue" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:background="@drawable/bg_input"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:hint="Digite uma mensagem..."
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="4"
+                android:imeOptions="actionSend"
+                android:textSize="15sp" />
+
+            <ImageButton
+                android:id="@+id/btnSend"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_send_button"
+                android:src="@drawable/ic_send"
+                android:contentDescription="Enviar"
+                android:tint="@android:color/white" />
+
+            <ImageButton
+                android:id="@+id/btnVoiceMode"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_voice_mode"
+                android:contentDescription="Modo voz"
+                android:tint="@color/accent_blue" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

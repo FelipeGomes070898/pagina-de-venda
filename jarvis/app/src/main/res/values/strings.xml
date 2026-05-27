@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Jarvis</string>
+    <string name="action_clear_history">Limpar histórico</string>
+    <string name="action_settings">Configurações</string>
+    <string name="hint_message">Digite uma mensagem…</string>
+    <string name="btn_send">Enviar</string>
+    <string name="btn_mic">Microfone</string>
+    <string name="model_not_installed">Modelo não instalado</string>
+    <string name="loading_model">Carregando modelo…</string>
+    <string name="widget_label">Jarvis</string>
+</resources>
