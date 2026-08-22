@@ -69,3 +69,13 @@ export async function listarPedidosAbertos(): Promise<Pedido[]> {
   const { data } = await api.get<Pedido[]>('/api/pedidos/abertos');
   return data;
 }
+
+export type StatusPedido = 'andamento' | 'concluido' | 'cancelado';
+
+export async function atualizarStatusPedido(
+  pedidoId: string,
+  status: StatusPedido,
+): Promise<Pedido> {
+  const { data } = await api.put<Pedido>(`/api/pedidos/${pedidoId}/status`, { status });
+  return data;
+}

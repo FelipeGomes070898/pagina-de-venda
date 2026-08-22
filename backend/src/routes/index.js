@@ -4,6 +4,7 @@ const admin = require('./admin');
 const prestadores = require('./prestadores');
 const pedidos = require('./pedidos');
 const chat = require('./chat');
+const avaliacoes = require('./avaliacoes');
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use('/admin', admin);
 router.use('/prestadores', prestadores);
 router.use('/pedidos', pedidos);
 router.use('/chat', chat);
+router.use('/avaliacoes', avaliacoes);
 
 module.exports = router;

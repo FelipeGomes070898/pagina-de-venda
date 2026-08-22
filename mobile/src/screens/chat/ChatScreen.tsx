@@ -24,6 +24,7 @@ import {
   listarConversa,
   responderProposta,
 } from '@/services/chatService';
+import { atualizarStatusPedido } from '@/services/marketplaceService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -51,7 +52,7 @@ function montarLinhaDoTempo(conversa: Conversa): ItemLinhaDoTempo[] {
   return itens.sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
 }
 
-export function ChatScreen({ route }: Props) {
+export function ChatScreen({ route, navigation }: Props) {
   const { pedidoId, prestadorNome } = route.params;
   const meuTipo = useAuthStore((s) => s.usuario?.tipo);
 
@@ -60,6 +61,7 @@ export function ChatScreen({ route }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [finalizando, setFinalizando] = useState(false);
 
   const [mostrarFormProposta, setMostrarFormProposta] = useState(false);
   const [valorProposta, setValorProposta] = useState('');
@@ -139,6 +141,18 @@ export function ChatScreen({ route }: Props) {
     }
   }
 
+  async function aoMarcarConcluido() {
+    setFinalizando(true);
+    try {
+      await atualizarStatusPedido(pedidoId, 'concluido');
+      await carregar();
+    } catch {
+      setErro('Não foi possível marcar o serviço como concluído.');
+    } finally {
+      setFinalizando(false);
+    }
+  }
+
   if (carregando || !conversa) {
     return (
       <View style={styles.centro}>
@@ -148,6 +162,7 @@ export function ChatScreen({ route }: Props) {
   }
 
   const pedidoFechado = conversa.pedido.status === 'andamento';
+  const pedidoConcluido = conversa.pedido.status === 'concluido';
   const podeReceberEndereco = meuTipo === 'cliente' && pedidoFechado && !conversa.pedido.endereco;
 
   return (
@@ -206,7 +221,31 @@ export function ChatScreen({ route }: Props) {
         <Text style={styles.enderecoConfirmado}>📍 Endereço enviado: {conversa.pedido.endereco}</Text>
       )}
 
-      {mostrarFormProposta && (
+      {pedidoFechado && (
+        <TouchableOpacity
+          style={styles.botaoConcluir}
+          onPress={aoMarcarConcluido}
+          disabled={finalizando}
+        >
+          <Text style={styles.botaoConcluirTexto}>
+            {finalizando ? 'Marcando...' : 'Marcar serviço como concluído'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {pedidoConcluido && meuTipo === 'cliente' && (
+        <TouchableOpacity
+          style={styles.botaoConcluir}
+          onPress={() => navigation.navigate('Review', { pedidoId, prestadorNome })}
+        >
+          <Text style={styles.botaoConcluirTexto}>⭐ Avaliar prestador</Text>
+        </TouchableOpacity>
+      )}
+      {pedidoConcluido && meuTipo === 'prestador' && (
+        <Text style={styles.enderecoConfirmado}>Serviço concluído.</Text>
+      )}
+
+      {!pedidoConcluido && mostrarFormProposta && (
         <View style={styles.linhaEnvio}>
           <TextInput
             style={styles.inputFlex}
@@ -381,7 +420,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
+    textAlign: 'center',
   },
+  botaoConcluir: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.green,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  botaoConcluirTexto: { color: colors.green, fontWeight: '700', fontSize: 13 },
   linhaEnvio: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,

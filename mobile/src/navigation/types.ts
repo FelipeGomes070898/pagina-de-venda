@@ -5,4 +5,5 @@ export type RootStackParamList = {
   Register: undefined;
   Home: undefined;
   Chat: { pedidoId: string; prestadorNome: string };
+  Review: { pedidoId: string; prestadorNome: string };
 };

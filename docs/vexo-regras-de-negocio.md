@@ -137,7 +137,15 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
    > tempo real via WebSocket/socket.io — isso é upgrade de
    > infraestrutura para uma próxima fase, não afeta a lógica de
    > negócio.
-5. Tela de avaliação pós-serviço.
+5. ~~Tela de avaliação pós-serviço.~~ ✅ feito —
+   `mobile/src/screens/orders/ReviewScreen.tsx` (estrelas, tags e
+   comentário). No `ChatScreen`, qualquer uma das partes marca
+   "serviço concluído" (`PUT /api/pedidos/:id/status`); uma vez
+   concluído, só o cliente vê o botão "Avaliar prestador". Backend:
+   `POST /api/avaliacoes` (bloqueia se o pedido não estiver concluído
+   ou já tiver sido avaliado) e `GET /api/avaliacoes/:prestadorId`
+   (pública). A nota do prestador (`prestadores.avaliacao`) é
+   recalculada automaticamente a cada avaliação nova.
 6. ~~Configuração da cobrança do prestador (escolha 5%/serviço ou
    R$25/mês)~~ ✅ campo `modelo_cobranca` já existe no cadastro; falta a
    integração real com Asaas (cobrar de fato).
