@@ -1,7 +1,58 @@
-# Vexo — Regras de negócio (marketplace)
+# Vexo — Regras de negócio (marketplace + equipe interna)
 
 Documento de referência para as próximas etapas de construção do app.
 Etapa 1 (splash, intro, login) já implementada em `mobile/`.
+Base da equipe interna (hierarquia de admins) implementada em `backend/`
+e `frontend-web/`.
+
+## Hierarquia da equipe interna (painel admin)
+
+Estrutura organizacional, do topo para a base:
+
+- **Dono** — dono/fundador da empresa. Acesso total: financeiro,
+  pagamentos, configurações, e pode cadastrar RH, gerentes e atendimento.
+  Não é criado pelo painel (é o registro inicial, feito direto no banco/
+  script de setup por segurança).
+- **RH** — cadastra e desativa **gerentes** e **atendimento**. Não vê
+  financeiro/pagamentos/configurações, e não pode mexer em outro RH nem
+  no dono.
+- **Gerente** — vinculado a uma **divisão** (`divisao_id`, ex.: uma região
+  ou área de atuação). Vê e atua apenas sobre o que é da sua divisão.
+  Não cadastra outros admins.
+- **Atendimento** — suporte/denúncias. Sem acesso a financeiro, equipe ou
+  configurações.
+
+Regra de criação (quem pode cadastrar quem), já implementada no backend
+(`Admin.CARGOS_QUE_PODEM_CRIAR`):
+
+| Quem cria    | Pode criar                  |
+|--------------|------------------------------|
+| dono         | rh, gerente, atendimento     |
+| rh           | gerente, atendimento         |
+| gerente      | ninguém                      |
+| atendimento  | ninguém                      |
+
+Tabelas: `admins` (cargo, divisao_id, criado_por, ativo) e `divisoes`
+(nome, descrição). Ver `backend/src/utils/migrations.sql`.
+
+### Visibilidade no painel (`frontend-web/src/components/layout/Sidebar.jsx`)
+
+| Seção          | dono | rh | gerente | atendimento |
+|----------------|:---:|:--:|:-------:|:-----------:|
+| Dashboard      | ✅  | ✅ | ✅      | ✅          |
+| Prestadores    | ✅  | ✅ | ✅ (só divisão) | ✅  |
+| Clientes       | ✅  | ✅ | ✅ (só divisão) | ✅  |
+| Financeiro     | ✅  | ❌ | ❌      | ❌          |
+| Pagamentos     | ✅  | ❌ | ❌      | ❌          |
+| Equipe         | ✅  | ✅ | ❌      | ❌          |
+| Suporte        | ✅  | ✅ | ✅      | ✅          |
+| Configurações  | ✅  | ❌ | ❌      | ❌          |
+
+> Pendente para a próxima fase: aplicar o filtro por `divisao_id` nas
+> listagens de prestadores/clientes/suporte quando `cargo === 'gerente'`
+> (o middleware `restringirPorDivisao` já existe em
+> `backend/src/middlewares/auth.js`, falta plugar nas rotas de
+> prestadores/clientes quando essas rotas forem criadas).
 
 ## Marketplace de serviços
 

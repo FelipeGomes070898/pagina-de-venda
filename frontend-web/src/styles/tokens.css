@@ -1,0 +1,23 @@
+:root {
+  --vexo-roxo: #7c3aed;
+  --vexo-laranja: #ff7a2f;
+  --vexo-bg: #08080e;
+  --vexo-bg2: #0d0d1a;
+  --vexo-bg3: #0c0920;
+  --vexo-text: rgba(255, 255, 255, 0.75);
+  --vexo-muted: rgba(255, 255, 255, 0.35);
+  --vexo-border: rgba(255, 255, 255, 0.06);
+  --vexo-green: #4ade80;
+  --vexo-red: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--vexo-bg);
+  color: var(--vexo-text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
