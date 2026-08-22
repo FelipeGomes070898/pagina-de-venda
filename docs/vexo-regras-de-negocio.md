@@ -1,0 +1,70 @@
+# Vexo — Regras de negócio (marketplace)
+
+Documento de referência para as próximas etapas de construção do app.
+Etapa 1 (splash, intro, login) já implementada em `mobile/`.
+
+## Marketplace de serviços
+
+- Lista pessoas oferecendo serviços de qualquer modalidade: pedreiro, ajudante
+  de pedreiro, diarista, trabalho doméstico, babá, roçador de quintal,
+  encanador, etc. (categorias fixas + personalizadas, como já previsto no
+  schema `categorias`).
+- **Preço definido pelo prestador.** Cada prestador cadastra o valor do seu
+  serviço; esse valor aparece no card dele no marketplace.
+- **Cliente também pode publicar pedido no marketplace**, dizendo que
+  precisa de um serviço e sugerindo um valor (oferta reversa).
+- **Ranking por proximidade:** usando a localização cadastrada por cliente e
+  prestador, quem está mais perto aparece mais acima na lista.
+
+## Contato e negociação
+
+1. Cliente encontra o prestador (ex.: "Senhor Francisco", roçador, R$150).
+2. Cliente toca em "Entrar em contato" → abre chat dentro do app.
+3. Prestador recebe notificação da mensagem.
+4. Negociação acontece no chat (aceitar valor anunciado ou negociar outro).
+5. Ao fechar o serviço, o app libera a opção de **enviar o endereço** do
+   cliente para o prestador.
+6. Isso já está mapeado no schema atual: tabelas `pedidos`, `mensagens` e
+   `propostas` (proposta = valor negociado dentro do chat).
+
+## Cobrança do prestador (mensalidade da plataforma)
+
+O prestador escolhe **um dos dois modelos** para manter a conta ativa:
+
+- **5% sobre cada serviço concluído**, cobrado automaticamente via Asaas
+  quando o pedido muda para `concluido`; ou
+- **Taxa fixa de R$ 25,00/mês**, cobrada como assinatura recorrente.
+
+> Observação: isso substitui o modelo anterior de trial de 7 dias + R$50/mês
+> fixo descrito na skill original. Ajustar `backend/src/services/trialService.js`
+> e a tabela `pagamentos` (novo campo `modelo_cobranca`: `percentual` |
+> `fixo_mensal`) quando o backend for retomado.
+
+## Avaliação e confiança
+
+- Prestador ganha estrelas conforme avaliação dos clientes após serviço
+  `concluido` (já previsto: tabela `avaliacoes`, nota 1–5, tags, comentário).
+- Perfil também é fortalecido pela **quantidade de fotos de trabalhos
+  anteriores** cadastradas (tabela `fotos_trabalhos`) — quanto mais fotos,
+  mais completo/confiável o perfil aparece. O número mínimo/gatilho exato
+  fica como regra interna, não exposta ao usuário.
+
+## Escopo nacional
+
+- Fase 1: app 100% em português, focado no Brasil (login por celular, e-mail
+  ou CPF; endereços e telefone no formato BR).
+- Internacionalização (i18n multi-idioma) fica para uma fase posterior —
+  a estrutura de `src/i18n` já foi montada para comportar isso.
+
+## Próximas etapas sugeridas
+
+1. Telas de cadastro (cliente e prestador, incluindo CPF, cidade, foto).
+2. Tela de Marketplace (lista de prestadores por proximidade + categorias).
+3. Perfil do prestador (fotos, avaliação, preço, botão "Entrar em contato").
+4. Chat + proposta de valor + fechamento do pedido + envio de endereço.
+5. Tela de avaliação pós-serviço.
+6. Configuração da cobrança do prestador (escolha 5%/serviço ou R$25/mês) +
+   integração Asaas.
+7. Backend: endpoint de login unificado (`POST /api/auth/login`) aceitando
+   identificador (celular/e-mail/CPF) + senha, e models atualizados com
+   campo `cpf`.

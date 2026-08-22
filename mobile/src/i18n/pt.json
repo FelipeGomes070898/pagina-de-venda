@@ -1,0 +1,38 @@
+{
+  "splash": {
+    "slogan": "Serviços. Pessoas. Conexões reais."
+  },
+  "onboarding": {
+    "skip": "Pular",
+    "next": "Próximo",
+    "start": "Começar",
+    "slide1_title": "Encontre quem resolve",
+    "slide1_text": "Pedreiro, diarista, encanador, babá e muito mais, perto de você.",
+    "slide2_title": "Negocie direto no app",
+    "slide2_text": "Converse, combine o valor e feche o serviço com o prestador.",
+    "slide3_title": "Avalie e confie",
+    "slide3_text": "Veja fotos de trabalhos anteriores e avaliações de outros clientes."
+  },
+  "login": {
+    "title": "Entrar",
+    "subtitle": "Acesse sua conta Vexo",
+    "tab_phone": "Celular",
+    "tab_email": "E-mail",
+    "tab_cpf": "CPF",
+    "phone_placeholder": "(00) 00000-0000",
+    "email_placeholder": "seuemail@exemplo.com",
+    "cpf_placeholder": "000.000.000-00",
+    "password_placeholder": "Sua senha",
+    "remember_me": "Salvar login",
+    "forgot_password": "Esqueci minha senha",
+    "submit": "Entrar",
+    "no_account": "Ainda não tem conta?",
+    "create_account": "Criar conta",
+    "error_invalid_identifier": "Informe um dado válido para continuar",
+    "error_password_required": "Digite sua senha",
+    "error_login_failed": "Não foi possível entrar. Verifique seus dados."
+  },
+  "common": {
+    "loading": "Carregando..."
+  }
+}
