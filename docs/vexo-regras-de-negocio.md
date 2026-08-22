@@ -9,14 +9,19 @@ e `frontend-web/`.
 
 - `mobile/` — app React Native (Android/iOS, distribuído na Play Store).
 - `frontend-web/` — painel administrativo (dono/RH/gerente/atendimento).
-- `web-app/` — site para cliente/prestador (login, marketplace, cadastro),
-  alternativa ao app mobile pra quem prefere navegador. **Projeto
+- `web-app/` — site para cliente/prestador: login (também com Google),
+  cadastro, marketplace, perfil do prestador, chat completo (mensagens,
+  proposta, aceite, endereço com Maps) e avaliação pós-serviço.
+  Alternativa ao app mobile pra quem prefere navegador. **Projeto
   separado do mobile de propósito** (não é React Native Web/Expo): o
   mobile é RN "bare", migrar pra web seria arriscado e eu não conseguiria
   validar aqui. `web-app/` é React + Vite comum, testado de ponta a
-  ponta neste ambiente (cadastro → login → marketplace → contato, tudo
-  rodando de verdade com Postgres local). Mesmo padrão que Uber/InDrive
-  usam: app nativo e site são interfaces diferentes, mesma API.
+  ponta neste ambiente com Postgres local — inclusive o fluxo completo
+  em duas sessões de navegador simultâneas (cliente e prestador)
+  cobrindo cadastro → marketplace → perfil → contato → chat → proposta
+  → aceite → endereço → concluir → avaliação, tudo com dados reais no
+  banco. Mesmo padrão que Uber/InDrive usam: app nativo e site são
+  interfaces diferentes, mesma API.
 
 Todas as três conversam com o mesmo `backend/` — nenhuma tem lógica de
 negócio própria, só consomem os endpoints REST.
@@ -61,6 +66,13 @@ graciosamente** — nunca quebra o login normal nem o cadastro.
   mundo, o valor máximo possível de `acos`), um número real só que sem
   sentido nenhum. Corrigido com um `CASE WHEN lat IS NULL OR lng IS
   NULL THEN NULL` explícito em `Prestador.listarAtivos`.
+- **Bug encontrado e corrigido testando o fluxo completo do chat**:
+  `prestadores.total_servicos` nunca era incrementado em lugar nenhum
+  — mesmo depois de um pedido ser marcado `concluido`, o contador
+  ficava para sempre em 0 (o perfil do prestador sempre mostraria
+  "0 serviços feitos"). Corrigido em `pedidoController.atualizarStatus`
+  (`Prestador.incrementarServicos`), com uma guarda pra não contar duas
+  vezes se o mesmo pedido for marcado concluído mais de uma vez.
 
 ## Hierarquia da equipe interna (painel admin)
 

@@ -4,7 +4,9 @@ import { RotaProtegida } from './components/RotaProtegida';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { Marketplace } from './pages/marketplace/Marketplace';
-import { PedidoConfirmado } from './pages/pedido/PedidoConfirmado';
+import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
+import { Chat } from './pages/chat/Chat';
+import { Review } from './pages/review/Review';
 
 export default function App() {
   const usuario = useAuthStore((s) => s.usuario);
@@ -24,10 +26,26 @@ export default function App() {
           }
         />
         <Route
-          path="/pedido/:pedidoId"
+          path="/prestador/:prestadorId"
           element={
             <RotaProtegida>
-              <PedidoConfirmado />
+              <ProfessionalProfile />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/chat/:pedidoId"
+          element={
+            <RotaProtegida>
+              <Chat />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/avaliar/:pedidoId"
+          element={
+            <RotaProtegida>
+              <Review />
             </RotaProtegida>
           }
         />

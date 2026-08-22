@@ -1,24 +1,26 @@
-export function ProfessionalCard({ prestador, onContatar, contatando }) {
+export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando }) {
   const inicial = prestador.nome?.charAt(0)?.toUpperCase() || '?';
 
   return (
     <div style={styles.card}>
-      <div style={styles.avatar}>{inicial}</div>
+      <div style={styles.corpo} onClick={onAbrirPerfil}>
+        <div style={styles.avatar}>{inicial}</div>
 
-      <div style={styles.info}>
-        <div style={styles.nome}>{prestador.nome}</div>
-        <div style={styles.segmento}>{prestador.segmento || 'Serviços gerais'}</div>
-        <div style={styles.linha}>
-          <span>
-            ⭐ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes})
-          </span>
-          {prestador.distancia_km != null && (
-            <span style={styles.distancia}>· {formatarDistancia(prestador.distancia_km)}</span>
+        <div style={styles.info}>
+          <div style={styles.nome}>{prestador.nome}</div>
+          <div style={styles.segmento}>{prestador.segmento || 'Serviços gerais'}</div>
+          <div style={styles.linha}>
+            <span>
+              ⭐ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes})
+            </span>
+            {prestador.distancia_km != null && (
+              <span style={styles.distancia}>· {formatarDistancia(prestador.distancia_km)}</span>
+            )}
+          </div>
+          {prestador.valor_servico != null && (
+            <div style={styles.preco}>R$ {Number(prestador.valor_servico).toFixed(2)}</div>
           )}
         </div>
-        {prestador.valor_servico != null && (
-          <div style={styles.preco}>R$ {Number(prestador.valor_servico).toFixed(2)}</div>
-        )}
       </div>
 
       <button style={styles.botao} onClick={onContatar} disabled={contatando}>
@@ -43,6 +45,7 @@ const styles = {
     marginBottom: 10,
     gap: 14,
   },
+  corpo: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' },
   avatar: {
     width: 48,
     height: 48,

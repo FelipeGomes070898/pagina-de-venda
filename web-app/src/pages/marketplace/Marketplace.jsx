@@ -69,7 +69,7 @@ export function Marketplace() {
     setContatandoId(prestador.id);
     try {
       const pedido = await contatarPrestador(prestador.id);
-      navigate(`/pedido/${pedido.id}`, { state: { prestadorNome: prestador.nome } });
+      navigate(`/chat/${pedido.id}`, { state: { prestadorNome: prestador.nome } });
     } catch {
       setErro('Não foi possível entrar em contato agora.');
     } finally {
@@ -167,6 +167,7 @@ export function Marketplace() {
                 key={p.id}
                 prestador={p}
                 onContatar={() => aoContatar(p)}
+                onAbrirPerfil={() => navigate(`/prestador/${p.id}`)}
                 contatando={contatandoId === p.id}
               />
             ))

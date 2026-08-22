@@ -153,6 +153,12 @@ module.exports = {
     return rows[0] || null;
   },
 
+  async incrementarServicos(id) {
+    await pool.query(`UPDATE prestadores SET total_servicos = total_servicos + 1 WHERE id = $1`, [
+      id,
+    ]);
+  },
+
   async definirAsaasCustomerId(id, asaasCustomerId) {
     await pool.query(`UPDATE prestadores SET asaas_customer_id = $2 WHERE id = $1`, [
       id,

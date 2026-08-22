@@ -22,33 +22,37 @@ cp .env.example .env   # ajuste VITE_API_URL se o backend não estiver em localh
 npm run dev
 ```
 
-Abre em `http://localhost:5174`. Testado de ponta a ponta neste projeto:
-cadastro de cliente, cadastro de prestador, marketplace mostrando o
-prestador cadastrado, e "Entrar em contato" criando o pedido de verdade.
+Abre em `http://localhost:5174`. Testado de ponta a ponta neste projeto,
+com duas sessões de navegador simultâneas (uma como cliente, outra como
+prestador) e dados reais no Postgres: cadastro → marketplace → perfil →
+contato → chat → proposta → aceite → endereço → marcar concluído →
+avaliação. Ver `docs/vexo-regras-de-negocio.md` na raiz do repositório
+para os bugs reais que esse teste encontrou (e já corrigidos).
 
 ## Etapa atual
 
-- `src/pages/auth/Login.jsx` — login por celular, e-mail ou CPF + senha.
+- `src/pages/auth/Login.jsx` — login por celular, e-mail, CPF ou Google.
 - `src/pages/auth/Register.jsx` — cadastro de cliente ou prestador
-  (categoria, preço e modelo de cobrança para prestador).
+  (categoria, preço, modelo de cobrança, endereço com Google Maps
+  Autocomplete quando `VITE_GOOGLE_MAPS_API_KEY` está configurada).
 - `src/pages/marketplace/Marketplace.jsx` — lista de prestadores por
   categoria, ordenados por proximidade via `navigator.geolocation` do
-  próprio navegador (mais simples que no mobile: não precisa de
-  permissão configurada em manifesto nativo, o navegador já pergunta).
-  Também tem a aba "Preciso de um serviço" pro cliente publicar um
-  pedido em aberto.
-- "Entrar em contato" cria o pedido de verdade
-  (`POST /api/pedidos`) e leva pra uma tela de confirmação — o chat
-  completo (negociação, aceite, endereço) já existe no app mobile e é o
-  próximo passo a portar pra cá.
+  próprio navegador. Aba "Preciso de um serviço" pro cliente publicar
+  um pedido em aberto.
+- `src/pages/profile/ProfessionalProfile.jsx` — perfil do prestador
+  (fotos de trabalhos, bio, avaliações, botão "Entrar em contato").
+- `src/pages/chat/Chat.jsx` — chat completo: mensagens, proposta de
+  valor (qualquer uma das partes pode propor), aceitar/recusar (só quem
+  recebe, nunca quem propôs), marcar serviço como concluído, endereço
+  liberado após fechar (com Google Maps Autocomplete).
+- `src/pages/review/Review.jsx` — avaliação pós-serviço (estrelas, tags,
+  comentário), acessível pelo cliente depois que o pedido é concluído.
 
 ## Próximos passos
 
-- Chat (mensagens + proposta de valor + aceite) — já existe em
-  `mobile/src/screens/chat/ChatScreen.tsx`, portar a mesma lógica.
-- Perfil do prestador (fotos, avaliações) — mesma ideia do
-  `mobile/src/screens/profile/ProProfileScreen.tsx`.
-- Avaliação pós-serviço.
 - Deploy: qualquer host de site estático (Vercel, Netlify, etc.) depois
   de `npm run build` — só precisa apontar `VITE_API_URL` pro backend em
-  produção.
+  produção, e configurar `VITE_GOOGLE_CLIENT_ID`/`VITE_GOOGLE_MAPS_API_KEY`
+  se quiser login com Google e endereço com autocomplete.
+- Tempo real no chat (hoje atualiza por polling a cada 5s, igual o
+  mobile) — WebSocket/socket.io é upgrade de infraestrutura pra depois.

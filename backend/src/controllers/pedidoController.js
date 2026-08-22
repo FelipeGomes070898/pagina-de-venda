@@ -84,7 +84,11 @@ async function atualizarStatus(req, res) {
 
   // Serviço concluído + prestador no modelo "5% por serviço" → cobra a
   // taxa agora. Best-effort: não falha a requisição se o Asaas cair.
-  if (status === 'concluido' && atualizado.prestador_id) {
+  // `pedido.status !== 'concluido'` evita contar/cobrar duas vezes se
+  // o mesmo pedido for marcado concluído mais de uma vez.
+  if (status === 'concluido' && pedido.status !== 'concluido' && atualizado.prestador_id) {
+    await Prestador.incrementarServicos(atualizado.prestador_id);
+
     const prestador = await Prestador.buscarCompletoPorId(atualizado.prestador_id);
     if (prestador?.modelo_cobranca === 'percentual') {
       asaasService.cobrarTaxaServico(prestador, atualizado).catch(() => {});
