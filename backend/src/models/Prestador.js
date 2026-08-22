@@ -5,7 +5,7 @@ const CAMPOS_PUBLICOS = `
   id, nome, email, telefone, cpf, whatsapp, segmento, valor_servico,
   cidade, estado, pais, lat, lng, raio_km, bio, foto_url, status,
   modelo_cobranca, avaliacao, total_servicos, total_avaliacoes,
-  total_fotos_trabalho, idioma, trial_inicio, criado_em
+  total_fotos_trabalho, idioma, criado_em
 `;
 
 const COLUNA_POR_TIPO = {
@@ -125,6 +125,20 @@ module.exports = {
       `UPDATE prestadores SET status = $2 WHERE id = $1 RETURNING ${CAMPOS_PUBLICOS}`,
       [id, status],
     );
+    return rows[0] || null;
+  },
+
+  async definirAsaasCustomerId(id, asaasCustomerId) {
+    await pool.query(`UPDATE prestadores SET asaas_customer_id = $2 WHERE id = $1`, [
+      id,
+      asaasCustomerId,
+    ]);
+  },
+
+  // Interno: retorna o registro completo (com senha_hash e
+  // asaas_customer_id), usado pelo asaasService — nunca expor via API.
+  async buscarCompletoPorId(id) {
+    const { rows } = await pool.query(`SELECT * FROM prestadores WHERE id = $1`, [id]);
     return rows[0] || null;
   },
 };

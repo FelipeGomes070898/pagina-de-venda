@@ -29,6 +29,25 @@ npx react-native run-android   # ou run-ios
 Alternativa mais simples: usar o [Expo](https://expo.dev) caso prefira não
 lidar com projetos nativos manualmente (exigiria adaptar algumas libs).
 
+### Permissão de localização (necessária para o marketplace por proximidade)
+
+Depois de gerar `android/` e `ios/` (passo acima), adicione a permissão de
+GPS em cada plataforma — sem isso, `@react-native-community/geolocation`
+não funciona e o marketplace cai de volta pra ordenação por data:
+
+**Android** — em `android/app/src/main/AndroidManifest.xml`, antes da tag
+`<application>`:
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+**iOS** — em `ios/vexo/Info.plist`, adicione:
+```xml
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>O Vexo usa sua localização para mostrar os prestadores mais próximos de você.</string>
+```
+
 ## Stack
 
 React Native 0.73 + TypeScript, React Navigation (native-stack), Zustand

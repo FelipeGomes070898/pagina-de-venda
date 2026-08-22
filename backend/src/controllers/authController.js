@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Cliente = require('../models/Cliente');
 const Prestador = require('../models/Prestador');
+const asaasService = require('../services/asaasService');
 
 const TIPOS_IDENTIFICADOR = ['telefone', 'email', 'cpf'];
 
@@ -90,6 +91,15 @@ async function cadastro(req, res) {
     estado: req.body.estado,
     modeloCobranca: req.body.modeloCobranca,
   });
+
+  // Best-effort: não bloqueia o cadastro se o Asaas falhar ou não
+  // estiver configurado ainda (fica pendente até o dono configurar).
+  if (prestador.modelo_cobranca === 'fixo_mensal') {
+    asaasService.criarAssinaturaMensal(prestador).catch(() => {});
+  } else {
+    asaasService.garantirClienteAsaas(prestador).catch(() => {});
+  }
+
   const token = gerarToken({ id: prestador.id, tipo: 'prestador' });
   return res.status(201).json({ token, usuario: { ...prestador, tipo: 'prestador' } });
 }

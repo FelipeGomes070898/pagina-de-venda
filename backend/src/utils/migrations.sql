@@ -93,8 +93,10 @@ CREATE TABLE IF NOT EXISTS prestadores (
   raio_km             INT DEFAULT 5,
   bio                 TEXT,
   foto_url            TEXT,
-  status              VARCHAR(30) DEFAULT 'trial',
-  -- status: trial | ativo | trial_expirado | inadimplente | bloqueado
+  status              VARCHAR(30) DEFAULT 'ativo',
+  -- status: ativo | inadimplente | bloqueado
+  -- (sem período de trial: o prestador já entra cobrável, no modelo que
+  -- ele escolheu — percentual por serviço ou assinatura fixa mensal)
   modelo_cobranca     VARCHAR(20) DEFAULT 'percentual',
   -- percentual (5% por servico concluido) | fixo_mensal (R$25/mes)
   avaliacao           DECIMAL(2,1) DEFAULT 5.0,
@@ -104,7 +106,6 @@ CREATE TABLE IF NOT EXISTS prestadores (
   asaas_customer_id   TEXT,
   fcm_token           TEXT,
   idioma              VARCHAR(5) DEFAULT 'pt',
-  trial_inicio        TIMESTAMPTZ DEFAULT NOW(),
   criado_em           TIMESTAMPTZ DEFAULT NOW(),
 
   CONSTRAINT chk_prestadores_modelo_cobranca

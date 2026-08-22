@@ -25,6 +25,7 @@ import {
   Prestador,
   publicarPedidoAberto,
 } from '@/services/marketplaceService';
+import { Coordenadas, obterLocalizacaoComPermissao } from '@/services/locationService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -47,11 +48,24 @@ export function HomeScreen({ navigation }: Props) {
   const [valorPedido, setValorPedido] = useState('');
   const [publicando, setPublicando] = useState(false);
 
+  const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null);
+  const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(true);
+
+  useEffect(() => {
+    obterLocalizacaoComPermissao()
+      .then(setCoordenadas)
+      .finally(() => setBuscandoLocalizacao(false));
+  }, []);
+
   async function carregar() {
     setErro(null);
     try {
       if (aba === 'prestadores') {
-        const lista = await listarPrestadores({ segmento: categoriaAtiva || undefined });
+        const lista = await listarPrestadores({
+          segmento: categoriaAtiva || undefined,
+          lat: coordenadas?.lat,
+          lng: coordenadas?.lng,
+        });
         setPrestadores(lista);
       } else {
         const lista = await listarPedidosAbertos();
@@ -66,10 +80,11 @@ export function HomeScreen({ navigation }: Props) {
   }
 
   useEffect(() => {
+    if (buscandoLocalizacao) return;
     setCarregando(true);
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aba, categoriaAtiva]);
+  }, [aba, categoriaAtiva, buscandoLocalizacao]);
 
   function aoAtualizar() {
     setAtualizando(true);
@@ -112,6 +127,13 @@ export function HomeScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.titulo}>Marketplace</Text>
+        {aba === 'prestadores' && !buscandoLocalizacao && (
+          <Text style={styles.localizacaoInfo}>
+            {coordenadas
+              ? '📍 Ordenado pelos prestadores mais próximos de você'
+              : 'Ative a localização para ver quem está mais perto'}
+          </Text>
+        )}
         <View style={styles.abas}>
           <TouchableOpacity
             style={[styles.aba, aba === 'prestadores' && styles.abaAtiva]}
@@ -239,7 +261,8 @@ export function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte, marginBottom: spacing.md },
+  titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte, marginBottom: spacing.xs },
+  localizacaoInfo: { fontSize: 12, color: colors.muted, marginBottom: spacing.md },
   abas: { flexDirection: 'row', backgroundColor: colors.bg2, borderRadius: radius.md, padding: 4 },
   aba: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },
   abaAtiva: { backgroundColor: colors.roxo },

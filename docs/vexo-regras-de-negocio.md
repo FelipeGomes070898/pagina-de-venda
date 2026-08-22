@@ -86,10 +86,26 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
   quando o pedido muda para `concluido`; ou
 - **Taxa fixa de R$ 25,00/mês**, cobrada como assinatura recorrente.
 
-> Observação: isso substitui o modelo anterior de trial de 7 dias + R$50/mês
-> fixo descrito na skill original. Ajustar `backend/src/services/trialService.js`
-> e a tabela `pagamentos` (novo campo `modelo_cobranca`: `percentual` |
-> `fixo_mensal`) quando o backend for retomado.
+Isso substitui o modelo anterior de trial de 7 dias + R$50/mês fixo da
+skill original — não há mais período de trial, o prestador já entra
+cobrável no modelo que escolheu no cadastro. ✅ Integração real feita:
+
+- `backend/src/services/asaasService.js` — cria o cliente no Asaas no
+  cadastro do prestador; se `modelo_cobranca = 'fixo_mensal'`, já cria a
+  assinatura recorrente (primeira cobrança em 7 dias, como carência);
+  se `'percentual'`, cobra 5% via Pix quando o pedido é marcado
+  `concluido` (gatilho em `pedidoController.atualizarStatus`).
+- `POST /api/pagamentos/webhook` — recebe `PAYMENT_CONFIRMED` /
+  `PAYMENT_RECEIVED` (marca pago, reativa o prestador se estava
+  inadimplente) e `PAYMENT_OVERDUE` (marca vencido, prestador vira
+  `inadimplente` e some do feed — `listarAtivos` só mostra `status =
+  'ativo'`). Protegido por um token simples (`ASAAS_WEBHOOK_TOKEN`),
+  configurado como query string na URL do webhook cadastrada no painel
+  do Asaas.
+- `GET /api/pagamentos/meus` — histórico do prestador logado.
+- Tudo é *best-effort*: sem `ASAAS_API_KEY` no `.env`, nada quebra — só
+  fica registrado em `pagamentos` sem `asaas_id`, pendente até a chave
+  real ser configurada.
 
 ## Avaliação e confiança
 
@@ -116,11 +132,15 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
 2. ~~Tela de Marketplace (lista de prestadores por proximidade +
    categorias).~~ ✅ feito — `mobile/src/screens/home/HomeScreen.tsx`,
    com abas "Prestadores" / "Preciso de um serviço" e filtro por
-   categoria. Falta plugar geolocalização real do dispositivo (hoje a
-   API já aceita `lat`/`lng` e ordena por distância via Haversine, mas o
-   app ainda não captura o GPS do cliente — precisa de
-   `react-native-geolocation` e permissão, que exigem projeto nativo
-   gerado localmente).
+   categoria. ✅ Geolocalização real também feita:
+   `mobile/src/services/locationService.ts`
+   (`@react-native-community/geolocation`) pede permissão e captura
+   lat/lng do cliente ao abrir o marketplace; a Home já manda isso pro
+   `GET /api/prestadores`. Só falta uma coisa que eu não consigo fazer
+   por aqui: adicionar a permissão no `AndroidManifest.xml`/`Info.plist`
+   depois que você gerar as pastas nativas — passo a passo em
+   `mobile/README.md`. Sem a permissão concedida, cai de volta pra
+   ordenação por data (comportamento seguro, não quebra nada).
 3. ~~Perfil do prestador~~ ✅ feito —
    `mobile/src/screens/profile/ProProfileScreen.tsx` (fotos de
    trabalhos, bio, lista de avaliações, botão "Entrar em contato").
@@ -149,8 +169,8 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
    (pública). A nota do prestador (`prestadores.avaliacao`) é
    recalculada automaticamente a cada avaliação nova.
 6. ~~Configuração da cobrança do prestador (escolha 5%/serviço ou
-   R$25/mês)~~ ✅ campo `modelo_cobranca` já existe no cadastro; falta a
-   integração real com Asaas (cobrar de fato).
+   R$25/mês)~~ ✅ feito, com integração real Asaas — ver seção
+   "Cobrança do prestador" acima.
 7. ~~Backend: endpoint de login unificado~~ ✅ feito — `POST /api/auth/login`
    (app, aceita celular/e-mail/CPF) e `POST /api/auth/admin/login`
    (painel, hierarquia interna) são rotas separadas.

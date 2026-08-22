@@ -1,5 +1,6 @@
 const Pedido = require('../models/Pedido');
 const Prestador = require('../models/Prestador');
+const asaasService = require('../services/asaasService');
 
 // Cliente toca em "Entrar em contato" com um prestador do marketplace.
 // Cria o pedido já com o valor anunciado pelo prestador (ponto de partida
@@ -80,6 +81,16 @@ async function atualizarStatus(req, res) {
   }
 
   const atualizado = await Pedido.atualizarStatus(req.params.id, status);
+
+  // Serviço concluído + prestador no modelo "5% por serviço" → cobra a
+  // taxa agora. Best-effort: não falha a requisição se o Asaas cair.
+  if (status === 'concluido' && atualizado.prestador_id) {
+    const prestador = await Prestador.buscarCompletoPorId(atualizado.prestador_id);
+    if (prestador?.modelo_cobranca === 'percentual') {
+      asaasService.cobrarTaxaServico(prestador, atualizado).catch(() => {});
+    }
+  }
+
   res.json(atualizado);
 }
 
