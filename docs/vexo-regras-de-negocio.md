@@ -113,9 +113,24 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
    ✅ feito (`mobile/src/screens/auth/RegisterScreen.tsx` + endpoint
    `POST /api/auth/cadastro`; upload de foto fica para quando a rota de
    perfil do prestador existir).
-2. Tela de Marketplace (lista de prestadores por proximidade + categorias).
-3. Perfil do prestador (fotos, avaliação, preço, botão "Entrar em contato").
-4. Chat + proposta de valor + fechamento do pedido + envio de endereço.
+2. ~~Tela de Marketplace (lista de prestadores por proximidade +
+   categorias).~~ ✅ feito — `mobile/src/screens/home/HomeScreen.tsx`,
+   com abas "Prestadores" / "Preciso de um serviço" e filtro por
+   categoria. Falta plugar geolocalização real do dispositivo (hoje a
+   API já aceita `lat`/`lng` e ordena por distância via Haversine, mas o
+   app ainda não captura o GPS do cliente — precisa de
+   `react-native-geolocation` e permissão, que exigem projeto nativo
+   gerado localmente).
+3. Perfil do prestador (fotos, avaliação, tags de avaliação — falta a
+   tela dedicada; hoje `GET /api/prestadores/:id` já retorna fotos e
+   avaliações, falta só a UI).
+4. ~~Chat + proposta de valor + fechamento do pedido + envio de
+   endereço.~~ 🟡 parcial: "Entrar em contato" já cria o `pedido`
+   (`POST /api/pedidos`) e abre uma tela de chat (hoje só um resumo,
+   `mobile/src/screens/chat/ChatScreen.tsx`). Falta mensagens de
+   verdade, proposta de valor dentro do chat, aceite e o botão de
+   enviar endereço (`PUT /api/pedidos/:id/endereco`, já existe no
+   backend).
 5. Tela de avaliação pós-serviço.
 6. ~~Configuração da cobrança do prestador (escolha 5%/serviço ou
    R$25/mês)~~ ✅ campo `modelo_cobranca` já existe no cadastro; falta a

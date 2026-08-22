@@ -65,7 +65,10 @@ module.exports = {
     return rows[0] || null;
   },
 
-  async listarAtivos({ cidade, segmento } = {}) {
+  // Marketplace: lista prestadores ativos, mais próximos primeiro quando
+  // lat/lng são informados (distância por Haversine, em km). Sem
+  // localização, cai para os mais recentes.
+  async listarAtivos({ cidade, segmento, lat, lng, pagina = 1, porPagina = 20 } = {}) {
     const condicoes = [`status = 'ativo'`];
     const valores = [];
 
@@ -78,8 +81,36 @@ module.exports = {
       condicoes.push(`segmento = $${valores.length}`);
     }
 
+    const usarDistancia = lat != null && lng != null;
+    let colunaDistancia = 'NULL AS distancia_km';
+    let ordenacao = 'ORDER BY criado_em DESC';
+
+    if (usarDistancia) {
+      valores.push(lat, lng);
+      const idxLat = valores.length - 1;
+      const idxLng = valores.length;
+      colunaDistancia = `
+        ROUND((6371 * acos(
+          LEAST(1, GREATEST(-1,
+            cos(radians($${idxLat})) * cos(radians(lat)) *
+            cos(radians(lng) - radians($${idxLng})) +
+            sin(radians($${idxLat})) * sin(radians(lat))
+          ))
+        ))::numeric, 1) AS distancia_km
+      `;
+      ordenacao = 'ORDER BY (lat IS NULL OR lng IS NULL), distancia_km ASC';
+    }
+
+    valores.push(porPagina, (pagina - 1) * porPagina);
+    const idxLimit = valores.length - 1;
+    const idxOffset = valores.length;
+
     const { rows } = await pool.query(
-      `SELECT ${CAMPOS_PUBLICOS} FROM prestadores WHERE ${condicoes.join(' AND ')} ORDER BY criado_em DESC`,
+      `SELECT ${CAMPOS_PUBLICOS}, ${colunaDistancia}
+       FROM prestadores
+       WHERE ${condicoes.join(' AND ')}
+       ${ordenacao}
+       LIMIT $${idxLimit} OFFSET $${idxOffset}`,
       valores,
     );
     return rows;

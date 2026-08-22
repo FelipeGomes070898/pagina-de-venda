@@ -50,4 +50,49 @@ async function carregarAdminAtivo(req, res, next) {
   next();
 }
 
-module.exports = { autenticarAdmin, permitir, restringirPorDivisao, carregarAdminAtivo };
+// Autenticação do app (cliente/prestador) — separada da autenticação do
+// painel administrativo, que usa seu próprio token e sua própria hierarquia.
+function autenticarApp(req, res, next) {
+  const cabecalho = req.headers.authorization;
+  if (!cabecalho) return res.status(401).json({ erro: 'Token não informado' });
+
+  const [, token] = cabecalho.split(' ');
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (!payload.tipo || !['cliente', 'prestador'].includes(payload.tipo)) {
+      return res.status(401).json({ erro: 'Token inválido' });
+    }
+    req.usuarioApp = payload; // { id, tipo }
+    next();
+  } catch {
+    return res.status(401).json({ erro: 'Token inválido ou expirado' });
+  }
+}
+
+// Autenticação opcional: preenche req.usuarioApp quando há token válido,
+// mas não bloqueia a requisição sem token (ex.: navegar no marketplace
+// sem estar logado).
+function autenticarAppOpcional(req, res, next) {
+  const cabecalho = req.headers.authorization;
+  if (!cabecalho) return next();
+
+  const [, token] = cabecalho.split(' ');
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (payload.tipo && ['cliente', 'prestador'].includes(payload.tipo)) {
+      req.usuarioApp = payload;
+    }
+  } catch {
+    // token inválido/expirado: segue sem usuário autenticado
+  }
+  next();
+}
+
+module.exports = {
+  autenticarAdmin,
+  permitir,
+  restringirPorDivisao,
+  carregarAdminAtivo,
+  autenticarApp,
+  autenticarAppOpcional,
+};
