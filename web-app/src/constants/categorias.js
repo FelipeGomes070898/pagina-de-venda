@@ -1,0 +1,15 @@
+export const CATEGORIAS = [
+  'Pedreiro',
+  'Ajudante de pedreiro',
+  'Diarista',
+  'Trabalho doméstico',
+  'Babá',
+  'Roçador de quintal',
+  'Encanador',
+  'Eletricista',
+  'Pintor',
+  'Jardineiro',
+  'Cuidador de idosos',
+  'Motorista particular',
+  'Montador de móveis',
+];

@@ -5,6 +5,22 @@ Etapa 1 (splash, intro, login) já implementada em `mobile/`.
 Base da equipe interna (hierarquia de admins) implementada em `backend/`
 e `frontend-web/`.
 
+## Três interfaces, uma API
+
+- `mobile/` — app React Native (Android/iOS, distribuído na Play Store).
+- `frontend-web/` — painel administrativo (dono/RH/gerente/atendimento).
+- `web-app/` — site para cliente/prestador (login, marketplace, cadastro),
+  alternativa ao app mobile pra quem prefere navegador. **Projeto
+  separado do mobile de propósito** (não é React Native Web/Expo): o
+  mobile é RN "bare", migrar pra web seria arriscado e eu não conseguiria
+  validar aqui. `web-app/` é React + Vite comum, testado de ponta a
+  ponta neste ambiente (cadastro → login → marketplace → contato, tudo
+  rodando de verdade com Postgres local). Mesmo padrão que Uber/InDrive
+  usam: app nativo e site são interfaces diferentes, mesma API.
+
+Todas as três conversam com o mesmo `backend/` — nenhuma tem lógica de
+negócio própria, só consomem os endpoints REST.
+
 ## Hierarquia da equipe interna (painel admin)
 
 Estrutura organizacional, do topo para a base:
