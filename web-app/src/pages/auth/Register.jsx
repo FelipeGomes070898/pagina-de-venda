@@ -1,21 +1,26 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { GoogleLoginButton } from '../../components/GoogleLoginButton';
+import { AddressAutocompleteInput } from '../../components/AddressAutocompleteInput';
 import { validarCPF, validarEmail, validarTelefoneBR } from '../../utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '../../utils/masks';
 import { CATEGORIAS } from '../../constants/categorias';
+import { loginComGoogle } from '../../services/googleAuthService';
 
 export function Register() {
-  const { cadastrar, carregando } = useAuthStore();
+  const { cadastrar, carregando, definirSessao } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const perfilGoogle = location.state?.perfilGoogle || null;
 
   const [tipo, setTipo] = useState('cliente');
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
+  const [nome, setNome] = useState(perfilGoogle?.nome || '');
+  const [email, setEmail] = useState(perfilGoogle?.email || '');
   const [telefone, setTelefone] = useState('');
   const [cpf, setCpf] = useState('');
-  const [cidade, setCidade] = useState('');
+  const [endereco, setEndereco] = useState({ texto: '', cidade: '', estado: '', lat: null, lng: null });
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [segmento, setSegmento] = useState(null);
@@ -43,14 +48,35 @@ export function Register() {
         telefone: somenteDigitos(telefone),
         cpf: somenteDigitos(cpf),
         senha,
-        cidade: cidade.trim() || undefined,
+        cidade: endereco.cidade || endereco.texto.trim() || undefined,
+        estado: endereco.estado || undefined,
+        lat: endereco.lat || undefined,
+        lng: endereco.lng || undefined,
         segmento: tipo === 'prestador' ? segmento : undefined,
         valorServico: tipo === 'prestador' && valorServico ? Number(valorServico.replace(',', '.')) : undefined,
         modeloCobranca: tipo === 'prestador' ? modeloCobranca : undefined,
+        googleId: perfilGoogle?.googleId || undefined,
       });
       navigate('/');
     } catch {
       setErro('Não foi possível criar sua conta. Tente novamente.');
+    }
+  }
+
+  async function aoReceberCredentialGoogle(idToken) {
+    setErro(null);
+    try {
+      const resultado = await loginComGoogle(idToken);
+      if (resultado.novoCadastro) {
+        setNome(resultado.perfilGoogle.nome || '');
+        setEmail(resultado.perfilGoogle.email || '');
+        navigate('/cadastro', { state: { perfilGoogle: resultado.perfilGoogle }, replace: true });
+      } else {
+        definirSessao(resultado);
+        navigate('/');
+      }
+    } catch {
+      setErro('Não foi possível continuar com o Google.');
     }
   }
 
@@ -59,6 +85,13 @@ export function Register() {
       <form style={styles.card} onSubmit={aoSubmeter}>
         <h1 style={styles.titulo}>Criar conta</h1>
         <p style={styles.subtitulo}>Cadastro nacional — Brasil</p>
+
+        {perfilGoogle && (
+          <p style={styles.avisoGoogle}>
+            Continuando com a conta Google de <strong>{perfilGoogle.email}</strong>. Falta só
+            completar os dados abaixo (exigidos para o cadastro nacional).
+          </p>
+        )}
 
         <div style={styles.abas}>
           <button type="button" style={{ ...styles.aba, ...(tipo === 'cliente' ? styles.abaAtiva : {}) }} onClick={() => setTipo('cliente')}>
@@ -69,8 +102,20 @@ export function Register() {
           </button>
         </div>
 
-        <input style={styles.input} placeholder="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <input style={styles.input} placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input
+          style={styles.input}
+          placeholder="Nome completo"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          readOnly={!!perfilGoogle}
+        />
+        <input
+          style={styles.input}
+          placeholder="E-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          readOnly={!!perfilGoogle}
+        />
         <input
           style={styles.input}
           placeholder="Celular (00) 00000-0000"
@@ -83,7 +128,15 @@ export function Register() {
           value={cpf}
           onChange={(e) => setCpf(mascararCPF(e.target.value))}
         />
-        <input style={styles.input} placeholder="Cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} />
+        <AddressAutocompleteInput
+          style={styles.input}
+          placeholder="Cidade ou endereço"
+          value={endereco.texto}
+          onChange={(texto) => setEndereco((s) => ({ ...s, texto }))}
+          onSelecionar={(dados) =>
+            setEndereco({ texto: dados.enderecoCompleto, cidade: dados.cidade, estado: dados.estado, lat: dados.lat, lng: dados.lng })
+          }
+        />
         <input
           style={styles.input}
           type="password"
@@ -146,6 +199,8 @@ export function Register() {
 
         <PrimaryButton label="Criar conta" type="submit" loading={carregando} />
 
+        {!perfilGoogle && <GoogleLoginButton onCredential={aoReceberCredentialGoogle} />}
+
         <p style={styles.rodape}>
           Já tem conta? <Link style={styles.link} to="/login">Entrar</Link>
         </p>
@@ -169,6 +224,15 @@ const styles = {
   },
   titulo: { color: '#fff', fontSize: 24, margin: 0, textAlign: 'center' },
   subtitulo: { textAlign: 'center', color: 'var(--vexo-muted)', fontSize: 13, marginBottom: 12 },
+  avisoGoogle: {
+    background: 'var(--vexo-bg3)',
+    border: '1px solid var(--vexo-border)',
+    borderRadius: 10,
+    padding: 10,
+    color: 'var(--vexo-text)',
+    fontSize: 12,
+    textAlign: 'center',
+  },
   abas: { display: 'flex', background: 'var(--vexo-bg3)', borderRadius: 12, padding: 4, gap: 4 },
   aba: {
     flex: 1,

@@ -10,13 +10,24 @@ const COLUNA_POR_TIPO = {
 };
 
 module.exports = {
-  async criar({ nome, email, telefone, cpf, senha, cidade, estado }) {
+  async criar({ nome, email, telefone, cpf, senha, cidade, estado, lat, lng, googleId }) {
     const senhaHash = await bcrypt.hash(senha, 10);
     const { rows } = await pool.query(
-      `INSERT INTO clientes (nome, email, telefone, cpf, senha_hash, cidade, estado)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO clientes (nome, email, telefone, cpf, senha_hash, cidade, estado, lat, lng, google_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING ${CAMPOS_PUBLICOS}`,
-      [nome, email, telefone, cpf, senhaHash, cidade || null, estado || null],
+      [
+        nome,
+        email,
+        telefone,
+        cpf,
+        senhaHash,
+        cidade || null,
+        estado || null,
+        lat || null,
+        lng || null,
+        googleId || null,
+      ],
     );
     return rows[0];
   },
@@ -26,6 +37,18 @@ module.exports = {
     if (!coluna) return null;
     const { rows } = await pool.query(`SELECT * FROM clientes WHERE ${coluna} = $1`, [valor]);
     return rows[0] || null;
+  },
+
+  async buscarPorGoogleIdOuEmail(googleId, email) {
+    const { rows } = await pool.query(
+      `SELECT * FROM clientes WHERE google_id = $1 OR email = $2 LIMIT 1`,
+      [googleId, email],
+    );
+    return rows[0] || null;
+  },
+
+  async vincularGoogleId(id, googleId) {
+    await pool.query(`UPDATE clientes SET google_id = $2 WHERE id = $1`, [id, googleId]);
   },
 
   async buscarPorId(id) {

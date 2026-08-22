@@ -25,14 +25,17 @@ module.exports = {
     valorServico,
     cidade,
     estado,
+    lat,
+    lng,
     modeloCobranca,
+    googleId,
   }) {
     const senhaHash = await bcrypt.hash(senha, 10);
     const { rows } = await pool.query(
       `INSERT INTO prestadores
          (nome, email, telefone, cpf, senha_hash, segmento, valor_servico,
-          cidade, estado, modelo_cobranca)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          cidade, estado, lat, lng, modelo_cobranca, google_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING ${CAMPOS_PUBLICOS}`,
       [
         nome,
@@ -44,10 +47,25 @@ module.exports = {
         valorServico || null,
         cidade || null,
         estado || null,
+        lat || null,
+        lng || null,
         modeloCobranca === 'fixo_mensal' ? 'fixo_mensal' : 'percentual',
+        googleId || null,
       ],
     );
     return rows[0];
+  },
+
+  async buscarPorGoogleIdOuEmail(googleId, email) {
+    const { rows } = await pool.query(
+      `SELECT * FROM prestadores WHERE google_id = $1 OR email = $2 LIMIT 1`,
+      [googleId, email],
+    );
+    return rows[0] || null;
+  },
+
+  async vincularGoogleId(id, googleId) {
+    await pool.query(`UPDATE prestadores SET google_id = $2 WHERE id = $1`, [id, googleId]);
   },
 
   async buscarPorIdentificadorComSenha(tipo, valor) {
@@ -89,14 +107,21 @@ module.exports = {
       valores.push(lat, lng);
       const idxLat = valores.length - 1;
       const idxLng = valores.length;
+      // CASE explícito porque GREATEST/LEAST do Postgres ignoram NULL em
+      // vez de propagar — sem isso, prestador sem lat/lng não cai pra
+      // NULL, cai em acos(-1) = meia volta ao mundo (~20015 km), um
+      // valor real só que sem sentido nenhum (e o frontend mostraria
+      // "20015.1 km" em vez de simplesmente omitir a distância).
       colunaDistancia = `
-        ROUND((6371 * acos(
-          LEAST(1, GREATEST(-1,
-            cos(radians($${idxLat})) * cos(radians(lat)) *
-            cos(radians(lng) - radians($${idxLng})) +
-            sin(radians($${idxLat})) * sin(radians(lat))
-          ))
-        ))::numeric, 1) AS distancia_km
+        CASE WHEN lat IS NULL OR lng IS NULL THEN NULL ELSE
+          ROUND((6371 * acos(
+            LEAST(1, GREATEST(-1,
+              cos(radians($${idxLat})) * cos(radians(lat)) *
+              cos(radians(lng) - radians($${idxLng})) +
+              sin(radians($${idxLat})) * sin(radians(lat))
+            ))
+          ))::numeric, 1)
+        END AS distancia_km
       `;
       ordenacao = 'ORDER BY (lat IS NULL OR lng IS NULL), distancia_km ASC';
     }

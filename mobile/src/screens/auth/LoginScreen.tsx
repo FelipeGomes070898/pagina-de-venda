@@ -15,10 +15,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { VexoLogo } from '@/components/common/VexoLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { TipoIdentificador, validarIdentificador } from '@/utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '@/utils/masks';
+import { loginComGoogle } from '@/services/authService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -30,7 +32,7 @@ const ABAS: { tipo: TipoIdentificador; chaveLabel: string; chavePlaceholder: str
 
 export function LoginScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { login, lembrarLogin, setLembrarLogin, carregando } = useAuthStore();
+  const { login, lembrarLogin, setLembrarLogin, carregando, definirSessao } = useAuthStore();
 
   const [aba, setAba] = useState<TipoIdentificador>('telefone');
   const [identificador, setIdentificador] = useState('');
@@ -71,6 +73,21 @@ export function LoginScreen({ navigation }: Props) {
       navigation.replace('Home');
     } catch {
       setErro(t('login.error_login_failed'));
+    }
+  }
+
+  async function aoReceberIdTokenGoogle(idToken: string) {
+    setErro(null);
+    try {
+      const resultado = await loginComGoogle(idToken);
+      if ('novoCadastro' in resultado && resultado.novoCadastro) {
+        navigation.navigate('Register', { perfilGoogle: resultado.perfilGoogle });
+      } else {
+        definirSessao(resultado);
+        navigation.replace('Home');
+      }
+    } catch {
+      setErro('Não foi possível entrar com o Google.');
     }
   }
 
@@ -141,6 +158,8 @@ export function LoginScreen({ navigation }: Props) {
         </View>
 
         <PrimaryButton label={t('login.submit')} onPress={aoSubmeter} loading={carregando} />
+
+        <GoogleLoginButton onIdToken={aoReceberIdTokenGoogle} />
 
         <View style={styles.rodape}>
           <Text style={styles.rodapeTexto}>{t('login.no_account')} </Text>

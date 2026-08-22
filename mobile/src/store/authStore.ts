@@ -15,6 +15,7 @@ interface AuthState {
   setLembrarLogin: (valor: boolean) => void;
   login: (payload: LoginPayload) => Promise<void>;
   cadastrar: (payload: CadastroPayload) => Promise<void>;
+  definirSessao: (sessao: { token: string; usuario: Usuario }) => void;
   logout: () => void;
 }
 
@@ -53,6 +54,13 @@ export const useAuthStore = create<AuthState>()(
           set({ carregando: false, erro: 'error_register_failed' });
           throw e;
         }
+      },
+
+      // Usado pelo login com Google: a sessão já vem pronta do backend,
+      // sem passar pelas ações login()/cadastrar().
+      definirSessao: ({ token, usuario }) => {
+        setAuthToken(token);
+        set({ token, usuario, erro: null });
       },
 
       logout: () => {

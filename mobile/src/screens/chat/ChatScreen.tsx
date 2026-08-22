@@ -25,6 +25,7 @@ import {
   responderProposta,
 } from '@/services/chatService';
 import { atualizarStatusPedido } from '@/services/marketplaceService';
+import { AddressAutocompleteInput } from '@/components/common/AddressAutocompleteInput';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -66,7 +67,9 @@ export function ChatScreen({ route, navigation }: Props) {
   const [mostrarFormProposta, setMostrarFormProposta] = useState(false);
   const [valorProposta, setValorProposta] = useState('');
 
-  const [endereco, setEndereco] = useState('');
+  const [endereco, setEndereco] = useState<{ texto: string; lat?: number; lng?: number }>({
+    texto: '',
+  });
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
 
   const listaRef = useRef<FlatList>(null);
@@ -129,10 +132,14 @@ export function ChatScreen({ route, navigation }: Props) {
   }
 
   async function aoEnviarEndereco() {
-    if (!endereco.trim()) return;
+    if (!endereco.texto.trim()) return;
     setEnviandoEndereco(true);
     try {
-      await enviarEndereco(pedidoId, { endereco: endereco.trim() });
+      await enviarEndereco(pedidoId, {
+        endereco: endereco.texto.trim(),
+        lat: endereco.lat,
+        lng: endereco.lng,
+      });
       await carregar();
     } catch {
       setErro('Não foi possível enviar o endereço.');
@@ -199,12 +206,15 @@ export function ChatScreen({ route, navigation }: Props) {
         <View style={styles.enderecoWrapper}>
           <Text style={styles.enderecoRotulo}>Pedido fechado! Envie o endereço:</Text>
           <View style={styles.linhaEnvio}>
-            <TextInput
-              style={styles.inputFlex}
+            <AddressAutocompleteInput
               placeholder="Rua, número, bairro..."
-              placeholderTextColor={colors.muted}
-              value={endereco}
-              onChangeText={setEndereco}
+              value={endereco.texto}
+              onChangeText={(texto) => setEndereco({ texto })}
+              onSelecionar={(dados) =>
+                setEndereco({ texto: dados.enderecoCompleto, lat: dados.lat, lng: dados.lng })
+              }
+              wrapperStyle={styles.enderecoAutocompleteWrapper}
+              inputStyle={styles.inputFlex}
             />
             <TouchableOpacity
               style={styles.botaoEnviar}
@@ -439,6 +449,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     gap: 8,
   },
+  enderecoAutocompleteWrapper: { flex: 1, marginBottom: 0 },
   inputFlex: {
     flex: 1,
     height: 44,

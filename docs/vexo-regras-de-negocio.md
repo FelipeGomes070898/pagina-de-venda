@@ -21,6 +21,47 @@ e `frontend-web/`.
 Todas as três conversam com o mesmo `backend/` — nenhuma tem lógica de
 negócio própria, só consomem os endpoints REST.
 
+## Login com Google + endereço com Google Maps
+
+Facilidades pedidas explicitamente, implementadas nas duas interfaces
+voltadas pro cliente/prestador (`web-app/` e `mobile/`), sempre com o
+mesmo princípio: **sem a chave configurada, o recurso some/degrada
+graciosamente** — nunca quebra o login normal nem o cadastro.
+
+- **`POST /api/auth/google`** (backend) — verifica o idToken do Google
+  (lib oficial `google-auth-library`, variável `GOOGLE_CLIENT_ID`). Se
+  já existe conta com aquele `google_id` ou e-mail, loga direto. Se não
+  existe, devolve `{ novoCadastro: true, perfilGoogle }` — o app leva o
+  usuário pra completar telefone/CPF/senha (que o Google não fornece e
+  o cadastro nacional exige) e manda o mesmo `googleId` pra
+  `/api/auth/cadastro`, que vincula a conta.
+- **web-app**: `GoogleLoginButton` usa o Google Identity Services
+  (`VITE_GOOGLE_CLIENT_ID`); endereço usa a Maps JavaScript API +
+  Places Autocomplete (`VITE_GOOGLE_MAPS_API_KEY`), testado neste
+  ambiente sem as chaves configuradas (fallback vira texto livre) — não
+  testável de ponta a ponta com o Google de verdade sem uma conta
+  Google Cloud real.
+- **mobile**: usa `@react-native-google-signin/google-signin`, que
+  **exige** projeto nativo (`android/`/`ios/` gerados localmente,
+  `google-services.json`, SHA-1 do keystore) — impossível de configurar
+  ou testar neste ambiente. O endereço no mobile usa a Places API via
+  HTTP puro (sem SDK nativo, então já funciona assim que
+  `GOOGLE_MAPS_API_KEY` existir, mesmo sem `android/`/`ios/`). Detalhes
+  em `mobile/README.md`.
+- **Corrigido de quebra**: nem cliente nem prestador tinham `lat`/`lng`
+  salvos no cadastro (as colunas existiam desde o início, só nunca
+  eram preenchidas) — a ordenação por proximidade do marketplace nunca
+  tinha coordenada real de prestador pra comparar. Corrigido nos dois
+  apps: o campo de endereço agora captura lat/lng (via Maps quando
+  configurado) e manda pro cadastro.
+- **Bug encontrado e corrigido durante o teste**: a fórmula de
+  distância (Haversine) usava `GREATEST`/`LEAST` do Postgres, que
+  **ignoram `NULL`** em vez de propagar — um prestador sem lat/lng não
+  virava `distancia_km = NULL`, virava `~20015 km` (meia volta ao
+  mundo, o valor máximo possível de `acos`), um número real só que sem
+  sentido nenhum. Corrigido com um `CASE WHEN lat IS NULL OR lng IS
+  NULL THEN NULL` explícito em `Prestador.listarAtivos`.
+
 ## Hierarquia da equipe interna (painel admin)
 
 Estrutura organizacional, do topo para a base:

@@ -63,6 +63,10 @@ CREATE TABLE IF NOT EXISTS clientes (
   telefone   VARCHAR(20)  UNIQUE NOT NULL,
   cpf        VARCHAR(14)  UNIQUE NOT NULL,
   senha_hash TEXT NOT NULL,
+  google_id  TEXT UNIQUE,
+  -- vincula a conta ao "sub" do token do Google (login/cadastro social).
+  -- Continua exigindo telefone/CPF/senha: o Google só poupa digitar
+  -- nome/e-mail e a senha, o resto do cadastro nacional é obrigatório.
   foto_url   TEXT,
   cidade     VARCHAR(80),
   estado     VARCHAR(50),
@@ -79,6 +83,7 @@ CREATE TABLE IF NOT EXISTS prestadores (
   telefone            VARCHAR(20)  UNIQUE NOT NULL,
   cpf                 VARCHAR(14)  UNIQUE NOT NULL,
   senha_hash          TEXT NOT NULL,
+  google_id           TEXT UNIQUE,
   whatsapp            VARCHAR(25),
   segmento            VARCHAR(80),
   -- ex.: pedreiro, diarista, encanador, baba, roçador de quintal...

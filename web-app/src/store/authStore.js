@@ -36,6 +36,10 @@ export const useAuthStore = create()(
         }
       },
 
+      // Usado pelo login com Google: a sessão já vem pronta (token +
+      // usuario) do backend, sem passar pelas ações login()/cadastrar().
+      definirSessao: ({ token, usuario }) => set({ token, usuario, erro: null }),
+
       logout: () => set({ token: null, usuario: null }),
     }),
     {

@@ -31,11 +31,24 @@ export interface CadastroPayload {
   senha: string;
   cidade?: string;
   estado?: string;
+  lat?: number;
+  lng?: number;
+  googleId?: string;
   // Somente para prestador:
   segmento?: string;
   valorServico?: number;
   modeloCobranca?: ModeloCobranca;
 }
+
+export interface PerfilGoogle {
+  googleId: string;
+  email: string;
+  nome: string;
+}
+
+export type LoginGoogleResponse =
+  | (LoginResponse & { novoCadastro?: false })
+  | { novoCadastro: true; perfilGoogle: PerfilGoogle };
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse>('/api/auth/login', payload);
@@ -44,5 +57,10 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 
 export async function cadastro(payload: CadastroPayload): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse>('/api/auth/cadastro', payload);
+  return data;
+}
+
+export async function loginComGoogle(idToken: string): Promise<LoginGoogleResponse> {
+  const { data } = await api.post<LoginGoogleResponse>('/api/auth/google', { idToken });
   return data;
 }

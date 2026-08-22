@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { GoogleLoginButton } from '../../components/GoogleLoginButton';
 import { validarIdentificador } from '../../utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '../../utils/masks';
+import { loginComGoogle } from '../../services/googleAuthService';
 
 const ABAS = [
   { tipo: 'telefone', label: 'Celular', placeholder: '(00) 00000-0000' },
@@ -12,7 +14,7 @@ const ABAS = [
 ];
 
 export function Login() {
-  const { login, lembrarLogin, setLembrarLogin, carregando } = useAuthStore();
+  const { login, lembrarLogin, setLembrarLogin, carregando, definirSessao } = useAuthStore();
   const navigate = useNavigate();
 
   const [aba, setAba] = useState('telefone');
@@ -54,6 +56,21 @@ export function Login() {
       navigate('/');
     } catch {
       setErro('Não foi possível entrar. Verifique seus dados.');
+    }
+  }
+
+  async function aoReceberCredentialGoogle(idToken) {
+    setErro(null);
+    try {
+      const resultado = await loginComGoogle(idToken);
+      if (resultado.novoCadastro) {
+        navigate('/cadastro', { state: { perfilGoogle: resultado.perfilGoogle } });
+      } else {
+        definirSessao(resultado);
+        navigate('/');
+      }
+    } catch {
+      setErro('Não foi possível entrar com o Google.');
     }
   }
 
@@ -104,6 +121,8 @@ export function Login() {
         </label>
 
         <PrimaryButton label="Entrar" type="submit" loading={carregando} />
+
+        <GoogleLoginButton onCredential={aoReceberCredentialGoogle} />
 
         <p style={styles.rodape}>
           Ainda não tem conta? <Link style={styles.link} to="/cadastro">Criar conta</Link>

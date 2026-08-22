@@ -13,26 +13,32 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
+import { AddressAutocompleteInput } from '@/components/common/AddressAutocompleteInput';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { useCategoryStore } from '@/store/categoryStore';
-import { TipoConta, ModeloCobranca } from '@/services/authService';
+import { TipoConta, ModeloCobranca, loginComGoogle } from '@/services/authService';
+import { EnderecoDetalhado } from '@/services/mapsService';
 import { validarCPF, validarEmail, validarTelefoneBR } from '@/utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '@/utils/masks';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
-export function RegisterScreen({ navigation }: Props) {
+export function RegisterScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
-  const { cadastrar, carregando } = useAuthStore();
+  const { cadastrar, carregando, definirSessao } = useAuthStore();
   const categorias = useCategoryStore((s) => s.categorias);
+  const perfilGoogle = route.params?.perfilGoogle;
 
   const [tipo, setTipo] = useState<TipoConta>('cliente');
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
+  const [nome, setNome] = useState(perfilGoogle?.nome || '');
+  const [email, setEmail] = useState(perfilGoogle?.email || '');
   const [telefone, setTelefone] = useState('');
   const [cpf, setCpf] = useState('');
-  const [cidade, setCidade] = useState('');
+  const [endereco, setEndereco] = useState<{ texto: string } & Partial<EnderecoDetalhado>>({
+    texto: '',
+  });
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [segmento, setSegmento] = useState<string | null>(null);
@@ -59,15 +65,36 @@ export function RegisterScreen({ navigation }: Props) {
         telefone: somenteDigitos(telefone),
         cpf: somenteDigitos(cpf),
         senha,
-        cidade: cidade.trim() || undefined,
+        cidade: endereco.cidade || endereco.texto.trim() || undefined,
+        estado: endereco.estado || undefined,
+        lat: endereco.lat,
+        lng: endereco.lng,
         segmento: tipo === 'prestador' ? segmento ?? undefined : undefined,
         valorServico:
           tipo === 'prestador' && valorServico ? Number(valorServico.replace(',', '.')) : undefined,
         modeloCobranca: tipo === 'prestador' ? modeloCobranca : undefined,
+        googleId: perfilGoogle?.googleId,
       });
       navigation.replace('Home');
     } catch {
       setErro(t('register.error_register_failed'));
+    }
+  }
+
+  async function aoReceberIdTokenGoogle(idToken: string) {
+    setErro(null);
+    try {
+      const resultado = await loginComGoogle(idToken);
+      if ('novoCadastro' in resultado && resultado.novoCadastro) {
+        setNome(resultado.perfilGoogle.nome || '');
+        setEmail(resultado.perfilGoogle.email || '');
+        navigation.setParams({ perfilGoogle: resultado.perfilGoogle });
+      } else {
+        definirSessao(resultado);
+        navigation.replace('Home');
+      }
+    } catch {
+      setErro('Não foi possível continuar com o Google.');
     }
   }
 
@@ -79,6 +106,13 @@ export function RegisterScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.titulo}>{t('register.title')}</Text>
         <Text style={styles.subtitulo}>{t('register.subtitle')}</Text>
+
+        {perfilGoogle && (
+          <Text style={styles.avisoGoogle}>
+            Continuando com a conta Google de {perfilGoogle.email}. Falta só completar os dados
+            abaixo (exigidos para o cadastro nacional).
+          </Text>
+        )}
 
         <View style={styles.tipoWrapper}>
           <TouchableOpacity
@@ -105,6 +139,7 @@ export function RegisterScreen({ navigation }: Props) {
           placeholderTextColor={colors.muted}
           value={nome}
           onChangeText={setNome}
+          editable={!perfilGoogle}
         />
         <TextInput
           style={styles.input}
@@ -114,6 +149,7 @@ export function RegisterScreen({ navigation }: Props) {
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          editable={!perfilGoogle}
         />
         <TextInput
           style={styles.input}
@@ -131,12 +167,11 @@ export function RegisterScreen({ navigation }: Props) {
           onChangeText={(v) => setCpf(mascararCPF(v))}
           keyboardType="number-pad"
         />
-        <TextInput
-          style={styles.input}
+        <AddressAutocompleteInput
           placeholder={t('register.city_placeholder')}
-          placeholderTextColor={colors.muted}
-          value={cidade}
-          onChangeText={setCidade}
+          value={endereco.texto}
+          onChangeText={(texto) => setEndereco({ texto })}
+          onSelecionar={(dados) => setEndereco({ texto: dados.enderecoCompleto, ...dados })}
         />
         <TextInput
           style={styles.input}
@@ -217,6 +252,8 @@ export function RegisterScreen({ navigation }: Props) {
 
         <PrimaryButton label={t('register.submit')} onPress={aoSubmeter} loading={carregando} />
 
+        {!perfilGoogle && <GoogleLoginButton onIdToken={aoReceberIdTokenGoogle} />}
+
         <View style={styles.rodape}>
           <Text style={styles.rodapeTexto}>{t('register.already_account')} </Text>
           <TouchableOpacity onPress={() => navigation.replace('Login')}>
@@ -233,6 +270,16 @@ const styles = StyleSheet.create({
   container: { flexGrow: 1, padding: spacing.xl, paddingTop: spacing.xxl },
   titulo: { fontSize: 24, fontWeight: '800', color: colors.textForte },
   subtitulo: { fontSize: 14, color: colors.muted, marginBottom: spacing.lg },
+  avisoGoogle: {
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    color: colors.text,
+    fontSize: 12,
+    marginBottom: spacing.md,
+  },
   tipoWrapper: {
     flexDirection: 'row',
     backgroundColor: colors.bg2,
