@@ -149,26 +149,34 @@ CREATE TABLE IF NOT EXISTS pedidos (
   criado_em     TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Mensagens do chat (negociação entre cliente e prestador)
+-- Mensagens do chat (negociação entre cliente e prestador, nos dois
+-- sentidos). remetente_tipo evita ambiguidade na hora de renderizar o
+-- balão (esquerda/direita) sem precisar cruzar com duas tabelas.
 CREATE TABLE IF NOT EXISTS mensagens (
-  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  pedido_id    UUID REFERENCES pedidos(id) ON DELETE CASCADE,
-  remetente_id UUID, -- pode ser cliente ou prestador
-  conteudo     TEXT NOT NULL,
-  tipo         VARCHAR(20) DEFAULT 'texto', -- texto | imagem | proposta | endereco
-  lida         BOOLEAN DEFAULT FALSE,
-  criado_em    TIMESTAMPTZ DEFAULT NOW()
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pedido_id      UUID REFERENCES pedidos(id) ON DELETE CASCADE,
+  remetente_id   UUID, -- id do cliente, do prestador, ou nulo (mensagem de sistema)
+  remetente_tipo VARCHAR(12), -- cliente | prestador | sistema
+  conteudo       TEXT NOT NULL,
+  tipo           VARCHAR(20) DEFAULT 'texto', -- texto | proposta | sistema
+  lida           BOOLEAN DEFAULT FALSE,
+  criado_em      TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Propostas de valor dentro do chat (negociação do preço do serviço)
+-- Propostas de valor dentro do chat — qualquer uma das partes pode propor
+-- (cliente contra-oferta, prestador confirma ou ajusta o preço).
 CREATE TABLE IF NOT EXISTS propostas (
-  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  pedido_id    UUID REFERENCES pedidos(id),
-  prestador_id UUID REFERENCES prestadores(id),
-  valor        DECIMAL(10,2) NOT NULL,
-  descricao    TEXT,
-  status       VARCHAR(20) DEFAULT 'pendente', -- pendente | aceita | recusada
-  criado_em    TIMESTAMPTZ DEFAULT NOW()
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pedido_id      UUID REFERENCES pedidos(id) ON DELETE CASCADE,
+  remetente_id   UUID NOT NULL,
+  remetente_tipo VARCHAR(12) NOT NULL, -- cliente | prestador
+  valor          DECIMAL(10,2) NOT NULL,
+  descricao      TEXT,
+  status         VARCHAR(20) DEFAULT 'pendente', -- pendente | aceita | recusada
+  criado_em      TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT chk_propostas_remetente_tipo
+    CHECK (remetente_tipo IN ('cliente', 'prestador'))
 );
 
 -- Avaliações do prestador (só liberada após pedido concluído)

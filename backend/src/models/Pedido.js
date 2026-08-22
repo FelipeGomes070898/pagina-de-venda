@@ -68,6 +68,15 @@ module.exports = {
     return rows[0] || null;
   },
 
+  // Fecha o pedido com o valor combinado na negociação (proposta aceita).
+  async fecharComValor(id, valor) {
+    const { rows } = await pool.query(
+      `UPDATE pedidos SET status = 'andamento', valor = $2 WHERE id = $1 RETURNING ${CAMPOS}`,
+      [id, valor],
+    );
+    return rows[0] || null;
+  },
+
   // Endereço só é gravado quando o pedido é fechado (aceito) no chat.
   async definirEndereco(id, { endereco, lat, lng }) {
     const { rows } = await pool.query(
@@ -75,5 +84,15 @@ module.exports = {
       [id, endereco, lat || null, lng || null],
     );
     return rows[0] || null;
+  },
+
+  // Confere se o usuário autenticado do app (cliente ou prestador) é uma
+  // das duas partes do pedido — usado no chat e nas ações sobre o pedido.
+  ehParte(pedido, usuarioApp) {
+    const { id, tipo } = usuarioApp;
+    return (
+      (tipo === 'cliente' && pedido.cliente_id === id) ||
+      (tipo === 'prestador' && pedido.prestador_id === id)
+    );
   },
 };

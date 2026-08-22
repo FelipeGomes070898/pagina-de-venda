@@ -57,6 +57,15 @@ async function meus(req, res) {
   res.json(pedidos);
 }
 
+async function buscar(req, res) {
+  const pedido = await Pedido.buscarPorId(req.params.id);
+  if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado' });
+  if (!Pedido.ehParte(pedido, req.usuarioApp)) {
+    return res.status(403).json({ erro: 'Você não faz parte deste pedido' });
+  }
+  res.json(pedido);
+}
+
 async function atualizarStatus(req, res) {
   const { status } = req.body;
   const permitidos = ['andamento', 'concluido', 'cancelado'];
@@ -66,12 +75,9 @@ async function atualizarStatus(req, res) {
 
   const pedido = await Pedido.buscarPorId(req.params.id);
   if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado' });
-
-  const { id, tipo } = req.usuarioApp;
-  const ehParte =
-    (tipo === 'cliente' && pedido.cliente_id === id) ||
-    (tipo === 'prestador' && pedido.prestador_id === id);
-  if (!ehParte) return res.status(403).json({ erro: 'Você não faz parte deste pedido' });
+  if (!Pedido.ehParte(pedido, req.usuarioApp)) {
+    return res.status(403).json({ erro: 'Você não faz parte deste pedido' });
+  }
 
   const atualizado = await Pedido.atualizarStatus(req.params.id, status);
   res.json(atualizado);
@@ -92,4 +98,12 @@ async function definirEndereco(req, res) {
   res.json(atualizado);
 }
 
-module.exports = { criarComPrestador, criarAberto, listarAbertos, meus, atualizarStatus, definirEndereco };
+module.exports = {
+  criarComPrestador,
+  criarAberto,
+  listarAbertos,
+  meus,
+  buscar,
+  atualizarStatus,
+  definirEndereco,
+};

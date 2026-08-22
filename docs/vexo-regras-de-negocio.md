@@ -125,12 +125,18 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
    tela dedicada; hoje `GET /api/prestadores/:id` já retorna fotos e
    avaliações, falta só a UI).
 4. ~~Chat + proposta de valor + fechamento do pedido + envio de
-   endereço.~~ 🟡 parcial: "Entrar em contato" já cria o `pedido`
-   (`POST /api/pedidos`) e abre uma tela de chat (hoje só um resumo,
-   `mobile/src/screens/chat/ChatScreen.tsx`). Falta mensagens de
-   verdade, proposta de valor dentro do chat, aceite e o botão de
-   enviar endereço (`PUT /api/pedidos/:id/endereco`, já existe no
-   backend).
+   endereço.~~ ✅ feito — `mobile/src/screens/chat/ChatScreen.tsx` tem
+   mensagens de texto, proposta de valor (qualquer uma das partes pode
+   propor), aceitar/recusar (só quem recebe a proposta, nunca quem
+   enviou) e, quando aceita, o pedido fecha (`status = 'andamento'`,
+   `valor` atualizado) e libera o campo de endereço para o cliente
+   enviar. Endpoints: `GET/POST /api/chat/:pedidoId`,
+   `POST /api/chat/:pedidoId/proposta`,
+   `PATCH /api/chat/:pedidoId/proposta/:propostaId`.
+   > Limitação atual: chat atualiza por polling (a cada 5s), não é
+   > tempo real via WebSocket/socket.io — isso é upgrade de
+   > infraestrutura para uma próxima fase, não afeta a lógica de
+   > negócio.
 5. Tela de avaliação pós-serviço.
 6. ~~Configuração da cobrança do prestador (escolha 5%/serviço ou
    R$25/mês)~~ ✅ campo `modelo_cobranca` já existe no cadastro; falta a
