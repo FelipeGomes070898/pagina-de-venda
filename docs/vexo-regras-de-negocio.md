@@ -121,9 +121,11 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
    app ainda não captura o GPS do cliente — precisa de
    `react-native-geolocation` e permissão, que exigem projeto nativo
    gerado localmente).
-3. Perfil do prestador (fotos, avaliação, tags de avaliação — falta a
-   tela dedicada; hoje `GET /api/prestadores/:id` já retorna fotos e
-   avaliações, falta só a UI).
+3. ~~Perfil do prestador~~ ✅ feito —
+   `mobile/src/screens/profile/ProProfileScreen.tsx` (fotos de
+   trabalhos, bio, lista de avaliações, botão "Entrar em contato").
+   Abre ao tocar no corpo do card no marketplace (o botão "Contato"
+   continua contatando direto, sem precisar abrir o perfil).
 4. ~~Chat + proposta de valor + fechamento do pedido + envio de
    endereço.~~ ✅ feito — `mobile/src/screens/chat/ChatScreen.tsx` tem
    mensagens de texto, proposta de valor (qualquer uma das partes pode
@@ -152,6 +154,16 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
 7. ~~Backend: endpoint de login unificado~~ ✅ feito — `POST /api/auth/login`
    (app, aceita celular/e-mail/CPF) e `POST /api/auth/admin/login`
    (painel, hierarquia interna) são rotas separadas.
+
+### Primeiro acesso ao painel (conta do dono)
+
+Não existe endpoint HTTP para criar o dono (de propósito — ninguém deveria
+virar dono clicando num botão). Depois de `npm run migrate`, rode
+`npm run criar-dono` em `backend/` (script `src/config/criarDono.js`):
+pede nome/e-mail/senha (ou lê `DONO_NOME`/`DONO_EMAIL`/`DONO_SENHA` do
+ambiente, útil em deploy automatizado) e recusa criar um segundo dono se
+já existir um. A partir daí, o dono usa o painel (`frontend-web`) para
+cadastrar RH, que por sua vez cadastra gerentes e atendimento.
 
 ### Login/cadastro do app — como ficou
 

@@ -44,12 +44,10 @@ CREATE TABLE IF NOT EXISTS admins (
 CREATE INDEX IF NOT EXISTS idx_admins_cargo      ON admins(cargo);
 CREATE INDEX IF NOT EXISTS idx_admins_divisao_id ON admins(divisao_id);
 
--- Registro inicial do dono da empresa (ajustar e-mail/senha no ambiente
--- real; a senha abaixo é só um placeholder de setup — trocar no primeiro
--- acesso). Senha placeholder: "TrocarNoPrimeiroAcesso!" (hash bcrypt fake,
--- gerar de verdade com o script de setup antes de rodar em produção).
--- INSERT INTO admins (nome, email, senha_hash, cargo)
--- VALUES ('Dono', 'dono@vexo.app', '<hash_bcrypt_real_aqui>', 'dono');
+-- Registro inicial do dono da empresa: NÃO é feito aqui no SQL. Depois
+-- de rodar `npm run migrate`, rode `npm run criar-dono`
+-- (src/config/criarDono.js) — ele pede nome/e-mail/senha, gera o hash
+-- bcrypt de verdade e recusa criar um segundo dono se já existir um.
 
 -- ============================================================
 -- USUÁRIOS DO APP (clientes e prestadores) — nacional (BR).

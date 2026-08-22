@@ -6,35 +6,38 @@ import { Prestador } from '@/services/marketplaceService';
 interface Props {
   prestador: Prestador;
   onContatar: () => void;
+  onAbrirPerfil: () => void;
   contatando?: boolean;
 }
 
-export function ProfessionalCard({ prestador, onContatar, contatando }: Props) {
+export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando }: Props) {
   const inicial = prestador.nome?.charAt(0)?.toUpperCase() || '?';
 
   return (
     <View style={styles.card}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarTexto}>{inicial}</Text>
-      </View>
-
-      <View style={styles.info}>
-        <Text style={styles.nome}>{prestador.nome}</Text>
-        <Text style={styles.segmento}>{prestador.segmento || 'Serviços gerais'}</Text>
-
-        <View style={styles.linha}>
-          <Text style={styles.estrelas}>
-            ⭐ {prestador.avaliacao?.toFixed(1) ?? '5.0'} ({prestador.total_avaliacoes})
-          </Text>
-          {prestador.distancia_km != null && (
-            <Text style={styles.distancia}>· {formatarDistancia(prestador.distancia_km)}</Text>
-          )}
+      <TouchableOpacity style={styles.corpo} onPress={onAbrirPerfil}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarTexto}>{inicial}</Text>
         </View>
 
-        {prestador.valor_servico != null && (
-          <Text style={styles.preco}>R$ {prestador.valor_servico.toFixed(2)}</Text>
-        )}
-      </View>
+        <View style={styles.info}>
+          <Text style={styles.nome}>{prestador.nome}</Text>
+          <Text style={styles.segmento}>{prestador.segmento || 'Serviços gerais'}</Text>
+
+          <View style={styles.linha}>
+            <Text style={styles.estrelas}>
+              ⭐ {prestador.avaliacao?.toFixed(1) ?? '5.0'} ({prestador.total_avaliacoes})
+            </Text>
+            {prestador.distancia_km != null && (
+              <Text style={styles.distancia}>· {formatarDistancia(prestador.distancia_km)}</Text>
+            )}
+          </View>
+
+          {prestador.valor_servico != null && (
+            <Text style={styles.preco}>R$ {prestador.valor_servico.toFixed(2)}</Text>
+          )}
+        </View>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.botao, contatando && styles.botaoDesabilitado]}
@@ -62,6 +65,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
+  corpo: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   avatar: {
     width: 48,
     height: 48,

@@ -168,6 +168,9 @@ export function HomeScreen({ navigation }: Props) {
             <ProfessionalCard
               prestador={item}
               onContatar={() => aoContatar(item)}
+              onAbrirPerfil={() =>
+                navigation.navigate('ProProfile', { prestadorId: item.id, prestadorNome: item.nome })
+              }
               contatando={contatandoId === item.id}
             />
           )}
