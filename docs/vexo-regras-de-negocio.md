@@ -109,13 +109,30 @@ O prestador escolhe **um dos dois modelos** para manter a conta ativa:
 
 ## Próximas etapas sugeridas
 
-1. Telas de cadastro (cliente e prestador, incluindo CPF, cidade, foto).
+1. ~~Telas de cadastro (cliente e prestador, incluindo CPF, cidade, foto).~~
+   ✅ feito (`mobile/src/screens/auth/RegisterScreen.tsx` + endpoint
+   `POST /api/auth/cadastro`; upload de foto fica para quando a rota de
+   perfil do prestador existir).
 2. Tela de Marketplace (lista de prestadores por proximidade + categorias).
 3. Perfil do prestador (fotos, avaliação, preço, botão "Entrar em contato").
 4. Chat + proposta de valor + fechamento do pedido + envio de endereço.
 5. Tela de avaliação pós-serviço.
-6. Configuração da cobrança do prestador (escolha 5%/serviço ou R$25/mês) +
-   integração Asaas.
-7. Backend: endpoint de login unificado (`POST /api/auth/login`) aceitando
-   identificador (celular/e-mail/CPF) + senha, e models atualizados com
-   campo `cpf`.
+6. ~~Configuração da cobrança do prestador (escolha 5%/serviço ou
+   R$25/mês)~~ ✅ campo `modelo_cobranca` já existe no cadastro; falta a
+   integração real com Asaas (cobrar de fato).
+7. ~~Backend: endpoint de login unificado~~ ✅ feito — `POST /api/auth/login`
+   (app, aceita celular/e-mail/CPF) e `POST /api/auth/admin/login`
+   (painel, hierarquia interna) são rotas separadas.
+
+### Login/cadastro do app — como ficou
+
+- `POST /api/auth/cadastro` — body `{ tipo: 'cliente'|'prestador', nome,
+  email, telefone, cpf, senha, cidade?, segmento?, valorServico?,
+  modeloCobranca? }`. Telefone e CPF vão sem máscara (só dígitos); o app
+  já cuida disso antes de enviar.
+- `POST /api/auth/login` — body `{ identificador, tipoIdentificador:
+  'telefone'|'email'|'cpf', senha }`. Busca primeiro em `clientes`, depois
+  em `prestadores`.
+- `POST /api/auth/admin/login` — separado de propósito do login do app,
+  usado só pelo painel web (`frontend-web`), autentica contra a tabela
+  `admins` (hierarquia dono/rh/gerente/atendimento).

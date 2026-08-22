@@ -9,7 +9,7 @@ export const useAuthStore = create(
       token: null,
 
       login: async (email, senha) => {
-        const { data } = await api.post('/auth/login', { email, senha });
+        const { data } = await api.post('/auth/admin/login', { email, senha });
         set({ admin: data.admin, token: data.token });
       },
 

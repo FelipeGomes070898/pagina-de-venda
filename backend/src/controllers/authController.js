@@ -1,6 +1,100 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
+const Cliente = require('../models/Cliente');
+const Prestador = require('../models/Prestador');
 
+const TIPOS_IDENTIFICADOR = ['telefone', 'email', 'cpf'];
+
+function gerarToken(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
+}
+
+// Login do app (cliente ou prestador) — nacional, aceita celular, e-mail
+// ou CPF como identificador, mais senha.
+async function login(req, res) {
+  const { identificador, tipoIdentificador, senha } = req.body;
+
+  if (!identificador || !senha || !TIPOS_IDENTIFICADOR.includes(tipoIdentificador)) {
+    return res.status(400).json({ erro: 'Informe identificador, tipoIdentificador e senha' });
+  }
+
+  const cliente = await Cliente.buscarPorIdentificadorComSenha(tipoIdentificador, identificador);
+  if (cliente) {
+    const senhaValida = await Cliente.verificarSenha(senha, cliente.senha_hash);
+    if (!senhaValida) return res.status(401).json({ erro: 'Credenciais inválidas' });
+
+    const token = gerarToken({ id: cliente.id, tipo: 'cliente' });
+    return res.json({
+      token,
+      usuario: { id: cliente.id, nome: cliente.nome, tipo: 'cliente', fotoUrl: cliente.foto_url },
+    });
+  }
+
+  const prestador = await Prestador.buscarPorIdentificadorComSenha(
+    tipoIdentificador,
+    identificador,
+  );
+  if (prestador) {
+    const senhaValida = await Prestador.verificarSenha(senha, prestador.senha_hash);
+    if (!senhaValida) return res.status(401).json({ erro: 'Credenciais inválidas' });
+
+    const token = gerarToken({ id: prestador.id, tipo: 'prestador' });
+    return res.json({
+      token,
+      usuario: {
+        id: prestador.id,
+        nome: prestador.nome,
+        tipo: 'prestador',
+        fotoUrl: prestador.foto_url,
+      },
+    });
+  }
+
+  return res.status(401).json({ erro: 'Credenciais inválidas' });
+}
+
+// Cadastro do app — tipo: 'cliente' | 'prestador'.
+async function cadastro(req, res) {
+  const { tipo, nome, email, telefone, cpf, senha } = req.body;
+
+  if (!['cliente', 'prestador'].includes(tipo)) {
+    return res.status(400).json({ erro: 'tipo deve ser "cliente" ou "prestador"' });
+  }
+  if (!nome || !email || !telefone || !cpf || !senha) {
+    return res.status(400).json({ erro: 'Nome, e-mail, telefone, CPF e senha são obrigatórios' });
+  }
+
+  if (tipo === 'cliente') {
+    const cliente = await Cliente.criar({
+      nome,
+      email,
+      telefone,
+      cpf,
+      senha,
+      cidade: req.body.cidade,
+      estado: req.body.estado,
+    });
+    const token = gerarToken({ id: cliente.id, tipo: 'cliente' });
+    return res.status(201).json({ token, usuario: { ...cliente, tipo: 'cliente' } });
+  }
+
+  const prestador = await Prestador.criar({
+    nome,
+    email,
+    telefone,
+    cpf,
+    senha,
+    segmento: req.body.segmento,
+    valorServico: req.body.valorServico,
+    cidade: req.body.cidade,
+    estado: req.body.estado,
+    modeloCobranca: req.body.modeloCobranca,
+  });
+  const token = gerarToken({ id: prestador.id, tipo: 'prestador' });
+  return res.status(201).json({ token, usuario: { ...prestador, tipo: 'prestador' } });
+}
+
+// Login do painel administrativo (equipe interna, hierarquia própria).
 async function loginAdmin(req, res) {
   const { email, senha } = req.body;
   if (!email || !senha) {
@@ -37,4 +131,4 @@ async function loginAdmin(req, res) {
   });
 }
 
-module.exports = { loginAdmin };
+module.exports = { login, cadastro, loginAdmin };

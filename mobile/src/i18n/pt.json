@@ -32,6 +32,35 @@
     "error_password_required": "Digite sua senha",
     "error_login_failed": "Não foi possível entrar. Verifique seus dados."
   },
+  "register": {
+    "title": "Criar conta",
+    "subtitle": "Cadastro nacional — Brasil",
+    "type_client": "Sou cliente",
+    "type_provider": "Sou prestador de serviço",
+    "name_placeholder": "Nome completo",
+    "email_placeholder": "E-mail",
+    "phone_placeholder": "Celular (00) 00000-0000",
+    "cpf_placeholder": "CPF (000.000.000-00)",
+    "city_placeholder": "Cidade",
+    "password_placeholder": "Criar senha",
+    "confirm_password_placeholder": "Confirmar senha",
+    "segment_label": "Qual serviço você oferece?",
+    "price_placeholder": "Valor do seu serviço (R$)",
+    "billing_label": "Como prefere pagar a taxa da plataforma?",
+    "billing_percent": "5% por serviço concluído",
+    "billing_fixed": "R$ 25,00 fixo por mês",
+    "submit": "Criar conta",
+    "already_account": "Já tem conta?",
+    "do_login": "Entrar",
+    "error_name_required": "Informe seu nome completo",
+    "error_email_invalid": "Informe um e-mail válido",
+    "error_phone_invalid": "Informe um celular válido",
+    "error_cpf_invalid": "Informe um CPF válido",
+    "error_password_short": "A senha deve ter pelo menos 6 caracteres",
+    "error_password_mismatch": "As senhas não coincidem",
+    "error_segment_required": "Escolha o serviço que você oferece",
+    "error_register_failed": "Não foi possível criar sua conta. Tente novamente."
+  },
   "common": {
     "loading": "Carregando..."
   }

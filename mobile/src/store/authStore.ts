@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAuthToken } from '@/services/api';
 import * as authService from '@/services/authService';
-import { LoginPayload, Usuario } from '@/services/authService';
+import { CadastroPayload, LoginPayload, Usuario } from '@/services/authService';
 
 interface AuthState {
   usuario: Usuario | null;
@@ -14,6 +14,7 @@ interface AuthState {
   isAuthenticated: () => boolean;
   setLembrarLogin: (valor: boolean) => void;
   login: (payload: LoginPayload) => Promise<void>;
+  cadastrar: (payload: CadastroPayload) => Promise<void>;
   logout: () => void;
 }
 
@@ -38,6 +39,18 @@ export const useAuthStore = create<AuthState>()(
           set({ token, usuario, carregando: false });
         } catch (e) {
           set({ carregando: false, erro: 'error_login_failed' });
+          throw e;
+        }
+      },
+
+      cadastrar: async (payload: CadastroPayload) => {
+        set({ carregando: true, erro: null });
+        try {
+          const { token, usuario } = await authService.cadastro(payload);
+          setAuthToken(token);
+          set({ token, usuario, carregando: false });
+        } catch (e) {
+          set({ carregando: false, erro: 'error_register_failed' });
           throw e;
         }
       },

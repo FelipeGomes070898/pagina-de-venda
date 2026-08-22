@@ -144,7 +144,7 @@ export function LoginScreen({ navigation }: Props) {
 
         <View style={styles.rodape}>
           <Text style={styles.rodapeTexto}>{t('login.no_account')} </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.link}>{t('login.create_account')}</Text>
           </TouchableOpacity>
         </View>
