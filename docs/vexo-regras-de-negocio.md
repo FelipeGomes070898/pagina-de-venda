@@ -23,6 +23,21 @@ e `frontend-web/`.
   banco. Mesmo padrão que Uber/InDrive usam: app nativo e site são
   interfaces diferentes, mesma API.
 
+## Deploy em produção
+
+Ver `docs/deploy.md` — guia completo pra publicar as 4 peças (backend
++ banco, os dois sites, o app mobile na Play Store) e o checklist de
+variáveis de ambiente que precisam trocar antes de ir ao ar. Já preparado
+nesta etapa: `backend/Dockerfile` + `docker-compose.yml` (sobem
+API + Postgres com um comando), e `CORS_ORIGINS` configurável no
+backend (testado restringindo e liberando origem — hoje aberto por
+padrão em dev, documentado pra restringir em produção). Não consegui
+rodar `docker compose up` de ponta a ponta aqui: este ambiente de
+sandbox não suporta containers aninhados. Validei o que dava sem o
+daemon — sintaxe do compose e que o `bcrypt` (única dependência nativa
+arriscada) tem prebuild pra Alpine — mas vale confirmar num ambiente
+real antes de confiar em produção.
+
 Todas as três conversam com o mesmo `backend/` — nenhuma tem lógica de
 negócio própria, só consomem os endpoints REST.
 
