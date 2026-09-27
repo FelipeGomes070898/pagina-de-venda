@@ -2,6 +2,17 @@ const Prestador = require('../models/Prestador');
 const FotoTrabalho = require('../models/FotoTrabalho');
 const Avaliacao = require('../models/Avaliacao');
 
+// email/cpf/telefone vêm de CAMPOS_PUBLICOS (compartilhado com o retorno do
+// próprio cadastro do prestador, que precisa desses campos) mas não podem
+// vazar nestes dois endpoints, que são públicos e sem autenticação — quem
+// quiser contato usa o chat do app ou o whatsapp que o prestador optou por
+// exibir.
+function ocultarPii(prestador) {
+  // eslint-disable-next-line no-unused-vars
+  const { email, cpf, telefone, ...publico } = prestador;
+  return publico;
+}
+
 async function listar(req, res) {
   const { cidade, segmento, busca, lat, lng, page } = req.query;
 
@@ -14,7 +25,7 @@ async function listar(req, res) {
     pagina: page ? Number(page) : 1,
   });
 
-  res.json(prestadores);
+  res.json(prestadores.map(ocultarPii));
 }
 
 async function buscar(req, res) {
@@ -26,7 +37,7 @@ async function buscar(req, res) {
     Avaliacao.listarPorPrestador(prestador.id),
   ]);
 
-  res.json({ ...prestador, fotos, avaliacoes });
+  res.json({ ...ocultarPii(prestador), fotos, avaliacoes });
 }
 
 module.exports = { listar, buscar };

@@ -29,13 +29,14 @@ module.exports = {
     lng,
     modeloCobranca,
     googleId,
+    whatsapp,
   }) {
     const senhaHash = await bcrypt.hash(senha, 10);
     const { rows } = await pool.query(
       `INSERT INTO prestadores
          (nome, email, telefone, cpf, senha_hash, segmento, valor_servico,
-          cidade, estado, lat, lng, modelo_cobranca, google_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          cidade, estado, lat, lng, modelo_cobranca, google_id, whatsapp)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING ${CAMPOS_PUBLICOS}`,
       [
         nome,
@@ -51,6 +52,9 @@ module.exports = {
         lng || null,
         modeloCobranca === 'fixo_mensal' ? 'fixo_mensal' : 'percentual',
         googleId || null,
+        // a maioria dos prestadores usa o próprio celular no WhatsApp —
+        // só grava um número diferente se ele informar um explicitamente.
+        whatsapp || telefone,
       ],
     );
     return rows[0];

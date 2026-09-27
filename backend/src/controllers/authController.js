@@ -102,6 +102,7 @@ async function cadastro(req, res) {
     lng,
     modeloCobranca: req.body.modeloCobranca,
     googleId,
+    whatsapp: req.body.whatsapp,
   });
 
   // Best-effort: não bloqueia o cadastro se o Asaas falhar ou não

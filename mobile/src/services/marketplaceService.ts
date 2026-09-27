@@ -3,6 +3,7 @@ import { api } from './api';
 export interface Prestador {
   id: string;
   nome: string;
+  whatsapp: string | null;
   segmento: string | null;
   valor_servico: number | null;
   cidade: string | null;
