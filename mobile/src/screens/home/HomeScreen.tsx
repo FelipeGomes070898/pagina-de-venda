@@ -11,7 +11,9 @@ import {
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/types';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import { MainTabParamList, RootStackParamList } from '@/navigation/types';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useCategoryStore } from '@/store/categoryStore';
 import { CategoryChip } from '@/components/common/CategoryChip';
@@ -27,7 +29,10 @@ import {
 } from '@/services/marketplaceService';
 import { Coordenadas, obterLocalizacaoComPermissao } from '@/services/locationService';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'MarketplaceTab'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 type Aba = 'prestadores' | 'pedidos';
 
@@ -36,6 +41,8 @@ export function HomeScreen({ navigation }: Props) {
 
   const [aba, setAba] = useState<Aba>('prestadores');
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
+  const [buscaTexto, setBuscaTexto] = useState('');
+  const [buscaAplicada, setBuscaAplicada] = useState('');
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [pedidosAbertos, setPedidosAbertos] = useState<Pedido[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -63,6 +70,7 @@ export function HomeScreen({ navigation }: Props) {
       if (aba === 'prestadores') {
         const lista = await listarPrestadores({
           segmento: categoriaAtiva || undefined,
+          busca: buscaAplicada || undefined,
           lat: coordenadas?.lat,
           lng: coordenadas?.lng,
         });
@@ -84,7 +92,12 @@ export function HomeScreen({ navigation }: Props) {
     setCarregando(true);
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aba, categoriaAtiva, buscandoLocalizacao]);
+  }, [aba, categoriaAtiva, buscaAplicada, buscandoLocalizacao]);
+
+  useEffect(() => {
+    const temporizador = setTimeout(() => setBuscaAplicada(buscaTexto.trim()), 400);
+    return () => clearTimeout(temporizador);
+  }, [buscaTexto]);
 
   function aoAtualizar() {
     setAtualizando(true);
@@ -127,6 +140,17 @@ export function HomeScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.titulo}>Marketplace</Text>
+        {aba === 'prestadores' && (
+          <TextInput
+            style={styles.buscaInput}
+            placeholder="Buscar por nome ou serviço"
+            placeholderTextColor={colors.muted}
+            value={buscaTexto}
+            onChangeText={setBuscaTexto}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        )}
         {aba === 'prestadores' && !buscandoLocalizacao && (
           <Text style={styles.localizacaoInfo}>
             {coordenadas
@@ -261,7 +285,18 @@ export function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte, marginBottom: spacing.xs },
+  titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte, marginBottom: spacing.sm },
+  buscaInput: {
+    height: 44,
+    backgroundColor: colors.bg2,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    color: colors.textForte,
+    fontSize: 14,
+    marginBottom: spacing.sm,
+  },
   localizacaoInfo: { fontSize: 12, color: colors.muted, marginBottom: spacing.md },
   abas: { flexDirection: 'row', backgroundColor: colors.bg2, borderRadius: radius.md, padding: 4 },
   aba: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },

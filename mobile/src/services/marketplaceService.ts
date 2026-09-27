@@ -34,8 +34,13 @@ export interface Pedido {
   criado_em: string;
 }
 
+export interface Conversa extends Pedido {
+  contraparte_nome: string | null;
+}
+
 export interface FiltrosMarketplace {
   segmento?: string;
+  busca?: string;
   cidade?: string;
   lat?: number;
   lng?: number;
@@ -77,5 +82,10 @@ export async function atualizarStatusPedido(
   status: StatusPedido,
 ): Promise<Pedido> {
   const { data } = await api.put<Pedido>(`/api/pedidos/${pedidoId}/status`, { status });
+  return data;
+}
+
+export async function listarMinhasConversas(): Promise<Conversa[]> {
+  const { data } = await api.get<Conversa[]>('/api/pedidos/meus');
   return data;
 }

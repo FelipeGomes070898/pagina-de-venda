@@ -86,7 +86,7 @@ module.exports = {
   // Marketplace: lista prestadores ativos, mais próximos primeiro quando
   // lat/lng são informados (distância por Haversine, em km). Sem
   // localização, cai para os mais recentes.
-  async listarAtivos({ cidade, segmento, lat, lng, pagina = 1, porPagina = 20 } = {}) {
+  async listarAtivos({ cidade, segmento, busca, lat, lng, pagina = 1, porPagina = 20 } = {}) {
     const condicoes = [`status = 'ativo'`];
     const valores = [];
 
@@ -97,6 +97,10 @@ module.exports = {
     if (segmento) {
       valores.push(segmento);
       condicoes.push(`segmento = $${valores.length}`);
+    }
+    if (busca) {
+      valores.push(`%${busca}%`);
+      condicoes.push(`(nome ILIKE $${valores.length} OR segmento ILIKE $${valores.length})`);
     }
 
     const usarDistancia = lat != null && lng != null;

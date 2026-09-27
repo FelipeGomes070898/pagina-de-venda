@@ -1,3 +1,10 @@
+export type MainTabParamList = {
+  MarketplaceTab: undefined;
+  BuscaTab: undefined;
+  ChatsTab: undefined;
+  PerfilTab: undefined;
+};
+
 export type RootStackParamList = {
   Splash: undefined;
   Onboarding: undefined;

@@ -41,7 +41,12 @@ module.exports = {
 
   async listarDoCliente(clienteId) {
     const { rows } = await pool.query(
-      `SELECT ${CAMPOS} FROM pedidos WHERE cliente_id = $1 ORDER BY criado_em DESC`,
+      `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
+              p.valor, p.status, p.agendado_para, p.criado_em, pr.nome AS contraparte_nome
+       FROM pedidos p
+       LEFT JOIN prestadores pr ON pr.id = p.prestador_id
+       WHERE p.cliente_id = $1
+       ORDER BY p.criado_em DESC`,
       [clienteId],
     );
     return rows;
@@ -49,7 +54,12 @@ module.exports = {
 
   async listarDoPrestador(prestadorId) {
     const { rows } = await pool.query(
-      `SELECT ${CAMPOS} FROM pedidos WHERE prestador_id = $1 ORDER BY criado_em DESC`,
+      `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
+              p.valor, p.status, p.agendado_para, p.criado_em, c.nome AS contraparte_nome
+       FROM pedidos p
+       LEFT JOIN clientes c ON c.id = p.cliente_id
+       WHERE p.prestador_id = $1
+       ORDER BY p.criado_em DESC`,
       [prestadorId],
     );
     return rows;

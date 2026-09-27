@@ -4,13 +4,23 @@ App estilo Uber, mas para conexão de serviços locais (pedreiro, diarista,
 encanador, babá, roçador de quintal, etc.) entre clientes e prestadores
 autônomos.
 
-## Etapa atual: Splash → Onboarding → Login
+## Telas
 
 - `src/screens/auth/SplashScreen.tsx` — logo animado, decide a próxima tela
   (Onboarding na primeira vez, Login ou Home nas seguintes).
 - `src/screens/auth/OnboardingScreen.tsx` — vinheta de abertura em 3 slides.
-- `src/screens/auth/LoginScreen.tsx` — login nacional (BR) por celular,
-  e-mail ou CPF + senha, com opção "salvar login".
+- `src/screens/auth/LoginScreen.tsx` / `RegisterScreen.tsx` — login e cadastro
+  nacional (BR) por celular, e-mail ou CPF + senha (ou Google), com opção
+  "salvar login".
+- `src/navigation/MainTabsNavigator.tsx` — navegação principal por abas depois
+  do login: **Início** (marketplace), **Busca**, **Chats** e **Perfil**.
+- `src/screens/home/HomeScreen.tsx` — marketplace: lista de prestadores
+  (ordenada por proximidade) ou pedidos em aberto, com busca e categorias.
+- `src/screens/busca/BuscaScreen.tsx` — busca dedicada por nome/serviço.
+- `src/screens/chat/ChatsListScreen.tsx` — lista das conversas/negociações do
+  usuário; `ChatScreen.tsx` é a conversa individual (mensagens + proposta).
+- `src/screens/profile/PerfilScreen.tsx` — perfil do usuário logado (dados da
+  conta, sair). `ProProfileScreen.tsx` é o perfil público de um prestador.
 
 ## Rodando o projeto
 
@@ -80,8 +90,8 @@ cadastro do prestador e no envio de endereço do chat) viram texto livre
 
 ## Stack
 
-React Native 0.73 + TypeScript, React Navigation (native-stack), Zustand
-(com persistência via AsyncStorage para "salvar login"), i18next, Axios.
+React Native 0.73 + TypeScript, React Navigation (native-stack + bottom-tabs),
+Zustand (com persistência via AsyncStorage para "salvar login"), i18next, Axios.
 
 ## Próximos passos
 

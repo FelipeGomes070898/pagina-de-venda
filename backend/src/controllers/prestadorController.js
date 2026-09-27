@@ -3,11 +3,12 @@ const FotoTrabalho = require('../models/FotoTrabalho');
 const Avaliacao = require('../models/Avaliacao');
 
 async function listar(req, res) {
-  const { cidade, segmento, lat, lng, page } = req.query;
+  const { cidade, segmento, busca, lat, lng, page } = req.query;
 
   const prestadores = await Prestador.listarAtivos({
     cidade,
     segmento,
+    busca,
     lat: lat ? Number(lat) : undefined,
     lng: lng ? Number(lng) : undefined,
     pagina: page ? Number(page) : 1,
