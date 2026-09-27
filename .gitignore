@@ -1,0 +1,6 @@
+# Skills/agent tooling instalado localmente pra apoiar o desenvolvimento
+# (ex.: `npx skills add ...`) — documentação de referência pro assistente,
+# não faz parte do projeto Labuta em si.
+.agents/
+.claude/
+skills-lock.json
