@@ -19,7 +19,7 @@ import { colors, spacing } from '@/theme/tokens';
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const { width } = Dimensions.get('window');
-const CHAVE_ONBOARDING_VISTO = '@vexo/onboarding_visto';
+const CHAVE_ONBOARDING_VISTO = '@labuta/onboarding_visto';
 
 const SLIDES = [
   { icone: '🔍', chaveTitulo: 'onboarding.slide1_title', chaveTexto: 'onboarding.slide1_text' },
@@ -118,6 +118,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginHorizontal: 4,
   },
-  pontoAtivo: { backgroundColor: colors.laranja, width: 20 },
+  pontoAtivo: { backgroundColor: colors.azul, width: 20 },
   botao: { marginHorizontal: spacing.xl, marginBottom: spacing.xl },
 });

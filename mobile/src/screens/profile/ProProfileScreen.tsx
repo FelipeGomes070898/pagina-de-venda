@@ -45,7 +45,7 @@ export function ProProfileScreen({ route, navigation }: Props) {
   if (carregando) {
     return (
       <View style={styles.centro}>
-        <ActivityIndicator color={colors.roxo} />
+        <ActivityIndicator color={colors.laranja} />
       </View>
     );
   }
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: colors.roxo,
+    backgroundColor: colors.laranja,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: spacing.md,
   },
-  avatarTexto: { color: colors.textForte, fontSize: 36, fontWeight: '800' },
+  avatarTexto: { color: '#fff', fontSize: 36, fontWeight: '800' },
   nome: { color: colors.textForte, fontSize: 20, fontWeight: '800', textAlign: 'center' },
   segmento: { color: colors.muted, fontSize: 14, textAlign: 'center', marginTop: 2 },
   linhaInfo: {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   estrelas: { color: colors.text, fontSize: 13 },
   servicos: { color: colors.muted, fontSize: 13, marginLeft: 4 },
   preco: {
-    color: colors.green,
+    color: colors.laranja,
     fontWeight: '800',
     fontSize: 18,
     textAlign: 'center',

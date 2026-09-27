@@ -13,7 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { VexoLogo } from '@/components/common/VexoLogo';
+import { LabutaLogo } from '@/components/common/LabutaLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -97,7 +97,7 @@ export function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <VexoLogo size="sm" />
+        <LabutaLogo size="sm" />
         <Text style={styles.titulo}>{t('login.title')}</Text>
         <Text style={styles.subtitulo}>{t('login.subtitle')}</Text>
 
@@ -147,7 +147,7 @@ export function LoginScreen({ navigation }: Props) {
             <Switch
               value={lembrarLogin}
               onValueChange={setLembrarLogin}
-              trackColor={{ true: colors.roxo, false: colors.border }}
+              trackColor={{ true: colors.laranja, false: colors.border }}
               thumbColor={colors.textForte}
             />
             <Text style={styles.lembrarTexto}>{t('login.remember_me')}</Text>
@@ -191,9 +191,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   aba: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },
-  abaAtiva: { backgroundColor: colors.roxo },
+  abaAtiva: { backgroundColor: colors.laranja },
   abaTexto: { color: colors.muted, fontSize: 13, fontWeight: '600' },
-  abaTextoAtivo: { color: colors.textForte },
+  abaTextoAtivo: { color: '#fff' },
   input: {
     width: '100%',
     height: 52,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   lembrarWrapper: { flexDirection: 'row', alignItems: 'center' },
   lembrarTexto: { color: colors.text, fontSize: 13, marginLeft: spacing.xs },
-  link: { color: colors.laranja, fontSize: 13, fontWeight: '600' },
+  link: { color: colors.azul, fontSize: 13, fontWeight: '600' },
   rodape: { flexDirection: 'row', marginTop: spacing.lg },
   rodapeTexto: { color: colors.muted, fontSize: 13 },
 });

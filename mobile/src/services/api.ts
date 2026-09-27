@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_URL = 'https://api.vexo.app';
+export const API_URL = 'https://api.labuta.app';
 
 export const api = axios.create({
   baseURL: API_URL,

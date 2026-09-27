@@ -39,7 +39,7 @@ export function PrimaryButton({
       activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={isOutline ? colors.roxo : colors.textForte} />
+        <ActivityIndicator color={isOutline ? colors.laranja : '#fff'} />
       ) : (
         <Text style={[styles.texto, isOutline && styles.textoOutline]}>{label}</Text>
       )}
@@ -55,13 +55,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
-  primary: { backgroundColor: colors.roxo },
+  primary: { backgroundColor: colors.laranja },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border,
   },
   desabilitado: { opacity: 0.5 },
-  texto: { color: colors.textForte, fontWeight: '700', fontSize: 16 },
+  texto: { color: '#fff', fontWeight: '700', fontSize: 16 },
   textoOutline: { color: colors.text },
 });

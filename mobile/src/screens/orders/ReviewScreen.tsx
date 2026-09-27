@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  tagAtiva: { backgroundColor: colors.roxo, borderColor: colors.roxo },
+  tagAtiva: { backgroundColor: colors.laranja, borderColor: colors.laranja },
   tagTexto: { color: colors.text, fontSize: 12 },
   input: {
     minHeight: 80,

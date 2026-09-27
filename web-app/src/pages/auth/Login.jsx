@@ -78,9 +78,9 @@ export function Login() {
     <div style={styles.container}>
       <form style={styles.card} onSubmit={aoSubmeter}>
         <div style={styles.marca}>
-          Vex<span style={styles.marcaDestaque}>o</span>
+          LABUTA
         </div>
-        <p style={styles.subtitulo}>Serviços. Pessoas. Conexões reais.</p>
+        <p style={styles.subtitulo}>Labuta Que Vale.</p>
 
         <div style={styles.abas}>
           {ABAS.map((item) => (
@@ -137,41 +137,40 @@ const styles = {
   card: {
     width: 360,
     maxWidth: '100%',
-    background: 'var(--vexo-bg2)',
-    border: '1px solid var(--vexo-border)',
+    background: 'var(--labuta-bg2)',
+    border: '1px solid var(--labuta-border)',
     borderRadius: 18,
     padding: 32,
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
   },
-  marca: { fontSize: 30, fontWeight: 900, color: '#fff', textAlign: 'center' },
-  marcaDestaque: { color: 'var(--vexo-laranja)' },
-  subtitulo: { textAlign: 'center', color: 'var(--vexo-muted)', fontSize: 13, marginBottom: 12 },
-  abas: { display: 'flex', background: 'var(--vexo-bg3)', borderRadius: 12, padding: 4, gap: 4 },
+  marca: { fontSize: 30, fontWeight: 900, color: 'var(--labuta-laranja)', textAlign: 'center', letterSpacing: 1 },
+  subtitulo: { textAlign: 'center', color: 'var(--labuta-muted)', fontSize: 13, marginBottom: 12 },
+  abas: { display: 'flex', background: 'var(--labuta-bg3)', borderRadius: 12, padding: 4, gap: 4 },
   aba: {
     flex: 1,
     padding: '10px 0',
     borderRadius: 8,
     border: 'none',
     background: 'transparent',
-    color: 'var(--vexo-muted)',
+    color: 'var(--labuta-muted)',
     fontSize: 12,
     fontWeight: 600,
   },
-  abaAtiva: { background: 'var(--vexo-roxo)', color: '#fff' },
+  abaAtiva: { background: 'var(--labuta-laranja)', color: '#fff' },
   input: {
     height: 48,
     borderRadius: 12,
-    border: '1px solid var(--vexo-border)',
-    background: 'var(--vexo-bg3)',
-    color: '#fff',
+    border: '1px solid var(--labuta-border)',
+    background: 'var(--labuta-bg3)',
+    color: 'var(--labuta-text-forte)',
     padding: '0 14px',
     fontSize: 14,
   },
-  erro: { color: 'var(--vexo-red)', fontSize: 13, margin: 0 },
-  lembrarWrapper: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--vexo-text)' },
+  erro: { color: 'var(--labuta-red)', fontSize: 13, margin: 0 },
+  lembrarWrapper: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--labuta-text)' },
   lembrarTexto: {},
-  rodape: { textAlign: 'center', fontSize: 13, color: 'var(--vexo-muted)', marginTop: 8 },
-  link: { color: 'var(--vexo-laranja)', fontWeight: 600, textDecoration: 'none' },
+  rodape: { textAlign: 'center', fontSize: 13, color: 'var(--labuta-muted)', marginTop: 8 },
+  link: { color: 'var(--labuta-azul)', fontWeight: 600, textDecoration: 'none' },
 };

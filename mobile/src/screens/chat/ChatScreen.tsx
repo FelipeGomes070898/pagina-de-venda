@@ -163,7 +163,7 @@ export function ChatScreen({ route, navigation }: Props) {
   if (carregando || !conversa) {
     return (
       <View style={styles.centro}>
-        <ActivityIndicator color={colors.roxo} />
+        <ActivityIndicator color={colors.laranja} />
       </View>
     );
   }
@@ -308,7 +308,9 @@ function BalaoMensagem({
   return (
     <View style={[styles.balaoWrapper, minhaMensagem && styles.balaoWrapperMeu]}>
       <View style={[styles.balao, minhaMensagem && styles.balaoMeu]}>
-        <Text style={styles.balaoTexto}>{mensagem.conteudo}</Text>
+        <Text style={[styles.balaoTexto, minhaMensagem && styles.balaoTextoMeu]}>
+          {mensagem.conteudo}
+        </Text>
       </View>
     </View>
   );
@@ -387,8 +389,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  balaoMeu: { backgroundColor: colors.roxo, borderColor: colors.roxo },
+  balaoMeu: { backgroundColor: colors.laranja, borderColor: colors.laranja },
   balaoTexto: { color: colors.textForte, fontSize: 14 },
+  balaoTextoMeu: { color: '#fff' },
   cartaoProposta: {
     alignSelf: 'center',
     backgroundColor: colors.bg2,
@@ -492,7 +495,7 @@ const styles = StyleSheet.create({
   botaoEnviar: {
     height: 44,
     borderRadius: radius.md,
-    backgroundColor: colors.roxo,
+    backgroundColor: colors.laranja,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,

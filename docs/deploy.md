@@ -1,4 +1,4 @@
-# Vexo — Guia de deploy em produção
+# Labuta — Guia de deploy em produção
 
 Este documento cobre as 4 peças do projeto. Nenhuma delas eu consigo
 publicar por você — todas exigem contas/credenciais suas (hospedagem,
@@ -31,7 +31,7 @@ lugar que aceite Node ou Docker.
    npm run criar-dono
    ```
 5. Pegue a URL pública que o Railway gera (ex.:
-   `https://vexo-api.up.railway.app`) — é o `VITE_API_URL` /
+   `https://labuta-api.up.railway.app`) — é o `VITE_API_URL` /
    `API_URL` que os outros três projetos vão usar.
 
 ### Opção B — Docker (Render, Fly.io, DigitalOcean, ou uma VPS qualquer)
@@ -59,7 +59,7 @@ compose, apontando as variáveis de ambiente pro Postgres gerenciado.
 ### Depois de qualquer uma das duas opções
 
 - Rode `npm run criar-dono` (uma vez só) pra ter o primeiro acesso ao
-  painel administrativo — ver `docs/vexo-regras-de-negocio.md`.
+  painel administrativo — ver `docs/labuta-regras-de-negocio.md`.
 - Configure o webhook do Asaas (se for usar) apontando pra
   `https://SEU_BACKEND/api/pagamentos/webhook?token=SEU_ASAAS_WEBHOOK_TOKEN`.
 
@@ -102,12 +102,12 @@ Google (pagamento único de US$ 25) e assinatura digital do app.
    copiando `android/` pra dentro deste projeto.
 2. **Apontar pro backend de produção**: configure a URL final da API
    em `mobile/src/services/api.ts` (hoje aponta pra
-   `https://api.vexo.app`, um placeholder).
+   `https://api.labuta.app`, um placeholder).
 3. **Gerar a keystore de release** (assinatura do app — guarde esse
    arquivo com muito cuidado, perdê-lo significa não poder mais
    atualizar o app publicado):
    ```bash
-   keytool -genkeypair -v -storetype PKCS12 -keystore vexo-release.keystore -alias vexo -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkeypair -v -storetype PKCS12 -keystore labuta-release.keystore -alias labuta -keyalg RSA -keysize 2048 -validity 10000
    ```
 4. **Gerar o AAB assinado**:
    ```bash

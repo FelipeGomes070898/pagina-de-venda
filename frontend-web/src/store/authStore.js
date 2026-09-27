@@ -23,6 +23,6 @@ export const useAuthStore = create(
       podeGerenciarEquipe: () => ['dono', 'rh'].includes(get().admin?.cargo),
       podeVerFinanceiro: () => get().admin?.cargo === 'dono',
     }),
-    { name: 'vexo-painel-auth' },
+    { name: 'labuta-painel-auth' },
   ),
 );

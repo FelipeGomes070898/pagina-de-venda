@@ -1,4 +1,4 @@
-# Vexo — Regras de negócio (marketplace + equipe interna)
+# Labuta — Regras de negócio (marketplace + equipe interna)
 
 Documento de referência para as próximas etapas de construção do app.
 Etapa 1 (splash, intro, login) já implementada em `mobile/`.

@@ -43,7 +43,7 @@ export const useAuthStore = create()(
       logout: () => set({ token: null, usuario: null }),
     }),
     {
-      name: 'vexo-web-auth',
+      name: 'labuta-web-auth',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) =>
         state.lembrarLogin

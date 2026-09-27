@@ -13,7 +13,7 @@ async function solicitarPermissaoAndroid(): Promise<boolean> {
       {
         title: 'Permitir localização',
         message:
-          'O Vexo usa sua localização para mostrar os prestadores mais próximos de você.',
+          'A Labuta usa sua localização para mostrar os prestadores mais próximos de você.',
         buttonPositive: 'Permitir',
         buttonNegative: 'Agora não',
       },

@@ -63,7 +63,7 @@ async function criarAssinaturaMensal(prestador) {
       value: VALOR_ASSINATURA_MENSAL,
       cycle: 'MONTHLY',
       nextDueDate: daquiA(7),
-      description: 'Assinatura mensal Vexo — taxa fixa da plataforma',
+      description: 'Assinatura mensal Labuta — taxa fixa da plataforma',
     });
     return data;
   } catch (erro) {
@@ -106,7 +106,7 @@ async function cobrarTaxaServico(prestador, pedido) {
       billingType: 'PIX',
       value: valorTaxa,
       dueDate: daquiA(3),
-      description: `Taxa Vexo (5%) — serviço concluído #${pedido.id}`,
+      description: `Taxa Labuta (5%) — serviço concluído #${pedido.id}`,
     });
 
     return Pagamento.criar({

@@ -179,7 +179,7 @@ export function HomeScreen({ navigation }: Props) {
       {erro && <Text style={styles.erro}>{erro}</Text>}
 
       {carregando ? (
-        <ActivityIndicator color={colors.roxo} style={{ marginTop: spacing.xl }} />
+        <ActivityIndicator color={colors.laranja} style={{ marginTop: spacing.xl }} />
       ) : aba === 'prestadores' ? (
         <FlatList
           data={prestadores}
@@ -265,9 +265,9 @@ const styles = StyleSheet.create({
   localizacaoInfo: { fontSize: 12, color: colors.muted, marginBottom: spacing.md },
   abas: { flexDirection: 'row', backgroundColor: colors.bg2, borderRadius: radius.md, padding: 4 },
   aba: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },
-  abaAtiva: { backgroundColor: colors.roxo },
+  abaAtiva: { backgroundColor: colors.laranja },
   abaTexto: { color: colors.muted, fontSize: 12, fontWeight: '600' },
-  abaTextoAtiva: { color: colors.textForte },
+  abaTextoAtiva: { color: '#fff' },
   categoriasScroll: { marginTop: spacing.md, maxHeight: 44 },
   categoriasConteudo: { paddingHorizontal: spacing.lg },
   erro: { color: colors.red, fontSize: 13, paddingHorizontal: spacing.lg, marginTop: spacing.sm },

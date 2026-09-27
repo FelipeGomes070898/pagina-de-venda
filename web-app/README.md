@@ -1,6 +1,6 @@
-# Vexo — App Web (cliente / prestador)
+# Labuta — App Web (cliente / prestador)
 
-Versão web do Vexo para quem prefere acessar pelo navegador em vez de
+Versão web da Labuta para quem prefere acessar pelo navegador em vez de
 baixar o app na Play Store. É um projeto **separado** do app mobile
 (`mobile/`) e do painel administrativo (`frontend-web/`) — os três
 consomem a mesma API (`backend/`), mas cada um é sua própria interface.
@@ -26,7 +26,7 @@ Abre em `http://localhost:5174`. Testado de ponta a ponta neste projeto,
 com duas sessões de navegador simultâneas (uma como cliente, outra como
 prestador) e dados reais no Postgres: cadastro → marketplace → perfil →
 contato → chat → proposta → aceite → endereço → marcar concluído →
-avaliação. Ver `docs/vexo-regras-de-negocio.md` na raiz do repositório
+avaliação. Ver `docs/labuta-regras-de-negocio.md` na raiz do repositório
 para os bugs reais que esse teste encontrou (e já corrigidos).
 
 ## Etapa atual

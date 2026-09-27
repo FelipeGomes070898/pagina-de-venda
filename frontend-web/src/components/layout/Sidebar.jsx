@@ -23,7 +23,7 @@ export function Sidebar() {
   return (
     <aside style={styles.aside}>
       <div style={styles.marca}>
-        Vex<span style={styles.marcaDestaque}>o</span>
+        LABUTA
       </div>
 
       <div style={styles.perfil}>
@@ -67,30 +67,29 @@ const styles = {
   aside: {
     width: 220,
     minHeight: '100vh',
-    background: 'var(--vexo-bg3)',
-    borderRight: '1px solid var(--vexo-border)',
+    background: 'var(--labuta-bg3)',
+    borderRight: '1px solid var(--labuta-border)',
     padding: 20,
     display: 'flex',
     flexDirection: 'column',
   },
-  marca: { fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 24 },
-  marcaDestaque: { color: 'var(--vexo-laranja)' },
+  marca: { fontSize: 22, fontWeight: 900, color: 'var(--labuta-laranja)', marginBottom: 24, letterSpacing: 1 },
   perfil: { marginBottom: 24 },
-  perfilNome: { color: '#fff', fontWeight: 700, fontSize: 14 },
-  perfilCargo: { color: 'var(--vexo-muted)', fontSize: 12, marginTop: 2 },
+  perfilNome: { color: 'var(--labuta-text-forte)', fontWeight: 700, fontSize: 14 },
+  perfilCargo: { color: 'var(--labuta-muted)', fontSize: 12, marginTop: 2 },
   nav: { display: 'flex', flexDirection: 'column', gap: 4, flex: 1 },
   link: {
     padding: '10px 12px',
     borderRadius: 8,
-    color: 'var(--vexo-text)',
+    color: 'var(--labuta-text)',
     textDecoration: 'none',
     fontSize: 14,
   },
-  linkAtivo: { background: 'var(--vexo-roxo)', color: '#fff' },
+  linkAtivo: { background: 'var(--labuta-laranja)', color: '#fff' },
   sair: {
     background: 'transparent',
-    border: '1px solid var(--vexo-border)',
-    color: 'var(--vexo-muted)',
+    border: '1px solid var(--labuta-border)',
+    color: 'var(--labuta-muted)',
     borderRadius: 8,
     padding: 10,
     cursor: 'pointer',

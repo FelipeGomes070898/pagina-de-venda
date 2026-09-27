@@ -1,14 +1,16 @@
 :root {
-  --vexo-roxo: #7c3aed;
-  --vexo-laranja: #ff7a2f;
-  --vexo-bg: #08080e;
-  --vexo-bg2: #0d0d1a;
-  --vexo-bg3: #0c0920;
-  --vexo-text: rgba(255, 255, 255, 0.75);
-  --vexo-muted: rgba(255, 255, 255, 0.35);
-  --vexo-border: rgba(255, 255, 255, 0.06);
-  --vexo-green: #4ade80;
-  --vexo-red: #f87171;
+  --labuta-laranja: #d97706; /* laranja queimado — cor primária */
+  --labuta-azul: #1f2937; /* azul profundo — secundária */
+  --labuta-verde: #10b981; /* disponível / sucesso / avaliação */
+  --labuta-bg: #fafafa;
+  --labuta-bg2: #ffffff; /* cards e superfícies elevadas */
+  --labuta-bg3: #f3f4f6; /* chrome secundário */
+  --labuta-text: #374151;
+  --labuta-text-forte: #111827;
+  --labuta-muted: #6b7280;
+  --labuta-border: #d1d5db;
+  --labuta-green: #10b981;
+  --labuta-red: #dc2626;
 }
 
 * {
@@ -17,7 +19,7 @@
 
 body {
   margin: 0;
-  background: var(--vexo-bg);
-  color: var(--vexo-text);
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--labuta-bg);
+  color: var(--labuta-text);
+  font-family: 'Inter', system-ui, sans-serif;
 }

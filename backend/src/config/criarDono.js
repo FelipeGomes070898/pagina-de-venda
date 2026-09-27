@@ -7,7 +7,7 @@
 //   (pede nome/e-mail/senha interativamente)
 //
 // Ou sem interação (ex.: script de deploy):
-//   DONO_NOME="Fulano" DONO_EMAIL="dono@vexo.app" DONO_SENHA="..." npm run criar-dono
+//   DONO_NOME="Fulano" DONO_EMAIL="dono@labuta.app" DONO_SENHA="..." npm run criar-dono
 require('dotenv').config();
 const readline = require('readline');
 const bcrypt = require('bcrypt');

@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'vexo-auth',
+      name: 'labuta-auth',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) =>
         state.lembrarLogin

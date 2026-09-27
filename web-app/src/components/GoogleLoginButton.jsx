@@ -40,7 +40,7 @@ export function GoogleLoginButton({ onCredential }) {
 const styles = {
   wrapper: { display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' },
   separador: { display: 'flex', alignItems: 'center', width: '100%', gap: 10 },
-  linha: { flex: 1, height: 1, background: 'var(--vexo-border)' },
-  ou: { color: 'var(--vexo-muted)', fontSize: 12 },
+  linha: { flex: 1, height: 1, background: 'var(--labuta-border)' },
+  ou: { color: 'var(--labuta-muted)', fontSize: 12 },
   botao: { display: 'flex', justifyContent: 'center', width: '100%' },
 };
