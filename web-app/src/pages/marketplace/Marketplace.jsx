@@ -17,6 +17,8 @@ export function Marketplace() {
 
   const [aba, setAba] = useState('prestadores');
   const [categoriaAtiva, setCategoriaAtiva] = useState(null);
+  const [buscaTexto, setBuscaTexto] = useState('');
+  const [buscaAplicada, setBuscaAplicada] = useState('');
   const [coordenadas, setCoordenadas] = useState(null);
   const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(true);
 
@@ -43,6 +45,7 @@ export function Marketplace() {
       if (aba === 'prestadores') {
         const lista = await listarPrestadores({
           segmento: categoriaAtiva || undefined,
+          busca: buscaAplicada || undefined,
           lat: coordenadas?.lat,
           lng: coordenadas?.lng,
         });
@@ -63,7 +66,12 @@ export function Marketplace() {
     setCarregando(true);
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aba, categoriaAtiva, buscandoLocalizacao]);
+  }, [aba, categoriaAtiva, buscaAplicada, buscandoLocalizacao]);
+
+  useEffect(() => {
+    const temporizador = setTimeout(() => setBuscaAplicada(buscaTexto.trim()), 400);
+    return () => clearTimeout(temporizador);
+  }, [buscaTexto]);
 
   async function aoContatar(prestador) {
     setContatandoId(prestador.id);
@@ -113,6 +121,14 @@ export function Marketplace() {
 
       <main style={styles.container}>
         <h1 style={styles.titulo}>Marketplace</h1>
+        {aba === 'prestadores' && (
+          <input
+            style={styles.buscaInput}
+            placeholder="Buscar por nome ou serviço"
+            value={buscaTexto}
+            onChange={(e) => setBuscaTexto(e.target.value)}
+          />
+        )}
         {aba === 'prestadores' && !buscandoLocalizacao && (
           <p style={styles.localizacaoInfo}>
             {coordenadas
@@ -239,7 +255,18 @@ const styles = {
     fontSize: 12,
   },
   container: { maxWidth: 640, margin: '0 auto', padding: 24 },
-  titulo: { color: 'var(--labuta-text-forte)', fontSize: 22, margin: 0 },
+  titulo: { color: 'var(--labuta-text-forte)', fontSize: 22, margin: '0 0 12px' },
+  buscaInput: {
+    width: '100%',
+    height: 44,
+    borderRadius: 12,
+    border: '1px solid var(--labuta-border)',
+    background: 'var(--labuta-bg2)',
+    color: 'var(--labuta-text-forte)',
+    padding: '0 14px',
+    fontSize: 14,
+    marginBottom: 8,
+  },
   localizacaoInfo: { color: 'var(--labuta-muted)', fontSize: 12, marginTop: 4, marginBottom: 12 },
   abas: { display: 'flex', background: 'var(--labuta-bg2)', borderRadius: 12, padding: 4, gap: 4, marginBottom: 16 },
   aba: {

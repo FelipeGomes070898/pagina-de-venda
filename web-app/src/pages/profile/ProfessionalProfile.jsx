@@ -30,17 +30,50 @@ export function ProfessionalProfile() {
     }
   }
 
+  function aoChamarNoWhatsapp() {
+    if (!prestador?.whatsapp) return;
+    const numero = prestador.whatsapp.replace(/\D/g, '');
+    const numeroComPais = numero.startsWith('55') ? numero : `55${numero}`;
+    const mensagem = encodeURIComponent(
+      `Olá ${prestador.nome}, vi seu perfil na Labuta e gostaria de saber mais sobre seus serviços.`,
+    );
+    window.open(`https://wa.me/${numeroComPais}?text=${mensagem}`, '_blank', 'noopener');
+  }
+
+  async function aoCompartilhar() {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${prestador.nome} — Labuta`, url });
+      } catch {
+        // usuário cancelou o compartilhamento — nada a fazer
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert('Link copiado!');
+    }
+  }
+
   if (carregando) return <div style={styles.centro}>Carregando...</div>;
   if (erro || !prestador) return <div style={styles.centro}>{erro || 'Prestador não encontrado.'}</div>;
 
   return (
     <div style={styles.pagina}>
-      <button style={styles.voltar} onClick={() => navigate('/')}>
-        ← Marketplace
-      </button>
+      <div style={styles.header}>
+        <button style={styles.voltar} onClick={() => navigate('/')}>
+          ← Marketplace
+        </button>
+        <button style={styles.voltar} onClick={aoCompartilhar}>
+          Compartilhar ⤴
+        </button>
+      </div>
 
       <div style={styles.container}>
-        <div style={styles.avatar}>{prestador.nome.charAt(0).toUpperCase()}</div>
+        {prestador.foto_url ? (
+          <img src={prestador.foto_url} alt={prestador.nome} style={styles.fotoPerfil} />
+        ) : (
+          <div style={styles.avatar}>{prestador.nome.charAt(0).toUpperCase()}</div>
+        )}
         <h1 style={styles.nome}>{prestador.nome}</h1>
         <p style={styles.segmento}>{prestador.segmento || 'Serviços gerais'}</p>
 
@@ -86,8 +119,14 @@ export function ProfessionalProfile() {
         {erro && <p style={styles.erroTexto}>{erro}</p>}
 
         <button style={styles.botaoContato} onClick={aoContatar} disabled={contatando}>
-          {contatando ? 'Entrando em contato...' : 'Entrar em contato'}
+          {contatando ? 'Entrando em contato...' : 'Solicitar serviço'}
         </button>
+
+        {prestador.whatsapp && (
+          <button style={styles.botaoWhatsapp} onClick={aoChamarNoWhatsapp}>
+            💬 Chamar no WhatsApp
+          </button>
+        )}
       </div>
     </div>
   );
@@ -96,19 +135,29 @@ export function ProfessionalProfile() {
 const styles = {
   pagina: { minHeight: '100vh' },
   centro: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--labuta-muted)' },
-  voltar: { background: 'transparent', border: 'none', color: 'var(--labuta-muted)', fontSize: 13, padding: 16, cursor: 'pointer' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  voltar: { background: 'transparent', border: 'none', color: 'var(--labuta-azul)', fontSize: 13, fontWeight: 600, padding: 16, cursor: 'pointer' },
   container: { maxWidth: 480, margin: '0 auto', padding: '0 24px 32px' },
+  fotoPerfil: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    objectFit: 'cover',
+    background: 'var(--labuta-bg2)',
+    display: 'block',
+    margin: '0 auto 16px',
+  },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     background: 'var(--labuta-laranja)',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 800,
-    fontSize: 36,
+    fontSize: 48,
     margin: '0 auto 16px',
   },
   nome: { color: 'var(--labuta-text-forte)', fontSize: 20, textAlign: 'center', margin: 0 },
@@ -136,5 +185,16 @@ const styles = {
     fontWeight: 700,
     fontSize: 14,
     marginTop: 32,
+  },
+  botaoWhatsapp: {
+    width: '100%',
+    height: 48,
+    borderRadius: 12,
+    border: '1px solid var(--labuta-green)',
+    background: 'transparent',
+    color: 'var(--labuta-green)',
+    fontWeight: 700,
+    fontSize: 14,
+    marginTop: 8,
   },
 };
