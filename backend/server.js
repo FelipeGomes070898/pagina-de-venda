@@ -1,30 +1,8 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const rotas = require('./src/routes');
-const { tratarErros } = require('./src/middlewares/erros');
-
-const app = express();
-
-// CORS_ORIGINS (opcional): lista separada por vírgula das origens
-// permitidas em produção (ex.: https://app.labuta.com,https://admin.labuta.com).
-// Sem essa variável, libera qualquer origem — conveniente em
-// desenvolvimento, mas troque isso antes de ir pra produção de verdade.
-// String vazia (CORS_ORIGINS= no .env) precisa se comportar igual a
-// "variável não definida" — sem esse filter, ''.split(',') vira [''],
-// que o pacote cors trata como uma origem literal vazia e acaba
-// bloqueando geral em vez de liberar tudo.
-const origensPermitidas = process.env.CORS_ORIGINS?.split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
-app.use(cors(origensPermitidas?.length ? { origin: origensPermitidas } : {}));
-app.use(express.json());
-
-app.use('/api', rotas);
-
-app.get('/health', (req, res) => res.json({ ok: true }));
-
-app.use(tratarErros);
+// Entrada usada em desenvolvimento local e em hosts que rodam um servidor
+// Node "sempre ligado" (Render, Railway, Docker). Na Vercel, quem responde
+// as requisições é api/index.js — que importa o mesmo app.js, mas sem dar
+// listen() (a Vercel cuida disso do jeito dela, no modelo serverless).
+const app = require('./src/app');
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => console.log(`Labuta API rodando na porta ${PORT}`));
