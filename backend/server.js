@@ -10,8 +10,14 @@ const app = express();
 // permitidas em produção (ex.: https://app.labuta.com,https://admin.labuta.com).
 // Sem essa variável, libera qualquer origem — conveniente em
 // desenvolvimento, mas troque isso antes de ir pra produção de verdade.
-const origensPermitidas = process.env.CORS_ORIGINS?.split(',').map((o) => o.trim());
-app.use(cors(origensPermitidas ? { origin: origensPermitidas } : {}));
+// String vazia (CORS_ORIGINS= no .env) precisa se comportar igual a
+// "variável não definida" — sem esse filter, ''.split(',') vira [''],
+// que o pacote cors trata como uma origem literal vazia e acaba
+// bloqueando geral em vez de liberar tudo.
+const origensPermitidas = process.env.CORS_ORIGINS?.split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(cors(origensPermitidas?.length ? { origin: origensPermitidas } : {}));
 app.use(express.json());
 
 app.use('/api', rotas);
