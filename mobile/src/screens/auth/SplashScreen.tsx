@@ -15,14 +15,22 @@ const CHAVE_ONBOARDING_VISTO = '@labuta/onboarding_visto';
 export function SplashScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const opacidade = useRef(new Animated.Value(0)).current;
+  const escala = useRef(new Animated.Value(0.9)).current;
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
-    Animated.timing(opacidade, {
-      toValue: 1,
-      duration: 700,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(opacidade, {
+        toValue: 1,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      Animated.spring(escala, {
+        toValue: 1,
+        friction: 6,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     const temporizador = setTimeout(async () => {
       if (isAuthenticated()) {
@@ -34,14 +42,15 @@ export function SplashScreen({ navigation }: Props) {
     }, 1800);
 
     return () => clearTimeout(temporizador);
-  }, [navigation, opacidade, isAuthenticated]);
+  }, [navigation, opacidade, escala, isAuthenticated]);
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ opacity: opacidade }}>
+      <Animated.View style={{ opacity: opacidade, transform: [{ scale: escala }] }}>
         <LabutaLogo size="lg" />
         <Text style={styles.slogan}>{t('splash.slogan')}</Text>
       </Animated.View>
+      <View style={styles.barraBase} />
     </View>
   );
 }
@@ -58,5 +67,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     textAlign: 'center',
+  },
+  barraBase: {
+    position: 'absolute',
+    bottom: 64,
+    width: 48,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.laranja,
   },
 });

@@ -16,7 +16,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { LabutaLogo } from '@/components/common/LabutaLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { TipoIdentificador, validarIdentificador } from '@/utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '@/utils/masks';
@@ -97,69 +97,73 @@ export function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <LabutaLogo size="sm" />
-        <Text style={styles.titulo}>{t('login.title')}</Text>
-        <Text style={styles.subtitulo}>{t('login.subtitle')}</Text>
-
-        <View style={styles.abas}>
-          {ABAS.map((item) => (
-            <TouchableOpacity
-              key={item.tipo}
-              style={[styles.aba, aba === item.tipo && styles.abaAtiva]}
-              onPress={() => trocarAba(item.tipo)}
-            >
-              <Text style={[styles.abaTexto, aba === item.tipo && styles.abaTextoAtivo]}>
-                {t(item.chaveLabel)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.cabecalho}>
+          <LabutaLogo size="sm" />
+          <Text style={styles.titulo}>{t('login.title')}</Text>
+          <Text style={styles.subtitulo}>{t('login.subtitle')}</Text>
         </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder={t(abaAtual.chavePlaceholder)}
-          placeholderTextColor={colors.muted}
-          value={identificador}
-          onChangeText={aoDigitarIdentificador}
-          keyboardType={aba === 'email' ? 'email-address' : 'number-pad'}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <View style={styles.senhaWrapper}>
-          <TextInput
-            style={styles.senhaInput}
-            placeholder={t('login.password_placeholder')}
-            placeholderTextColor={colors.muted}
-            value={senha}
-            onChangeText={setSenha}
-            secureTextEntry={!mostrarSenha}
-          />
-          <TouchableOpacity onPress={() => setMostrarSenha((v) => !v)}>
-            <Text style={styles.senhaToggle}>{mostrarSenha ? '🙈' : '👁️'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {erro && <Text style={styles.erro}>{erro}</Text>}
-
-        <View style={styles.linhaOpcoes}>
-          <View style={styles.lembrarWrapper}>
-            <Switch
-              value={lembrarLogin}
-              onValueChange={setLembrarLogin}
-              trackColor={{ true: colors.laranja, false: colors.border }}
-              thumbColor={colors.textForte}
-            />
-            <Text style={styles.lembrarTexto}>{t('login.remember_me')}</Text>
+        <View style={styles.card}>
+          <View style={styles.abas}>
+            {ABAS.map((item) => (
+              <TouchableOpacity
+                key={item.tipo}
+                style={[styles.aba, aba === item.tipo && styles.abaAtiva]}
+                onPress={() => trocarAba(item.tipo)}
+              >
+                <Text style={[styles.abaTexto, aba === item.tipo && styles.abaTextoAtivo]}>
+                  {t(item.chaveLabel)}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <TouchableOpacity>
-            <Text style={styles.link}>{t('login.forgot_password')}</Text>
-          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            placeholder={t(abaAtual.chavePlaceholder)}
+            placeholderTextColor={colors.muted}
+            value={identificador}
+            onChangeText={aoDigitarIdentificador}
+            keyboardType={aba === 'email' ? 'email-address' : 'number-pad'}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          <View style={styles.senhaWrapper}>
+            <TextInput
+              style={styles.senhaInput}
+              placeholder={t('login.password_placeholder')}
+              placeholderTextColor={colors.muted}
+              value={senha}
+              onChangeText={setSenha}
+              secureTextEntry={!mostrarSenha}
+            />
+            <TouchableOpacity onPress={() => setMostrarSenha((v) => !v)}>
+              <Text style={styles.senhaToggle}>{mostrarSenha ? '🙈' : '👁️'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {erro && <Text style={styles.erro}>{erro}</Text>}
+
+          <View style={styles.linhaOpcoes}>
+            <View style={styles.lembrarWrapper}>
+              <Switch
+                value={lembrarLogin}
+                onValueChange={setLembrarLogin}
+                trackColor={{ true: colors.laranja, false: colors.border }}
+                thumbColor={colors.textForte}
+              />
+              <Text style={styles.lembrarTexto}>{t('login.remember_me')}</Text>
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.link}>{t('login.forgot_password')}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <PrimaryButton label={t('login.submit')} onPress={aoSubmeter} loading={carregando} />
+
+          <GoogleLoginButton onIdToken={aoReceberIdTokenGoogle} />
         </View>
-
-        <PrimaryButton label={t('login.submit')} onPress={aoSubmeter} loading={carregando} />
-
-        <GoogleLoginButton onIdToken={aoReceberIdTokenGoogle} />
 
         <View style={styles.rodape}>
           <Text style={styles.rodapeTexto}>{t('login.no_account')} </Text>
@@ -174,17 +178,28 @@ export function LoginScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
-  container: { flexGrow: 1, padding: spacing.xl, paddingTop: spacing.xxl, alignItems: 'center' },
+  container: { flexGrow: 1, padding: spacing.lg, paddingTop: spacing.xxl, alignItems: 'center' },
+  cabecalho: { alignItems: 'center', marginBottom: spacing.lg },
   titulo: {
     fontSize: 24,
     fontWeight: '800',
     color: colors.textForte,
     marginTop: spacing.lg,
   },
-  subtitulo: { fontSize: 14, color: colors.muted, marginBottom: spacing.xl },
+  subtitulo: { fontSize: 14, color: colors.muted },
+  card: {
+    width: '100%',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    alignItems: 'center',
+    ...sombra,
+  },
   abas: {
     flexDirection: 'row',
-    backgroundColor: colors.bg2,
+    backgroundColor: colors.bg3,
     borderRadius: radius.md,
     padding: 4,
     width: '100%',
@@ -197,7 +212,7 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 52,
-    backgroundColor: colors.bg2,
+    backgroundColor: colors.bg3,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -208,7 +223,7 @@ const styles = StyleSheet.create({
   senhaWrapper: {
     width: '100%',
     height: 52,
-    backgroundColor: colors.bg2,
+    backgroundColor: colors.bg3,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
