@@ -5,18 +5,29 @@ const { Pool } = require('pg');
 // prontinho ("Connection string"), então evita erro de digitar host/porta
 // errado à mão. As DB_* continuam funcionando pra quem prefere configurar
 // assim localmente.
-const pool = process.env.DATABASE_URL
+//
+// A integração de Postgres da própria Vercel (Neon) deixa escolher um
+// prefixo pra variável (ex.: STORAGE_URL em vez de DATABASE_URL) — pra não
+// depender de acertar esse nome na hora de conectar o banco, aceitamos
+// qualquer uma das variantes mais comuns, nessa ordem de prioridade.
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.STORAGE_URL ||
+  process.env.STORAGE_DATABASE_URL ||
+  process.env.STORAGE_POSTGRES_URL;
+
+const pool = connectionString
   ? new Pool({
-      connectionString: process.env.DATABASE_URL,
-      // Supabase (e a maioria dos provedores gerenciados) exige SSL nas
-      // conexões externas; o certificado deles não vem na cadeia padrão
-      // de confiança do Node, por isso rejectUnauthorized: false aqui.
+      connectionString,
+      // Supabase/Neon (e a maioria dos provedores gerenciados) exige SSL
+      // nas conexões externas; o certificado deles não vem na cadeia
+      // padrão de confiança do Node, por isso rejectUnauthorized: false.
       ssl: { rejectUnauthorized: false },
       // Rodando como função serverless (Vercel), cada invocação pode abrir
       // sua própria conexão — um pool grande por instância esgota rápido
-      // o limite de conexões do banco. Por isso o max baixo; use a
-      // "Connection pooling" (Supavisor, porta 6543) do Supabase na
-      // DATABASE_URL quando for rodar na Vercel.
+      // o limite de conexões do banco. Por isso o max baixo; use a URL de
+      // "pooled connection" quando o provedor oferecer mais de uma opção.
       max: 3,
     })
   : new Pool({
