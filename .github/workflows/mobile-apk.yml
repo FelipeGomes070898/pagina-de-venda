@@ -29,11 +29,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
+      # Runners ubuntu-latest já vêm com o Android SDK pré-instalado
+      # (ANDROID_HOME já setado) — só falta garantir a plataforma/
+      # build-tools que o projeto usa. A action de terceiros
+      # android-actions/setup-android vinha falhando sem log útil, então
+      # trocamos pelo sdkmanager que já está na imagem.
       - name: Instalar plataforma/build-tools do Android
-        run: sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)"
+          echo "Usando sdkmanager em: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Buildar APK debug
         working-directory: mobile/android
