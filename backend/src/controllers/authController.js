@@ -208,4 +208,40 @@ async function loginAdmin(req, res) {
   });
 }
 
-module.exports = { login, cadastro, loginGoogle, loginAdmin };
+// "Esqueci minha senha" do app (cliente ou prestador). Sem e-mail/SMS
+// configurado no servidor ainda, a confirmação de identidade é por
+// conferência: e-mail + CPF + telefone têm que bater exatamente com o
+// que está no cadastro (os 3 juntos, não só um) antes de trocar a
+// senha. Quem não lembra algum desses dados precisa do suporte (painel
+// admin tem a opção de redefinir a senha manualmente).
+async function recuperarSenha(req, res) {
+  const { email, cpf, telefone, senhaNova } = req.body;
+
+  if (!email || !cpf || !telefone || !senhaNova || senhaNova.length < 8) {
+    return res.status(400).json({
+      erro: 'Informe e-mail, CPF, telefone e uma nova senha (mín. 8 caracteres)',
+    });
+  }
+
+  const cliente = await Cliente.buscarParaRecuperacao(email, cpf, telefone);
+  if (cliente) {
+    await Cliente.atualizarSenha(cliente.id, senhaNova);
+    return res.json({ ok: true });
+  }
+
+  const prestador = await Prestador.buscarParaRecuperacao(email, cpf, telefone);
+  if (prestador) {
+    await Prestador.atualizarSenha(prestador.id, senhaNova);
+    return res.json({ ok: true });
+  }
+
+  // Mensagem genérica de propósito: não revela se existe conta com
+  // esse e-mail nem qual dos 3 campos está errado (evita que alguém
+  // use esse endpoint pra descobrir dados de outra pessoa).
+  return res.status(400).json({
+    erro:
+      'Não conseguimos confirmar seus dados. Verifique e-mail, CPF e telefone exatamente como no cadastro, ou fale com o suporte.',
+  });
+}
+
+module.exports = { login, cadastro, loginGoogle, loginAdmin, recuperarSenha };

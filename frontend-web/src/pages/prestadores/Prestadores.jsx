@@ -57,6 +57,21 @@ export function Prestadores() {
     }
   }
 
+  // Resolve login travado/senha esquecida sem precisar excluir a conta:
+  // gera uma senha nova e mostra uma vez só, pro admin passar pro
+  // prestador por telefone/WhatsApp.
+  async function redefinirSenha(prestador) {
+    if (!window.confirm(`Gerar uma nova senha temporária para ${prestador.nome}?`)) return;
+    try {
+      const { data } = await api.post(`/admin/prestadores/${prestador.id}/redefinir-senha`);
+      window.alert(
+        `Senha temporária de ${prestador.nome}:\n\n${data.senhaTemporaria}\n\nPasse esse código pra ele por telefone ou WhatsApp — essa senha não aparece de novo.`,
+      );
+    } catch (e2) {
+      setErro(e2.response?.data?.erro || 'Não foi possível redefinir a senha');
+    }
+  }
+
   const totalPaginas = Math.max(1, Math.ceil(total / 20));
 
   return (
@@ -104,7 +119,7 @@ export function Prestadores() {
                 <th style={styles.th}>Segmento</th>
                 <th style={styles.th}>Cidade</th>
                 <th style={styles.th}>Status</th>
-                {podeAlterarStatus && <th style={styles.th}></th>}
+                <th style={styles.th}></th>
               </tr>
             </thead>
             <tbody>
@@ -116,9 +131,9 @@ export function Prestadores() {
                   <td style={styles.td}>{p.segmento || '—'}</td>
                   <td style={styles.td}>{p.cidade || '—'}</td>
                   <td style={styles.td}>{ROTULOS_STATUS[p.status] || p.status}</td>
-                  {podeAlterarStatus && (
-                    <td style={styles.td}>
-                      {p.status !== 'bloqueado' ? (
+                  <td style={{ ...styles.td, display: 'flex', gap: 12 }}>
+                    {podeAlterarStatus &&
+                      (p.status !== 'bloqueado' ? (
                         <button style={styles.linkBotao} onClick={() => alterarStatus(p, 'bloqueado')}>
                           Bloquear
                         </button>
@@ -126,9 +141,11 @@ export function Prestadores() {
                         <button style={styles.linkBotao} onClick={() => alterarStatus(p, 'ativo')}>
                           Reativar
                         </button>
-                      )}
-                    </td>
-                  )}
+                      ))}
+                    <button style={styles.linkBotao} onClick={() => redefinirSenha(p)}>
+                      Redefinir senha
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -10,6 +10,7 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   Register: { perfilGoogle?: { googleId: string; email: string; nome: string } } | undefined;
+  ForgotPassword: undefined;
   Home: undefined;
   ProProfile: { prestadorId: string; prestadorNome: string };
   Chat: { pedidoId: string; prestadorNome: string };

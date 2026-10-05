@@ -1,0 +1,22 @@
+node_modules/
+.env
+
+# Xcode
+ios/build/
+ios/Pods/
+*.xcworkspace
+!default.xcworkspace
+
+# Android
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+*.keystore
+!debug.keystore
+
+# Metro/Watchman
+.metro-health-check*
+
+npm-debug.log
+yarn-error.log

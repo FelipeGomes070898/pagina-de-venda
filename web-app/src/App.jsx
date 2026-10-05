@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore';
 import { RotaProtegida } from './components/RotaProtegida';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
+import { RecuperarSenha } from './pages/auth/RecuperarSenha';
 import { Marketplace } from './pages/marketplace/Marketplace';
 import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
 import { Chat } from './pages/chat/Chat';
@@ -16,6 +17,10 @@ export default function App() {
       <Routes>
         <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/cadastro" element={usuario ? <Navigate to="/" replace /> : <Register />} />
+        <Route
+          path="/recuperar-senha"
+          element={usuario ? <Navigate to="/" replace /> : <RecuperarSenha />}
+        />
 
         <Route
           path="/"

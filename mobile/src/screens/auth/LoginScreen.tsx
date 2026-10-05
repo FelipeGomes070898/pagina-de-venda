@@ -155,7 +155,7 @@ export function LoginScreen({ navigation }: Props) {
               />
               <Text style={styles.lembrarTexto}>{t('login.remember_me')}</Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
               <Text style={styles.link}>{t('login.forgot_password')}</Text>
             </TouchableOpacity>
           </View>

@@ -33,9 +33,19 @@ router.patch(
   permitir('dono', 'rh', 'gerente'),
   prestadorAdminController.atualizarStatus,
 );
+router.post(
+  '/prestadores/:id/redefinir-senha',
+  permitir(...TODOS_OS_CARGOS),
+  prestadorAdminController.redefinirSenha,
+);
 
 // Clientes (listagem, visível à equipe toda)
 router.get('/clientes', permitir(...TODOS_OS_CARGOS), clienteAdminController.listar);
+router.post(
+  '/clientes/:id/redefinir-senha',
+  permitir(...TODOS_OS_CARGOS),
+  clienteAdminController.redefinirSenha,
+);
 
 // Pagamentos e Financeiro (valores reais — só dono)
 router.get('/pagamentos', permitir('dono'), financeiroController.listarPagamentos);

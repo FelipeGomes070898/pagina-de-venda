@@ -60,6 +60,18 @@ export async function cadastro(payload: CadastroPayload): Promise<LoginResponse>
   return data;
 }
 
+export interface RecuperarSenhaPayload {
+  email: string;
+  cpf: string;
+  telefone: string;
+  senhaNova: string;
+}
+
+export async function recuperarSenha(payload: RecuperarSenhaPayload): Promise<{ ok: true }> {
+  const { data } = await api.post<{ ok: true }>('/api/auth/recuperar-senha', payload);
+  return data;
+}
+
 export async function loginComGoogle(idToken: string): Promise<LoginGoogleResponse> {
   const { data } = await api.post<LoginGoogleResponse>('/api/auth/google', { idToken });
   return data;

@@ -32,6 +32,25 @@
     "error_password_required": "Digite sua senha",
     "error_login_failed": "Não foi possível entrar. Verifique seus dados."
   },
+  "forgotPassword": {
+    "title": "Esqueci minha senha",
+    "subtitle": "Pra confirmar que é você, informe o e-mail, o CPF e o celular exatamente como estão no seu cadastro.",
+    "email_placeholder": "E-mail do cadastro",
+    "cpf_placeholder": "CPF (000.000.000-00)",
+    "phone_placeholder": "Celular (00) 00000-0000",
+    "new_password_placeholder": "Nova senha (mín. 8 caracteres)",
+    "confirm_password_placeholder": "Confirmar nova senha",
+    "submit": "Redefinir senha",
+    "support_hint": "Não lembra algum desses dados? Fale com o suporte pelo WhatsApp da Konecta Já.",
+    "back_to_login": "Voltar para o login",
+    "error_email_invalid": "Informe um e-mail válido",
+    "error_cpf_invalid": "Informe um CPF válido",
+    "error_phone_invalid": "Informe um celular válido",
+    "error_password_short": "A nova senha precisa ter pelo menos 8 caracteres",
+    "error_password_mismatch": "A confirmação não bate com a nova senha",
+    "error_failed": "Não conseguimos confirmar seus dados. Verifique e-mail, CPF e telefone.",
+    "success": "Senha redefinida! Entre com a sua nova senha."
+  },
   "register": {
     "title": "Criar conta",
     "subtitle": "Cadastro nacional — Brasil",

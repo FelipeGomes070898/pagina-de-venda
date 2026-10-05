@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { GoogleLoginButton } from '../../components/GoogleLoginButton';
@@ -16,6 +16,8 @@ const ABAS = [
 export function Login() {
   const { login, lembrarLogin, setLembrarLogin, carregando, definirSessao } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const senhaRedefinida = location.state?.senhaRedefinida;
 
   const [aba, setAba] = useState('telefone');
   const [identificador, setIdentificador] = useState('');
@@ -82,6 +84,10 @@ export function Login() {
         </div>
         <p style={styles.subtitulo}>Conecta na hora.</p>
 
+        {senhaRedefinida && (
+          <p style={styles.sucesso}>Senha redefinida! Entre com a sua nova senha.</p>
+        )}
+
         <div style={styles.abas}>
           {ABAS.map((item) => (
             <button
@@ -110,6 +116,12 @@ export function Login() {
         />
 
         {erro && <p style={styles.erro}>{erro}</p>}
+
+        <p style={styles.esqueciSenha}>
+          <Link style={styles.link} to="/recuperar-senha">
+            Esqueci minha senha
+          </Link>
+        </p>
 
         <label style={styles.lembrarWrapper}>
           <input
@@ -169,6 +181,8 @@ const styles = {
     fontSize: 14,
   },
   erro: { color: 'var(--konectaja-red)', fontSize: 13, margin: 0 },
+  sucesso: { color: 'var(--konectaja-verde)', fontSize: 13, textAlign: 'center', margin: 0 },
+  esqueciSenha: { textAlign: 'right', margin: 0, marginTop: -4 },
   lembrarWrapper: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--konectaja-text)' },
   lembrarTexto: {},
   rodape: { textAlign: 'center', fontSize: 13, color: 'var(--konectaja-muted)', marginTop: 8 },

@@ -1,4 +1,5 @@
 const Prestador = require('../models/Prestador');
+const { gerarSenhaTemporaria } = require('../utils/senha');
 
 const STATUS_VALIDOS = ['ativo', 'inadimplente', 'bloqueado'];
 
@@ -27,4 +28,16 @@ async function atualizarStatus(req, res) {
   res.json(atualizado);
 }
 
-module.exports = { listar, atualizarStatus };
+// Suporte/RH/dono redefine a senha sem precisar excluir e recriar a
+// conta — a senha nova aparece só uma vez na resposta, pra passar pro
+// prestador por telefone/WhatsApp.
+async function redefinirSenha(req, res) {
+  const prestador = await Prestador.buscarPorId(req.params.id);
+  if (!prestador) return res.status(404).json({ erro: 'Prestador não encontrado' });
+
+  const senhaTemporaria = gerarSenhaTemporaria();
+  await Prestador.atualizarSenha(prestador.id, senhaTemporaria);
+  res.json({ ok: true, senhaTemporaria });
+}
+
+module.exports = { listar, atualizarStatus, redefinirSenha };

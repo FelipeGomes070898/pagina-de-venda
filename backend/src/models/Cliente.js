@@ -63,6 +63,22 @@ module.exports = {
     return bcrypt.compare(senha, hash);
   },
 
+  // "Esqueci minha senha" sem e-mail/SMS: confirma a identidade batendo
+  // os 3 dados do cadastro ao mesmo tempo (mais difícil de adivinhar do
+  // que um só) antes de deixar redefinir a senha.
+  async buscarParaRecuperacao(email, cpf, telefone) {
+    const { rows } = await pool.query(
+      `SELECT id FROM clientes WHERE email = $1 AND cpf = $2 AND telefone = $3`,
+      [email, cpf, telefone],
+    );
+    return rows[0] || null;
+  },
+
+  async atualizarSenha(id, senha) {
+    const senhaHash = await bcrypt.hash(senha, 10);
+    await pool.query(`UPDATE clientes SET senha_hash = $2 WHERE id = $1`, [id, senhaHash]);
+  },
+
   // Painel admin: lista todos os clientes (não existe listagem pública,
   // clientes não navegam outros clientes).
   async listarTodos({ busca, pagina = 1, porPagina = 20 } = {}) {

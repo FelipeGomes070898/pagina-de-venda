@@ -37,6 +37,21 @@ export function Clientes() {
     carregar();
   }
 
+  // Resolve login travado/senha esquecida sem precisar excluir a conta:
+  // gera uma senha nova e mostra uma vez só, pro admin passar pro
+  // cliente por telefone/WhatsApp.
+  async function redefinirSenha(cliente) {
+    if (!window.confirm(`Gerar uma nova senha temporária para ${cliente.nome}?`)) return;
+    try {
+      const { data } = await api.post(`/admin/clientes/${cliente.id}/redefinir-senha`);
+      window.alert(
+        `Senha temporária de ${cliente.nome}:\n\n${data.senhaTemporaria}\n\nPasse esse código pra ele por telefone ou WhatsApp — essa senha não aparece de novo.`,
+      );
+    } catch (e2) {
+      setErro(e2.response?.data?.erro || 'Não foi possível redefinir a senha');
+    }
+  }
+
   const totalPaginas = Math.max(1, Math.ceil(total / 20));
 
   return (
@@ -70,6 +85,7 @@ export function Clientes() {
                 <th style={styles.th}>Telefone</th>
                 <th style={styles.th}>Cidade</th>
                 <th style={styles.th}>Cadastrado em</th>
+                <th style={styles.th}></th>
               </tr>
             </thead>
             <tbody>
@@ -80,6 +96,11 @@ export function Clientes() {
                   <td style={styles.td}>{c.telefone}</td>
                   <td style={styles.td}>{c.cidade || '—'}</td>
                   <td style={styles.td}>{formatarData(c.criado_em)}</td>
+                  <td style={styles.td}>
+                    <button style={styles.linkBotao} onClick={() => redefinirSenha(c)}>
+                      Redefinir senha
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
