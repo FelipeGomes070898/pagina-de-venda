@@ -75,4 +75,24 @@ async function atualizarStatus(req, res) {
   res.json(atualizado);
 }
 
-module.exports = { criar, listar, buscar, atualizarStatus };
+// Qualquer admin logado troca a própria senha (Configurações) —
+// precisa confirmar a senha atual antes.
+async function alterarSenha(req, res) {
+  const { senhaAtual, senhaNova } = req.body;
+  if (!senhaAtual || !senhaNova || senhaNova.length < 8) {
+    return res
+      .status(400)
+      .json({ erro: 'Senha atual e nova senha (mín. 8 caracteres) são obrigatórias' });
+  }
+
+  const admin = await Admin.buscarComSenhaPorId(req.admin.id);
+  const senhaValida = await Admin.verificarSenha(senhaAtual, admin.senha_hash);
+  if (!senhaValida) {
+    return res.status(400).json({ erro: 'Senha atual incorreta' });
+  }
+
+  await Admin.atualizarSenha(req.admin.id, senhaNova);
+  res.json({ ok: true });
+}
+
+module.exports = { criar, listar, buscar, atualizarStatus, alterarSenha };

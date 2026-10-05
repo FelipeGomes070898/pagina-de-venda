@@ -69,4 +69,16 @@ module.exports = {
   async registrarLogin(id) {
     await pool.query(`UPDATE admins SET ultimo_login = NOW() WHERE id = $1`, [id]);
   },
+
+  // Interno: precisa do senha_hash pra conferir a senha atual na troca
+  // de senha — nunca expor via API.
+  async buscarComSenhaPorId(id) {
+    const { rows } = await pool.query(`SELECT * FROM admins WHERE id = $1`, [id]);
+    return rows[0] || null;
+  },
+
+  async atualizarSenha(id, senha) {
+    const senhaHash = await bcrypt.hash(senha, 10);
+    await pool.query(`UPDATE admins SET senha_hash = $2 WHERE id = $1`, [id, senhaHash]);
+  },
 };

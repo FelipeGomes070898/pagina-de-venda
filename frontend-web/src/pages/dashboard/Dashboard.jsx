@@ -1,14 +1,48 @@
+import { useEffect, useState } from 'react';
+import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { estilosPagina as styles } from '../../styles/paginaAdmin';
 
 export function Dashboard() {
   const admin = useAuthStore((s) => s.admin);
+  const [resumo, setResumo] = useState(null);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    api
+      .get('/admin/dashboard/resumo')
+      .then(({ data }) => setResumo(data))
+      .catch(() => setErro('Não foi possível carregar o resumo'));
+  }, []);
+
+  const porStatus = Object.fromEntries(
+    (resumo?.prestadoresPorStatus || []).map((s) => [s.status, Number(s.quantidade)]),
+  );
+  const totalPrestadores = Object.values(porStatus).reduce((soma, n) => soma + n, 0);
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1 style={{ color: 'var(--konectaja-text-forte)', fontSize: 22, margin: 0 }}>Olá, {admin.nome}</h1>
-      <p style={{ color: 'var(--konectaja-muted)', fontSize: 13, marginTop: 8 }}>
-        Próxima etapa: métricas de prestadores, clientes e receita neste dashboard.
-      </p>
+    <div style={styles.container}>
+      <h1 style={styles.titulo}>Olá, {admin.nome}</h1>
+      <p style={styles.subtitulo}>Visão geral da plataforma</p>
+
+      {erro && <p style={styles.erro}>{erro}</p>}
+
+      {resumo && (
+        <div style={styles.cards}>
+          <div style={styles.card}>
+            <div style={styles.cardLabel}>Prestadores</div>
+            <div style={styles.cardValor}>{totalPrestadores}</div>
+            <div style={styles.cardLabel}>
+              {porStatus.ativo || 0} ativo(s) · {porStatus.inadimplente || 0} inadimplente(s) ·{' '}
+              {porStatus.bloqueado || 0} bloqueado(s)
+            </div>
+          </div>
+          <div style={styles.card}>
+            <div style={styles.cardLabel}>Clientes</div>
+            <div style={styles.cardValor}>{resumo.totalClientes}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

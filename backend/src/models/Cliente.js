@@ -62,4 +62,42 @@ module.exports = {
   async verificarSenha(senha, hash) {
     return bcrypt.compare(senha, hash);
   },
+
+  // Painel admin: lista todos os clientes (não existe listagem pública,
+  // clientes não navegam outros clientes).
+  async listarTodos({ busca, pagina = 1, porPagina = 20 } = {}) {
+    const condicoes = [];
+    const valores = [];
+    if (busca) {
+      valores.push(`%${busca}%`);
+      condicoes.push(
+        `(nome ILIKE $${valores.length} OR email ILIKE $${valores.length} OR cpf ILIKE $${valores.length})`,
+      );
+    }
+    const onde = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
+    valores.push(porPagina, (pagina - 1) * porPagina);
+    const idxLimit = valores.length - 1;
+    const idxOffset = valores.length;
+
+    const { rows } = await pool.query(
+      `SELECT ${CAMPOS_PUBLICOS} FROM clientes ${onde}
+       ORDER BY criado_em DESC LIMIT $${idxLimit} OFFSET $${idxOffset}`,
+      valores,
+    );
+    return rows;
+  },
+
+  async contar({ busca } = {}) {
+    const condicoes = [];
+    const valores = [];
+    if (busca) {
+      valores.push(`%${busca}%`);
+      condicoes.push(
+        `(nome ILIKE $${valores.length} OR email ILIKE $${valores.length} OR cpf ILIKE $${valores.length})`,
+      );
+    }
+    const onde = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
+    const { rows } = await pool.query(`SELECT COUNT(*) FROM clientes ${onde}`, valores);
+    return Number(rows[0].count);
+  },
 };

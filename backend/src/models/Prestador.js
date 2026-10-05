@@ -161,6 +161,61 @@ module.exports = {
     return rows[0] || null;
   },
 
+  // Painel admin: lista todos os prestadores (qualquer status), com PII
+  // visível — diferente de listarAtivos (marketplace público, só ativos).
+  async listarTodos({ busca, status, pagina = 1, porPagina = 20 } = {}) {
+    const condicoes = [];
+    const valores = [];
+
+    if (status) {
+      valores.push(status);
+      condicoes.push(`status = $${valores.length}`);
+    }
+    if (busca) {
+      valores.push(`%${busca}%`);
+      condicoes.push(
+        `(nome ILIKE $${valores.length} OR email ILIKE $${valores.length} OR cpf ILIKE $${valores.length})`,
+      );
+    }
+
+    const onde = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
+    valores.push(porPagina, (pagina - 1) * porPagina);
+    const idxLimit = valores.length - 1;
+    const idxOffset = valores.length;
+
+    const { rows } = await pool.query(
+      `SELECT ${CAMPOS_PUBLICOS} FROM prestadores ${onde}
+       ORDER BY criado_em DESC LIMIT $${idxLimit} OFFSET $${idxOffset}`,
+      valores,
+    );
+    return rows;
+  },
+
+  async contar({ busca, status } = {}) {
+    const condicoes = [];
+    const valores = [];
+    if (status) {
+      valores.push(status);
+      condicoes.push(`status = $${valores.length}`);
+    }
+    if (busca) {
+      valores.push(`%${busca}%`);
+      condicoes.push(
+        `(nome ILIKE $${valores.length} OR email ILIKE $${valores.length} OR cpf ILIKE $${valores.length})`,
+      );
+    }
+    const onde = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
+    const { rows } = await pool.query(`SELECT COUNT(*) FROM prestadores ${onde}`, valores);
+    return Number(rows[0].count);
+  },
+
+  async contarPorStatus() {
+    const { rows } = await pool.query(
+      `SELECT status, COUNT(*) AS quantidade FROM prestadores GROUP BY status`,
+    );
+    return rows;
+  },
+
   async incrementarServicos(id) {
     await pool.query(`UPDATE prestadores SET total_servicos = total_servicos + 1 WHERE id = $1`, [
       id,

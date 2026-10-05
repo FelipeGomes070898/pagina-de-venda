@@ -9,7 +9,11 @@ const ITENS_MENU = [
   { rota: '/pagamentos', label: 'Pagamentos', cargos: ['dono'] },
   { rota: '/equipe', label: 'Equipe', cargos: ['dono', 'rh'] },
   { rota: '/suporte', label: 'Suporte', cargos: ['dono', 'rh', 'gerente', 'atendimento'] },
-  { rota: '/configuracoes', label: 'Configurações', cargos: ['dono'] },
+  {
+    rota: '/configuracoes',
+    label: 'Configurações',
+    cargos: ['dono', 'rh', 'gerente', 'atendimento'],
+  },
 ];
 
 export function Sidebar() {
