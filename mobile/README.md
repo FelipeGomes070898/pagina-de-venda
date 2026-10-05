@@ -22,22 +22,45 @@ autônomos.
 - `src/screens/profile/PerfilScreen.tsx` — perfil do usuário logado (dados da
   conta, sair). `ProProfileScreen.tsx` é o perfil público de um prestador.
 
-## Rodando o projeto
+## Baixar um APK pronto pra testar (sem instalar nada)
 
-Este repositório contém apenas o código-fonte JS/TS. As pastas nativas
-`android/` e `ios/` **precisam ser geradas localmente**, pois são boilerplate
-extenso gerado por ferramenta (não faz sentido versionar escrito à mão):
+Toda vez que algo muda em `mobile/`, o GitHub Actions
+(`.github/workflows/mobile-apk.yml`) builda um APK debug automaticamente.
+Pra baixar o mais recente:
+
+1. Abra a aba **Actions** do repositório no GitHub.
+2. Clique no workflow mais recente de **"Mobile APK (debug)"** com um ✅.
+3. Na seção **Artifacts**, baixe `konectaja-debug-apk` (é um .zip contendo o
+   `app-debug.apk`).
+4. Transfira o `.apk` pro celular Android (link do GitHub, WhatsApp Web,
+   cabo USB, o que for mais fácil) e abra o arquivo nele.
+5. O Android vai pedir pra habilitar **"Instalar apps de fontes
+   desconhecidas"** pra esse app que está enviando o arquivo (navegador,
+   WhatsApp etc.) — é esperado, porque esse APK não veio da Play Store.
+
+Esse é um build **debug**, não assinado pra loja — serve pra testar a
+conexão cliente/prestador agora, não é a versão final de publicação.
+
+## Rodando o projeto localmente
+
+`android/` já está neste repositório (gerado a partir do template oficial
+da versão 0.73.6 do React Native) — não precisa gerar de novo. `ios/`
+continua precisando ser gerado localmente numa máquina com Xcode, pois
+exige um Mac (não dá pra gerar/testar aqui no Linux):
 
 ```bash
 cd mobile
 npm install
-npx react-native init TempKonectaJa --version 0.73.6   # gera android/ e ios/ de referência
-# copie as pastas android/ e ios/ geradas para dentro deste projeto
-npx react-native run-android   # ou run-ios
+npx react-native run-android   # precisa de um emulador rodando ou celular com depuração USB
 ```
 
-Alternativa mais simples: usar o [Expo](https://expo.dev) caso prefira não
-lidar com projetos nativos manualmente (exigiria adaptar algumas libs).
+Pra iOS, numa máquina com Xcode:
+
+```bash
+npx react-native init TempKonectaJa --version 0.73.6   # gera ios/ de referência
+# copie a pasta ios/ gerada para dentro deste projeto
+npx react-native run-ios
+```
 
 ### Permissão de localização (necessária para o marketplace por proximidade)
 

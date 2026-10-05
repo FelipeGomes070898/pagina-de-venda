@@ -1,0 +1,51 @@
+name: Mobile APK (debug)
+
+on:
+  push:
+    branches: [main, claude/**]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-apk.yml'
+  workflow_dispatch: {}
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalar dependências JS
+        working-directory: mobile
+        run: npm ci
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar plataforma/build-tools do Android
+        run: sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Buildar APK debug
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      # APK debug (não assinado pra release, instalável direto no
+      # celular com "instalar de fontes desconhecidas" habilitado) só
+      # pra testar a conexão cliente/prestador — não é a versão pra
+      # publicar nas lojas.
+      - name: Publicar APK como artefato do workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: konectaja-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
