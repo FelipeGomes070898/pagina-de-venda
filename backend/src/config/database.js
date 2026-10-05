@@ -17,9 +17,20 @@ const connectionString =
   process.env.STORAGE_DATABASE_URL ||
   process.env.STORAGE_POSTGRES_URL;
 
+// Algumas connection strings (Supabase, por exemplo) já vêm com
+// ?sslmode=require embutido na URL. Quando isso acontece, o parser
+// interno do `pg` monta a config de SSL a partir da URL e ignora o
+// `ssl: { rejectUnauthorized: false }` passado aqui embaixo — resultado:
+// "self-signed certificate in certificate chain" mesmo com o código
+// "certo". Tirando o sslmode da URL, só o `ssl` explícito abaixo manda.
+const connectionStringSemSslMode = connectionString?.replace(
+  /([?&])sslmode=[^&]*&?/,
+  '$1',
+).replace(/[?&]$/, '');
+
 const pool = connectionString
   ? new Pool({
-      connectionString,
+      connectionString: connectionStringSemSslMode,
       // Supabase/Neon (e a maioria dos provedores gerenciados) exige SSL
       // nas conexões externas; o certificado deles não vem na cadeia
       // padrão de confiança do Node, por isso rejectUnauthorized: false.
