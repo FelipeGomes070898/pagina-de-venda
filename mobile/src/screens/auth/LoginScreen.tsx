@@ -13,7 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { LabutaLogo } from '@/components/common/LabutaLogo';
+import { KonectaLogo } from '@/components/common/KonectaLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
@@ -98,7 +98,7 @@ export function LoginScreen({ navigation }: Props) {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.cabecalho}>
-          <LabutaLogo size="sm" />
+          <KonectaLogo size="sm" />
           <Text style={styles.titulo}>{t('login.title')}</Text>
           <Text style={styles.subtitulo}>{t('login.subtitle')}</Text>
         </View>

@@ -19,7 +19,7 @@ import { colors, spacing } from '@/theme/tokens';
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const { width } = Dimensions.get('window');
-const CHAVE_ONBOARDING_VISTO = '@labuta/onboarding_visto';
+const CHAVE_ONBOARDING_VISTO = '@konectaja/onboarding_visto';
 
 const SLIDES = [
   { icone: '🔍', chaveTitulo: 'onboarding.slide1_title', chaveTexto: 'onboarding.slide1_text' },

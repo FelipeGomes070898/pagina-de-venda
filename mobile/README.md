@@ -1,4 +1,4 @@
-# Labuta — App Mobile
+# Konecta Já — App Mobile
 
 App estilo Uber, mas para conexão de serviços locais (pedreiro, diarista,
 encanador, babá, roçador de quintal, etc.) entre clientes e prestadores
@@ -31,7 +31,7 @@ extenso gerado por ferramenta (não faz sentido versionar escrito à mão):
 ```bash
 cd mobile
 npm install
-npx react-native init TempLabuta --version 0.73.6   # gera android/ e ios/ de referência
+npx react-native init TempKonectaJa --version 0.73.6   # gera android/ e ios/ de referência
 # copie as pastas android/ e ios/ geradas para dentro deste projeto
 npx react-native run-android   # ou run-ios
 ```
@@ -52,10 +52,10 @@ não funciona e o marketplace cai de volta pra ordenação por data:
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
-**iOS** — em `ios/labuta/Info.plist`, adicione:
+**iOS** — em `ios/konectaja/Info.plist`, adicione:
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>A Labuta usa sua localização para mostrar os prestadores mais próximos de você.</string>
+<string>A Konecta Já usa sua localização para mostrar os prestadores mais próximos de você.</string>
 ```
 
 ### Login com Google
@@ -95,5 +95,5 @@ Zustand (com persistência via AsyncStorage para "salvar login"), i18next, Axios
 
 ## Próximos passos
 
-Ver `docs/labuta-regras-de-negocio.md` na raiz do repositório para o plano
+Ver `docs/konectaja-regras-de-negocio.md` na raiz do repositório para o plano
 completo do marketplace, chat, cobrança do prestador e avaliações.

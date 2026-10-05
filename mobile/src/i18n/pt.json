@@ -1,6 +1,6 @@
 {
   "splash": {
-    "slogan": "Labuta Que Vale."
+    "slogan": "Conecta na hora."
   },
   "onboarding": {
     "skip": "Pular",
@@ -15,7 +15,7 @@
   },
   "login": {
     "title": "Entrar",
-    "subtitle": "Acesse sua conta Labuta",
+    "subtitle": "Acesse sua conta Konecta Já",
     "tab_phone": "Celular",
     "tab_email": "E-mail",
     "tab_cpf": "CPF",

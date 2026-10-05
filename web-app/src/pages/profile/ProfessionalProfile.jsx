@@ -35,7 +35,7 @@ export function ProfessionalProfile() {
     const numero = prestador.whatsapp.replace(/\D/g, '');
     const numeroComPais = numero.startsWith('55') ? numero : `55${numero}`;
     const mensagem = encodeURIComponent(
-      `Olá ${prestador.nome}, vi seu perfil na Labuta e gostaria de saber mais sobre seus serviços.`,
+      `Olá ${prestador.nome}, vi seu perfil na Konecta Já e gostaria de saber mais sobre seus serviços.`,
     );
     window.open(`https://wa.me/${numeroComPais}?text=${mensagem}`, '_blank', 'noopener');
   }
@@ -44,7 +44,7 @@ export function ProfessionalProfile() {
     const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${prestador.nome} — Labuta`, url });
+        await navigator.share({ title: `${prestador.nome} — Konecta Já`, url });
       } catch {
         // usuário cancelou o compartilhamento — nada a fazer
       }
@@ -134,16 +134,16 @@ export function ProfessionalProfile() {
 
 const styles = {
   pagina: { minHeight: '100vh' },
-  centro: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--labuta-muted)' },
+  centro: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--konectaja-muted)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  voltar: { background: 'transparent', border: 'none', color: 'var(--labuta-azul)', fontSize: 13, fontWeight: 600, padding: 16, cursor: 'pointer' },
+  voltar: { background: 'transparent', border: 'none', color: 'var(--konectaja-azul)', fontSize: 13, fontWeight: 600, padding: 16, cursor: 'pointer' },
   container: { maxWidth: 480, margin: '0 auto', padding: '0 24px 32px' },
   fotoPerfil: {
     width: 120,
     height: 120,
     borderRadius: 60,
     objectFit: 'cover',
-    background: 'var(--labuta-bg2)',
+    background: 'var(--konectaja-bg2)',
     display: 'block',
     margin: '0 auto 16px',
   },
@@ -151,7 +151,7 @@ const styles = {
     width: 120,
     height: 120,
     borderRadius: 60,
-    background: 'var(--labuta-laranja)',
+    background: 'var(--konectaja-laranja)',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
@@ -160,27 +160,27 @@ const styles = {
     fontSize: 48,
     margin: '0 auto 16px',
   },
-  nome: { color: 'var(--labuta-text-forte)', fontSize: 20, textAlign: 'center', margin: 0 },
-  segmento: { color: 'var(--labuta-muted)', fontSize: 14, textAlign: 'center', marginTop: 4 },
-  linhaInfo: { color: 'var(--labuta-text)', fontSize: 13, textAlign: 'center', marginTop: 8 },
-  preco: { color: 'var(--labuta-laranja)', fontWeight: 800, fontSize: 18, textAlign: 'center', marginTop: 8 },
-  bio: { color: 'var(--labuta-text)', fontSize: 14, textAlign: 'center', marginTop: 16 },
+  nome: { color: 'var(--konectaja-text-forte)', fontSize: 20, textAlign: 'center', margin: 0 },
+  segmento: { color: 'var(--konectaja-muted)', fontSize: 14, textAlign: 'center', marginTop: 4 },
+  linhaInfo: { color: 'var(--konectaja-text)', fontSize: 13, textAlign: 'center', marginTop: 8 },
+  preco: { color: 'var(--konectaja-laranja)', fontWeight: 800, fontSize: 18, textAlign: 'center', marginTop: 8 },
+  bio: { color: 'var(--konectaja-text)', fontSize: 14, textAlign: 'center', marginTop: 16 },
   secao: { marginTop: 32 },
-  secaoTitulo: { color: 'var(--labuta-text-forte)', fontSize: 15, fontWeight: 700, marginBottom: 8 },
+  secaoTitulo: { color: 'var(--konectaja-text-forte)', fontSize: 15, fontWeight: 700, marginBottom: 8 },
   fotos: { display: 'flex', gap: 8, overflowX: 'auto' },
-  foto: { width: 110, height: 110, borderRadius: 12, objectFit: 'cover', background: 'var(--labuta-bg2)' },
-  semAvaliacoes: { color: 'var(--labuta-muted)', fontSize: 13 },
-  avaliacaoCard: { background: 'var(--labuta-bg2)', border: '1px solid var(--labuta-border)', borderRadius: 12, padding: 14, marginBottom: 8 },
+  foto: { width: 110, height: 110, borderRadius: 12, objectFit: 'cover', background: 'var(--konectaja-bg2)' },
+  semAvaliacoes: { color: 'var(--konectaja-muted)', fontSize: 13 },
+  avaliacaoCard: { background: 'var(--konectaja-bg2)', border: '1px solid var(--konectaja-border)', borderRadius: 12, padding: 14, marginBottom: 8 },
   avaliacaoHeader: { display: 'flex', justifyContent: 'space-between' },
-  avaliacaoNome: { color: 'var(--labuta-text-forte)', fontWeight: 600, fontSize: 13 },
-  avaliacaoComentario: { color: 'var(--labuta-text)', fontSize: 13, marginTop: 4 },
-  erroTexto: { color: 'var(--labuta-red)', fontSize: 13, textAlign: 'center', marginTop: 16 },
+  avaliacaoNome: { color: 'var(--konectaja-text-forte)', fontWeight: 600, fontSize: 13 },
+  avaliacaoComentario: { color: 'var(--konectaja-text)', fontSize: 13, marginTop: 4 },
+  erroTexto: { color: 'var(--konectaja-red)', fontSize: 13, textAlign: 'center', marginTop: 16 },
   botaoContato: {
     width: '100%',
     height: 48,
     borderRadius: 12,
     border: 'none',
-    background: 'var(--labuta-laranja)',
+    background: 'var(--konectaja-laranja)',
     color: '#fff',
     fontWeight: 700,
     fontSize: 14,
@@ -190,9 +190,9 @@ const styles = {
     width: '100%',
     height: 48,
     borderRadius: 12,
-    border: '1px solid var(--labuta-green)',
+    border: '1px solid var(--konectaja-green)',
     background: 'transparent',
-    color: 'var(--labuta-green)',
+    color: 'var(--konectaja-green)',
     fontWeight: 700,
     fontSize: 14,
     marginTop: 8,

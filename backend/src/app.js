@@ -7,7 +7,7 @@ const { tratarErros } = require('./middlewares/erros');
 const app = express();
 
 // CORS_ORIGINS (opcional): lista separada por vírgula das origens
-// permitidas em produção (ex.: https://app.labuta.com,https://admin.labuta.com).
+// permitidas em produção (ex.: https://app.konectaja.com,https://admin.konectaja.com).
 // Sem essa variável, libera qualquer origem — conveniente em
 // desenvolvimento, mas troque isso antes de ir pra produção de verdade.
 // String vazia (CORS_ORIGINS= no .env) precisa se comportar igual a

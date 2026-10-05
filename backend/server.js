@@ -5,4 +5,4 @@
 const app = require('./src/app');
 
 const PORT = process.env.PORT || 3333;
-app.listen(PORT, () => console.log(`Labuta API rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`Konecta Já API rodando na porta ${PORT}`));

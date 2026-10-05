@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'labuta-auth',
+      name: 'konectaja-auth',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) =>
         state.lembrarLogin

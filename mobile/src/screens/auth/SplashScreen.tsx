@@ -4,13 +4,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { LabutaLogo } from '@/components/common/LabutaLogo';
+import { KonectaLogo } from '@/components/common/KonectaLogo';
 import { colors } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
-const CHAVE_ONBOARDING_VISTO = '@labuta/onboarding_visto';
+const CHAVE_ONBOARDING_VISTO = '@konectaja/onboarding_visto';
 
 export function SplashScreen({ navigation }: Props) {
   const { t } = useTranslation();
@@ -47,7 +47,7 @@ export function SplashScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Animated.View style={{ opacity: opacidade, transform: [{ scale: escala }] }}>
-        <LabutaLogo size="lg" />
+        <KonectaLogo size="lg" />
         <Text style={styles.slogan}>{t('splash.slogan')}</Text>
       </Animated.View>
       <View style={styles.barraBase} />

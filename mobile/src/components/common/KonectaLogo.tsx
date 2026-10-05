@@ -6,11 +6,11 @@ interface Props {
   size?: 'sm' | 'lg';
 }
 
-export function LabutaLogo({ size = 'lg' }: Props) {
+export function KonectaLogo({ size = 'lg' }: Props) {
   const grande = size === 'lg';
   return (
     <View style={styles.wrapper}>
-      <Text style={[styles.marca, grande ? styles.grande : styles.pequeno]}>LABUTA</Text>
+      <Text style={[styles.marca, grande ? styles.grande : styles.pequeno]}>KONECTA JÁ</Text>
     </View>
   );
 }
@@ -18,6 +18,6 @@ export function LabutaLogo({ size = 'lg' }: Props) {
 const styles = StyleSheet.create({
   wrapper: { alignItems: 'center' },
   marca: { fontWeight: '900', color: colors.laranja, letterSpacing: 1 },
-  grande: { fontSize: 40 },
-  pequeno: { fontSize: 22 },
+  grande: { fontSize: 32 },
+  pequeno: { fontSize: 18 },
 });

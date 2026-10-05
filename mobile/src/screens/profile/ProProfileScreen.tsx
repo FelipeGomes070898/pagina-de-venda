@@ -51,14 +51,14 @@ export function ProProfileScreen({ route, navigation }: Props) {
     const numero = somenteDigitos(prestador.whatsapp);
     const numeroComPais = numero.startsWith('55') ? numero : `55${numero}`;
     const mensagem = encodeURIComponent(
-      `Olá ${prestador.nome}, vi seu perfil na Labuta e gostaria de saber mais sobre seus serviços.`,
+      `Olá ${prestador.nome}, vi seu perfil na Konecta Já e gostaria de saber mais sobre seus serviços.`,
     );
     Linking.openURL(`https://wa.me/${numeroComPais}?text=${mensagem}`);
   }
 
   function aoCompartilhar() {
     Share.share({
-      message: `Dá uma olhada no perfil de ${prestadorNome} na Labuta!`,
+      message: `Dá uma olhada no perfil de ${prestadorNome} na Konecta Já!`,
     });
   }
 

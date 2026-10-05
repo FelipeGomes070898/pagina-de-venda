@@ -29,7 +29,7 @@ export function Login() {
     <div style={styles.container}>
       <form style={styles.card} onSubmit={aoSubmeter}>
         <div style={styles.marca}>
-          LABUTA
+          KONECTA JÁ
         </div>
         <p style={styles.subtitulo}>Painel administrativo</p>
 
@@ -69,36 +69,36 @@ const styles = {
   },
   card: {
     width: 340,
-    background: 'var(--labuta-bg2)',
-    border: '1px solid var(--labuta-border)',
+    background: 'var(--konectaja-bg2)',
+    border: '1px solid var(--konectaja-border)',
     borderRadius: 16,
     padding: 32,
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
   },
-  marca: { fontSize: 28, fontWeight: 900, color: 'var(--labuta-laranja)', textAlign: 'center', letterSpacing: 1 },
+  marca: { fontSize: 28, fontWeight: 900, color: 'var(--konectaja-laranja)', textAlign: 'center', letterSpacing: 1 },
   subtitulo: {
     textAlign: 'center',
-    color: 'var(--labuta-muted)',
+    color: 'var(--konectaja-muted)',
     fontSize: 13,
     marginBottom: 12,
   },
   input: {
     height: 44,
     borderRadius: 10,
-    border: '1px solid var(--labuta-border)',
-    background: 'var(--labuta-bg3)',
-    color: 'var(--labuta-text-forte)',
+    border: '1px solid var(--konectaja-border)',
+    background: 'var(--konectaja-bg3)',
+    color: 'var(--konectaja-text-forte)',
     padding: '0 12px',
     fontSize: 14,
   },
-  erro: { color: 'var(--labuta-red)', fontSize: 13, margin: 0 },
+  erro: { color: 'var(--konectaja-red)', fontSize: 13, margin: 0 },
   botao: {
     height: 44,
     borderRadius: 10,
     border: 'none',
-    background: 'var(--labuta-laranja)',
+    background: 'var(--konectaja-laranja)',
     color: '#fff',
     fontWeight: 700,
     cursor: 'pointer',

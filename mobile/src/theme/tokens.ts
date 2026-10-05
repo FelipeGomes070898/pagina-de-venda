@@ -1,4 +1,4 @@
-// Design system Labuta — modo claro. "Brasileiro real, profissional mas
+// Design system Konecta Já — modo claro. "Brasileiro real, profissional mas
 // acessível, trabalho honesto, dinâmico, confiável."
 export const colors = {
   laranja: '#D97706', // laranja queimado — cor primária (botões, ações, destaque)

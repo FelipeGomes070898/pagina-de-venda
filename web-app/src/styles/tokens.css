@@ -1,16 +1,16 @@
 :root {
-  --labuta-laranja: #d97706; /* laranja queimado — cor primária */
-  --labuta-azul: #1f2937; /* azul profundo — secundária */
-  --labuta-verde: #10b981; /* disponível / sucesso / avaliação */
-  --labuta-bg: #fafafa;
-  --labuta-bg2: #ffffff; /* cards e superfícies elevadas */
-  --labuta-bg3: #f3f4f6; /* chrome secundário */
-  --labuta-text: #374151;
-  --labuta-text-forte: #111827;
-  --labuta-muted: #6b7280;
-  --labuta-border: #d1d5db;
-  --labuta-green: #10b981;
-  --labuta-red: #dc2626;
+  --konectaja-laranja: #d97706; /* laranja queimado — cor primária */
+  --konectaja-azul: #1f2937; /* azul profundo — secundária */
+  --konectaja-verde: #10b981; /* disponível / sucesso / avaliação */
+  --konectaja-bg: #fafafa;
+  --konectaja-bg2: #ffffff; /* cards e superfícies elevadas */
+  --konectaja-bg3: #f3f4f6; /* chrome secundário */
+  --konectaja-text: #374151;
+  --konectaja-text-forte: #111827;
+  --konectaja-muted: #6b7280;
+  --konectaja-border: #d1d5db;
+  --konectaja-green: #10b981;
+  --konectaja-red: #dc2626;
 }
 
 * {
@@ -25,8 +25,8 @@ body,
 
 body {
   margin: 0;
-  background: var(--labuta-bg);
-  color: var(--labuta-text);
+  background: var(--konectaja-bg);
+  color: var(--konectaja-text);
   font-family: 'Inter', system-ui, sans-serif;
 }
 

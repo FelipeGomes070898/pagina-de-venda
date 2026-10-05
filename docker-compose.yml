@@ -3,11 +3,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: labuta
+      POSTGRES_DB: konectaja
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - labuta_db_data:/var/lib/postgresql/data
+      - konectaja_db_data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
     healthcheck:
@@ -25,7 +25,7 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: labuta
+      DB_NAME: konectaja
       DB_USER: postgres
       DB_PASSWORD: postgres
       JWT_SECRET: ${JWT_SECRET:-troque-este-valor-em-producao}
@@ -44,4 +44,4 @@ services:
     command: sh -c "node src/config/setup.js && node server.js"
 
 volumes:
-  labuta_db_data:
+  konectaja_db_data:
