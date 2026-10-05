@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcrypt');
 const express = require('express');
 const cors = require('cors');
 const rotas = require('./routes');
@@ -44,6 +45,39 @@ if (process.env.MIGRATE_SECRET) {
       );
       await pool.query(sql);
       res.json({ ok: true, mensagem: 'Migrations aplicadas com sucesso.' });
+    } catch (erro) {
+      next(erro);
+    }
+  });
+
+  // Mesma proteção, pra criar o primeiro admin (dono) sem precisar de
+  // acesso direto ao banco. Recusa se já existir algum dono cadastrado.
+  app.post('/setup-inicial/dono', async (req, res, next) => {
+    if (req.get('x-migrate-secret') !== process.env.MIGRATE_SECRET) {
+      return res.status(404).json({ erro: 'Não encontrado' });
+    }
+    try {
+      const { nome, email, senha } = req.body;
+      if (!nome || !email || !senha || senha.length < 8) {
+        return res
+          .status(400)
+          .json({ erro: 'Nome, e-mail e senha (mín. 8 caracteres) são obrigatórios' });
+      }
+
+      const { rows: existentes } = await pool.query(
+        `SELECT id FROM admins WHERE cargo = 'dono' LIMIT 1`,
+      );
+      if (existentes.length > 0) {
+        return res.status(409).json({ erro: 'Já existe um dono cadastrado.' });
+      }
+
+      const senhaHash = await bcrypt.hash(senha, 10);
+      const { rows } = await pool.query(
+        `INSERT INTO admins (nome, email, senha_hash, cargo) VALUES ($1, $2, $3, 'dono')
+         RETURNING id, nome, email, cargo`,
+        [nome, email, senhaHash],
+      );
+      res.json({ ok: true, dono: rows[0] });
     } catch (erro) {
       next(erro);
     }
