@@ -258,4 +258,20 @@ async function recuperarSenha(req, res) {
   });
 }
 
-module.exports = { login, cadastro, loginGoogle, loginAdmin, recuperarSenha };
+// Dados de cadastro do usuário logado (app cliente/prestador) — usado
+// pela tela "Meu perfil", tanto no site quanto no mobile.
+async function meuPerfil(req, res) {
+  const { id, tipo } = req.usuarioApp;
+
+  if (tipo === 'cliente') {
+    const cliente = await Cliente.buscarPorId(id);
+    if (!cliente) return res.status(404).json({ erro: 'Conta não encontrada' });
+    return res.json({ ...cliente, tipo: 'cliente' });
+  }
+
+  const prestador = await Prestador.buscarPorId(id);
+  if (!prestador) return res.status(404).json({ erro: 'Conta não encontrada' });
+  return res.json({ ...prestador, tipo: 'prestador' });
+}
+
+module.exports = { login, cadastro, loginGoogle, loginAdmin, recuperarSenha, meuPerfil };

@@ -77,3 +77,26 @@ export async function loginComGoogle(idToken: string): Promise<LoginGoogleRespon
   const { data } = await api.post<LoginGoogleResponse>('/api/auth/google', { idToken });
   return data;
 }
+
+export interface MeuPerfil {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  cpf: string;
+  cidade: string | null;
+  estado: string | null;
+  tipo: 'cliente' | 'prestador';
+  // só em prestador:
+  segmento?: string | null;
+  valor_servico?: number | null;
+  modelo_cobranca?: 'percentual' | 'fixo_mensal';
+  avaliacao?: number;
+  total_servicos?: number;
+  total_avaliacoes?: number;
+}
+
+export async function meuPerfil(): Promise<MeuPerfil> {
+  const { data } = await api.get<MeuPerfil>('/api/auth/me');
+  return data;
+}

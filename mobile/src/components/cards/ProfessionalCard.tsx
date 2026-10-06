@@ -27,7 +27,7 @@ export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contata
 
           <View style={styles.linha}>
             <Text style={styles.estrelas}>
-              ⭐ {prestador.avaliacao?.toFixed(1) ?? '5.0'} ({prestador.total_avaliacoes})
+              ⭐ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes})
             </Text>
             {prestador.distancia_km != null && (
               <Text style={styles.distancia}>· {formatarDistancia(prestador.distancia_km)}</Text>
@@ -35,7 +35,7 @@ export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contata
           </View>
 
           {prestador.valor_servico != null && (
-            <Text style={styles.preco}>R$ {prestador.valor_servico.toFixed(2)}</Text>
+            <Text style={styles.preco}>R$ {Number(prestador.valor_servico).toFixed(2)}</Text>
           )}
         </View>
       </TouchableOpacity>

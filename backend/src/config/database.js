@@ -1,4 +1,12 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// Por padrão o node-postgres devolve NUMERIC/DECIMAL (valor_servico,
+// avaliacao, pedidos.valor, pagamentos.valor...) como STRING ("120.00"),
+// não number — pra não perder precisão em valores muito grandes. Isso
+// quebrava o app mobile: chamar .toFixed() direto numa string lança
+// TypeError e, sem Error Boundary, vira tela cinza/branca sem aviso
+// nenhum. 1700 é o OID do tipo NUMERIC no Postgres.
+types.setTypeParser(1700, parseFloat);
 
 // DATABASE_URL (Supabase, Render, Railway, etc.) tem prioridade sobre as
 // variáveis DB_* separadas — é o formato que esses provedores entregam

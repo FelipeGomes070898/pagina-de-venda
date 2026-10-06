@@ -14,3 +14,8 @@ export async function recuperarSenha({ email, cpf, telefone, senhaNova }) {
   const { data } = await api.post('/api/auth/recuperar-senha', { email, cpf, telefone, senhaNova });
   return data;
 }
+
+export async function meuPerfil() {
+  const { data } = await api.get('/api/auth/me');
+  return data;
+}

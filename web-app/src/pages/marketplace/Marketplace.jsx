@@ -114,7 +114,9 @@ export function Marketplace() {
           KONECTA JÁ
         </div>
         <div style={styles.headerDireita}>
-          <span style={styles.usuarioNome}>{usuario?.nome}</span>
+          <button style={styles.usuarioNome} onClick={() => navigate('/perfil')}>
+            {usuario?.nome}
+          </button>
           <button style={styles.sair} onClick={logout}>
             Sair
           </button>
@@ -247,7 +249,15 @@ const styles = {
   },
   marca: { fontSize: 20, fontWeight: 900, color: 'var(--konectaja-laranja)', letterSpacing: 1 },
   headerDireita: { display: 'flex', alignItems: 'center', gap: 12 },
-  usuarioNome: { color: 'var(--konectaja-text)', fontSize: 13 },
+  usuarioNome: {
+    color: 'var(--konectaja-text)',
+    fontSize: 13,
+    fontWeight: 600,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
   sair: {
     background: 'transparent',
     border: '1px solid var(--konectaja-border)',
