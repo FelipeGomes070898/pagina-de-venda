@@ -32,17 +32,24 @@ async function baixarAndroid(req, res) {
       return res.status(404).json({ erro: 'Instalador ainda não disponível' });
     }
 
+    // O endpoint de asset do GitHub não devolve o arquivo em si — devolve
+    // um 302 pra uma URL assinada e temporária (sem precisar de token)
+    // no storage deles. Repassamos esse redirect pro navegador em vez de
+    // baixar os ~23 MB aqui e reenviar: funções serverless da Vercel têm
+    // limite de tamanho de resposta bem menor que isso, então "baixar e
+    // reenviar" sempre dava 502.
     const resposta = await axios.get(asset.url, {
       headers: { ...cabecalhos, Accept: 'application/octet-stream' },
-      responseType: 'stream',
+      maxRedirects: 0,
+      validateStatus: (status) => status === 302,
     });
 
-    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-    res.setHeader('Content-Disposition', 'attachment; filename="konectaja.apk"');
-    if (resposta.headers['content-length']) {
-      res.setHeader('Content-Length', resposta.headers['content-length']);
+    const urlAssinada = resposta.headers.location;
+    if (!urlAssinada) {
+      return res.status(502).json({ erro: 'Não foi possível localizar o instalador agora.' });
     }
-    resposta.data.pipe(res);
+
+    res.redirect(302, urlAssinada);
   } catch {
     res.status(502).json({ erro: 'Não foi possível baixar o instalador agora. Tente novamente.' });
   }
