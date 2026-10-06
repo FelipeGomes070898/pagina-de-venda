@@ -25,21 +25,25 @@ autônomos.
 ## Baixar um APK pronto pra testar (sem instalar nada)
 
 Toda vez que algo muda em `mobile/`, o GitHub Actions
-(`.github/workflows/mobile-apk.yml`) builda um APK debug automaticamente.
+(`.github/workflows/mobile-apk.yml`) builda um APK automaticamente.
 Pra baixar o mais recente:
 
 1. Abra a aba **Actions** do repositório no GitHub.
-2. Clique no workflow mais recente de **"Mobile APK (debug)"** com um ✅.
-3. Na seção **Artifacts**, baixe `konectaja-debug-apk` (é um .zip contendo o
-   `app-debug.apk`).
+2. Clique no workflow mais recente de **"Mobile APK"** com um ✅.
+3. Na seção **Artifacts**, baixe `konectaja-apk` (é um .zip contendo o
+   `app-release.apk`).
 4. Transfira o `.apk` pro celular Android (link do GitHub, WhatsApp Web,
    cabo USB, o que for mais fácil) e abra o arquivo nele.
 5. O Android vai pedir pra habilitar **"Instalar apps de fontes
    desconhecidas"** pra esse app que está enviando o arquivo (navegador,
    WhatsApp etc.) — é esperado, porque esse APK não veio da Play Store.
 
-Esse é um build **debug**, não assinado pra loja — serve pra testar a
-conexão cliente/prestador agora, não é a versão final de publicação.
+É um build **release** (empacota o JS Hermes dentro do APK, por isso roda
+standalone sem precisar de Metro por perto), mas assinado com a
+`debug.keystore` padrão do React Native, não com uma chave de loja de
+verdade — serve pra testar a conexão cliente/prestador agora, não é a
+versão final de publicação (pra isso precisa gerar uma keystore própria,
+ver https://reactnative.dev/docs/signed-apk-android).
 
 ## Rodando o projeto localmente
 

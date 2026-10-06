@@ -1,4 +1,4 @@
-name: Mobile APK (debug)
+name: Mobile APK
 
 on:
   push:
@@ -42,17 +42,20 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Buildar APK debug
+      # "debug" não serve pra instalar standalone: ele não empacota o
+      # JS dentro do APK, espera um Metro Bundler rodando no PC pra
+      # carregar o código pela rede (por isso dá "Unable to load
+      # script" ao abrir sem o Metro por perto). "release" embute o JS
+      # Hermes compilado direto no APK — aqui ele é assinado com a
+      # debug.keystore padrão (ver android/app/build.gradle), não a de
+      # uma loja de verdade, mas funciona pra instalar e testar.
+      - name: Buildar APK release (standalone, sem precisar de Metro)
         working-directory: mobile/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
-      # APK debug (não assinado pra release, instalável direto no
-      # celular com "instalar de fontes desconhecidas" habilitado) só
-      # pra testar a conexão cliente/prestador — não é a versão pra
-      # publicar nas lojas.
       - name: Publicar APK como artefato do workflow
         uses: actions/upload-artifact@v4
         with:
-          name: konectaja-debug-apk
-          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          name: konectaja-apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
