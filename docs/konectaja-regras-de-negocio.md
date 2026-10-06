@@ -132,11 +132,17 @@ Tabelas: `admins` (cargo, divisao_id, criado_por, ativo) e `divisoes`
 | Suporte        | ✅  | ✅ | ✅      | ✅          |
 | Configurações  | ✅  | ❌ | ❌      | ❌          |
 
-> Pendente para a próxima fase: aplicar o filtro por `divisao_id` nas
-> listagens de prestadores/clientes/suporte quando `cargo === 'gerente'`
-> (o middleware `restringirPorDivisao` já existe em
-> `backend/src/middlewares/auth.js`, falta plugar nas rotas de
-> prestadores/clientes quando essas rotas forem criadas).
+> ✅ feito: `GET /admin/prestadores` e `GET /admin/clientes` agora
+> aplicam `restringirPorDivisao` quando `cargo === 'gerente'`. Como
+> `prestadores`/`clientes` nunca tiveram coluna `divisao_id` (só
+> `admins` tem), a divisão é usada como filtro por **cidade**
+> (`divisoes.nome` comparado via `ILIKE` contra `prestadores.cidade` /
+> `clientes.cidade`) — mesmo princípio de "mesma cidade" já usado no
+> marketplace. Pra funcionar na prática, cadastre as divisões com o
+> nome exato da cidade que elas cobrem (ex.: divisão "Porto Velho").
+> Suporte ainda não tem filtro por divisão porque ainda não existe
+> fila de tickets (ver `frontend-web/src/pages/suporte/Suporte.jsx`,
+> que documenta isso).
 
 ## Marketplace de serviços
 

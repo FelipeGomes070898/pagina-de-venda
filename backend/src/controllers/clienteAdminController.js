@@ -1,13 +1,22 @@
 const Cliente = require('../models/Cliente');
+const Divisao = require('../models/Divisao');
 const { gerarSenhaTemporaria } = require('../utils/senha');
 
 async function listar(req, res) {
   const { busca, page } = req.query;
   const pagina = page ? Number(page) : 1;
 
+  // Gerente só vê clientes da própria divisão — ver prestadorAdminController
+  // para a mesma lógica (divisão = filtro por cidade).
+  let cidade;
+  if (req.escopoDivisaoId) {
+    const divisao = await Divisao.buscarPorId(req.escopoDivisaoId);
+    cidade = divisao?.nome;
+  }
+
   const [clientes, total] = await Promise.all([
-    Cliente.listarTodos({ busca, pagina }),
-    Cliente.contar({ busca }),
+    Cliente.listarTodos({ busca, cidade, pagina }),
+    Cliente.contar({ busca, cidade }),
   ]);
 
   res.json({ clientes, total, pagina });

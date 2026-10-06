@@ -1,4 +1,5 @@
 const Prestador = require('../models/Prestador');
+const Divisao = require('../models/Divisao');
 const { gerarSenhaTemporaria } = require('../utils/senha');
 
 const STATUS_VALIDOS = ['ativo', 'inadimplente', 'bloqueado'];
@@ -9,9 +10,20 @@ async function listar(req, res) {
   const { busca, status, page } = req.query;
   const pagina = page ? Number(page) : 1;
 
+  // Gerente só vê prestadores da própria divisão (restringirPorDivisao
+  // já validou isso e deixou o id em req.escopoDivisaoId). Divisão vira
+  // filtro de cidade — mesmo princípio de "mesma cidade" já usado no
+  // marketplace, já que não existe (nem faria sentido reatribuir)
+  // divisao_id em prestadores/clientes.
+  let cidade;
+  if (req.escopoDivisaoId) {
+    const divisao = await Divisao.buscarPorId(req.escopoDivisaoId);
+    cidade = divisao?.nome;
+  }
+
   const [prestadores, total] = await Promise.all([
-    Prestador.listarTodos({ busca, status, pagina }),
-    Prestador.contar({ busca, status }),
+    Prestador.listarTodos({ busca, status, cidade, pagina }),
+    Prestador.contar({ busca, status, cidade }),
   ]);
 
   res.json({ prestadores, total, pagina });

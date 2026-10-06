@@ -5,7 +5,12 @@ const prestadorAdminController = require('../controllers/prestadorAdminControlle
 const clienteAdminController = require('../controllers/clienteAdminController');
 const financeiroController = require('../controllers/financeiroController');
 const dashboardController = require('../controllers/dashboardController');
-const { autenticarAdmin, permitir, carregarAdminAtivo } = require('../middlewares/auth');
+const {
+  autenticarAdmin,
+  permitir,
+  carregarAdminAtivo,
+  restringirPorDivisao,
+} = require('../middlewares/auth');
 
 const router = Router();
 
@@ -26,8 +31,15 @@ router.patch('/equipe/:id/status', permitir('dono', 'rh'), adminController.atual
 router.get('/divisoes', permitir('dono', 'rh'), divisaoController.listar);
 router.post('/divisoes', permitir('dono', 'rh'), divisaoController.criar);
 
-// Prestadores (listagem com PII + alteração de status, visível à equipe toda)
-router.get('/prestadores', permitir(...TODOS_OS_CARGOS), prestadorAdminController.listar);
+// Prestadores (listagem com PII + alteração de status, visível à equipe
+// toda — restringirPorDivisao restringe gerente à própria divisão, sem
+// efeito para os outros cargos).
+router.get(
+  '/prestadores',
+  permitir(...TODOS_OS_CARGOS),
+  restringirPorDivisao,
+  prestadorAdminController.listar,
+);
 router.patch(
   '/prestadores/:id/status',
   permitir('dono', 'rh', 'gerente'),
@@ -39,8 +51,14 @@ router.post(
   prestadorAdminController.redefinirSenha,
 );
 
-// Clientes (listagem, visível à equipe toda)
-router.get('/clientes', permitir(...TODOS_OS_CARGOS), clienteAdminController.listar);
+// Clientes (listagem, visível à equipe toda — mesma restrição por
+// divisão do gerente que em /prestadores)
+router.get(
+  '/clientes',
+  permitir(...TODOS_OS_CARGOS),
+  restringirPorDivisao,
+  clienteAdminController.listar,
+);
 router.post(
   '/clientes/:id/redefinir-senha',
   permitir(...TODOS_OS_CARGOS),

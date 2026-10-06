@@ -204,13 +204,19 @@ module.exports = {
 
   // Painel admin: lista todos os prestadores (qualquer status), com PII
   // visível — diferente de listarAtivos (marketplace público, só ativos).
-  async listarTodos({ busca, status, pagina = 1, porPagina = 20 } = {}) {
+  // `cidade` só vem preenchido quando quem pede é um gerente (restrito à
+  // própria divisão) — dono/rh/atendimento veem tudo, sem esse filtro.
+  async listarTodos({ busca, status, cidade, pagina = 1, porPagina = 20 } = {}) {
     const condicoes = [];
     const valores = [];
 
     if (status) {
       valores.push(status);
       condicoes.push(`status = $${valores.length}`);
+    }
+    if (cidade) {
+      valores.push(cidade);
+      condicoes.push(`cidade ILIKE $${valores.length}`);
     }
     if (busca) {
       valores.push(`%${busca}%`);
@@ -232,12 +238,16 @@ module.exports = {
     return rows;
   },
 
-  async contar({ busca, status } = {}) {
+  async contar({ busca, status, cidade } = {}) {
     const condicoes = [];
     const valores = [];
     if (status) {
       valores.push(status);
       condicoes.push(`status = $${valores.length}`);
+    }
+    if (cidade) {
+      valores.push(cidade);
+      condicoes.push(`cidade ILIKE $${valores.length}`);
     }
     if (busca) {
       valores.push(`%${busca}%`);
