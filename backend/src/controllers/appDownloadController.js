@@ -50,8 +50,13 @@ async function baixarAndroid(req, res) {
     }
 
     res.redirect(302, urlAssinada);
-  } catch {
-    res.status(502).json({ erro: 'Não foi possível baixar o instalador agora. Tente novamente.' });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('baixarAndroid falhou:', e.message, e.response?.status, e.response?.data);
+    res.status(502).json({
+      erro: 'Não foi possível baixar o instalador agora. Tente novamente.',
+      debug: e.message,
+    });
   }
 }
 
