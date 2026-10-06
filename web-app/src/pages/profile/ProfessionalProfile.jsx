@@ -33,16 +33,6 @@ export function ProfessionalProfile() {
     }
   }
 
-  function aoChamarNoWhatsapp() {
-    if (!prestador?.whatsapp) return;
-    const numero = prestador.whatsapp.replace(/\D/g, '');
-    const numeroComPais = numero.startsWith('55') ? numero : `55${numero}`;
-    const mensagem = encodeURIComponent(
-      `Olá ${prestador.nome}, vi seu perfil na Konecta Já e gostaria de saber mais sobre seus serviços.`,
-    );
-    window.open(`https://wa.me/${numeroComPais}?text=${mensagem}`, '_blank', 'noopener');
-  }
-
   async function aoCompartilhar() {
     const url = window.location.href;
     if (navigator.share) {
@@ -125,12 +115,9 @@ export function ProfessionalProfile() {
         <button style={styles.botaoContato} onClick={aoContatar} disabled={contatando}>
           {contatando ? 'Entrando em contato...' : 'Solicitar serviço'}
         </button>
-
-        {prestador.whatsapp && (
-          <button style={styles.botaoWhatsapp} onClick={aoChamarNoWhatsapp}>
-            💬 Chamar no WhatsApp
-          </button>
-        )}
+        <p style={styles.avisoChat}>
+          A conversa com {prestador.nome} acontece aqui dentro do app, no chat do pedido.
+        </p>
       </div>
     </div>
   );
@@ -190,15 +177,10 @@ const styles = {
     fontSize: 14,
     marginTop: 32,
   },
-  botaoWhatsapp: {
-    width: '100%',
-    height: 48,
-    borderRadius: 12,
-    border: '1px solid var(--konectaja-green)',
-    background: 'transparent',
-    color: 'var(--konectaja-green)',
-    fontWeight: 700,
-    fontSize: 14,
+  avisoChat: {
+    color: 'var(--konectaja-muted)',
+    fontSize: 12,
+    textAlign: 'center',
     marginTop: 8,
   },
 };

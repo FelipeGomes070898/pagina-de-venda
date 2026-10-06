@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Linking,
   ScrollView,
   Share,
   StyleSheet,
@@ -15,7 +14,6 @@ import { RootStackParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { buscarPrestador, contatarPrestador, PrestadorDetalhe } from '@/services/marketplaceService';
-import { somenteDigitos } from '@/utils/masks';
 import { obterLocalizacaoComPermissao } from '@/services/locationService';
 import { formatarDistancia } from '@/utils/distancia';
 
@@ -47,16 +45,6 @@ export function ProProfileScreen({ route, navigation }: Props) {
     } finally {
       setContatando(false);
     }
-  }
-
-  function aoChamarNoWhatsapp() {
-    if (!prestador?.whatsapp) return;
-    const numero = somenteDigitos(prestador.whatsapp);
-    const numeroComPais = numero.startsWith('55') ? numero : `55${numero}`;
-    const mensagem = encodeURIComponent(
-      `Olá ${prestador.nome}, vi seu perfil na Konecta Já e gostaria de saber mais sobre seus serviços.`,
-    );
-    Linking.openURL(`https://wa.me/${numeroComPais}?text=${mensagem}`);
   }
 
   function aoCompartilhar() {
@@ -159,12 +147,9 @@ export function ProProfileScreen({ route, navigation }: Props) {
           loading={contatando}
           style={styles.botaoContato}
         />
-
-        {prestador.whatsapp && (
-          <TouchableOpacity style={styles.botaoWhatsapp} onPress={aoChamarNoWhatsapp}>
-            <Text style={styles.botaoWhatsappTexto}>💬 Chamar no WhatsApp</Text>
-          </TouchableOpacity>
-        )}
+        <Text style={styles.avisoChat}>
+          A conversa com {prestador.nome} acontece aqui dentro do app, no chat do pedido.
+        </Text>
       </View>
     </ScrollView>
   );
@@ -248,14 +233,10 @@ const styles = StyleSheet.create({
   avaliacaoComentario: { color: colors.text, fontSize: 13, marginTop: 4 },
   erroAcao: { color: colors.red, fontSize: 13, textAlign: 'center', marginTop: spacing.lg },
   botaoContato: { marginTop: spacing.xl },
-  botaoWhatsapp: {
-    height: 48,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.green,
-    alignItems: 'center',
-    justifyContent: 'center',
+  avisoChat: {
+    color: colors.muted,
+    fontSize: 12,
+    textAlign: 'center',
     marginTop: spacing.sm,
   },
-  botaoWhatsappTexto: { color: colors.green, fontWeight: '700', fontSize: 14 },
 });

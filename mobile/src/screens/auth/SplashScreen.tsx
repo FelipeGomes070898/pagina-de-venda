@@ -1,22 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/types';
 import { KonectaLogo } from '@/components/common/KonectaLogo';
 import { colors } from '@/theme/tokens';
-import { useAuthStore } from '@/store/authStore';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
-
-const CHAVE_ONBOARDING_VISTO = '@konectaja/onboarding_visto';
-
-export function SplashScreen({ navigation }: Props) {
+// Só a animação de abertura — quem decide pra onde ir (Home, Login ou
+// Onboarding) é o AppNavigator, que também reage a mudanças de sessão
+// (ex.: logout) depois que o app já abriu.
+export function SplashScreen() {
   const { t } = useTranslation();
   const opacidade = useRef(new Animated.Value(0)).current;
   const escala = useRef(new Animated.Value(0.9)).current;
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     Animated.parallel([
@@ -31,18 +25,7 @@ export function SplashScreen({ navigation }: Props) {
         useNativeDriver: true,
       }),
     ]).start();
-
-    const temporizador = setTimeout(async () => {
-      if (isAuthenticated()) {
-        navigation.replace('Home');
-        return;
-      }
-      const jaViuOnboarding = await AsyncStorage.getItem(CHAVE_ONBOARDING_VISTO);
-      navigation.replace(jaViuOnboarding ? 'Login' : 'Onboarding');
-    }, 1800);
-
-    return () => clearTimeout(temporizador);
-  }, [navigation, opacidade, escala, isAuthenticated]);
+  }, [opacidade, escala]);
 
   return (
     <View style={styles.container}>

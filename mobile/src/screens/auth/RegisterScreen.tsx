@@ -76,7 +76,9 @@ export function RegisterScreen({ navigation, route }: Props) {
         modeloCobranca: tipo === 'prestador' ? modeloCobranca : undefined,
         googleId: perfilGoogle?.googleId,
       });
-      navigation.replace('Home');
+      // Sem navigation.replace aqui: o cadastro grava o token no
+      // estado global, e é essa mudança que faz o AppNavigator trocar
+      // sozinho pra pilha autenticada.
     } catch {
       setErro(t('register.error_register_failed'));
     }
@@ -92,7 +94,6 @@ export function RegisterScreen({ navigation, route }: Props) {
         navigation.setParams({ perfilGoogle: resultado.perfilGoogle });
       } else {
         definirSessao(resultado);
-        navigation.replace('Home');
       }
     } catch {
       setErro('Não foi possível continuar com o Google.');

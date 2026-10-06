@@ -69,8 +69,11 @@ export function LoginScreen({ navigation }: Props) {
     const valorLimpo = aba === 'email' ? identificador.trim() : somenteDigitos(identificador);
 
     try {
+      // Sem navigation.replace aqui: o login grava o token no estado
+      // global, e é essa mudança que faz o AppNavigator trocar
+      // sozinho pra pilha autenticada (ele reage ao estado, não dá pra
+      // navegar direto pra uma tela que só existe do outro lado).
       await login({ identificador: valorLimpo, tipoIdentificador: aba, senha });
-      navigation.replace('Home');
     } catch {
       setErro(t('login.error_login_failed'));
     }
@@ -84,7 +87,6 @@ export function LoginScreen({ navigation }: Props) {
         navigation.navigate('Register', { perfilGoogle: resultado.perfilGoogle });
       } else {
         definirSessao(resultado);
-        navigation.replace('Home');
       }
     } catch {
       setErro('Não foi possível entrar com o Google.');
