@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { estilosPagina as styles } from '../../styles/paginaAdmin';
+import { PasswordInput } from '../../components/common/PasswordInput';
 
 export function Configuracoes() {
   const admin = useAuthStore((s) => s.admin);
@@ -47,26 +48,23 @@ export function Configuracoes() {
         style={{ ...styles.card, maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12 }}
         onSubmit={aoSalvar}
       >
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Senha atual"
           value={senhaAtual}
           onChange={(e) => setSenhaAtual(e.target.value)}
           required
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Nova senha (mín. 8 caracteres)"
           value={senhaNova}
           onChange={(e) => setSenhaNova(e.target.value)}
           minLength={8}
           required
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Confirmar nova senha"
           value={confirmacao}
           onChange={(e) => setConfirmacao(e.target.value)}

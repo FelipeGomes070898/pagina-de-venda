@@ -49,8 +49,16 @@ jobs:
       # Hermes compilado direto no APK — aqui ele é assinado com a
       # debug.keystore padrão (ver android/app/build.gradle), não a de
       # uma loja de verdade, mas funciona pra instalar e testar.
+      # GOOGLE_MAPS_API_KEY/GOOGLE_WEB_CLIENT_ID são opcionais — sem
+      # configurar esses secrets no repositório (Settings > Secrets and
+      # variables > Actions), o build continua funcionando normal, só
+      # que sem autocomplete de endereço nem login Google (degrada pra
+      # texto livre, como já documentado no README do mobile/).
       - name: Buildar APK release (standalone, sem precisar de Metro)
         working-directory: mobile/android
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Publicar APK como artefato do workflow

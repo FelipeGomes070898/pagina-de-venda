@@ -5,8 +5,10 @@ export async function listarPrestadores(filtros = {}) {
   return data;
 }
 
-export async function buscarPrestador(id) {
-  const { data } = await api.get(`/api/prestadores/${id}`);
+export async function buscarPrestador(id, coordenadas = {}) {
+  const { data } = await api.get(`/api/prestadores/${id}`, {
+    params: { lat: coordenadas.lat, lng: coordenadas.lng },
+  });
   return data;
 }
 

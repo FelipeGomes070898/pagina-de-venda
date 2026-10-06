@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { PasswordInput } from '../../components/PasswordInput';
 import { recuperarSenha } from '../../services/authService';
 import { validarCPF, validarEmail, validarTelefoneBR } from '../../utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '../../utils/masks';
@@ -74,16 +75,14 @@ export function RecuperarSenha() {
           value={telefone}
           onChange={(e) => setTelefone(mascararTelefoneBR(e.target.value))}
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Nova senha (mín. 8 caracteres)"
           value={senhaNova}
           onChange={(e) => setSenhaNova(e.target.value)}
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Confirmar nova senha"
           value={confirmacao}
           onChange={(e) => setConfirmacao(e.target.value)}

@@ -13,6 +13,7 @@ import {
 
 export function Marketplace() {
   const { usuario, logout } = useAuthStore();
+  const cidadeUsuario = usuario?.cidade;
   const navigate = useNavigate();
 
   const [aba, setAba] = useState('prestadores');
@@ -46,6 +47,7 @@ export function Marketplace() {
         const lista = await listarPrestadores({
           segmento: categoriaAtiva || undefined,
           busca: buscaAplicada || undefined,
+          cidade: cidadeUsuario || undefined,
           lat: coordenadas?.lat,
           lng: coordenadas?.lng,
         });
@@ -66,7 +68,7 @@ export function Marketplace() {
     setCarregando(true);
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aba, categoriaAtiva, buscaAplicada, buscandoLocalizacao]);
+  }, [aba, categoriaAtiva, buscaAplicada, buscandoLocalizacao, cidadeUsuario]);
 
   useEffect(() => {
     const temporizador = setTimeout(() => setBuscaAplicada(buscaTexto.trim()), 400);

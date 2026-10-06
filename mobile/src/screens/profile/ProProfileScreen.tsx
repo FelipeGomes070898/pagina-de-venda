@@ -16,6 +16,8 @@ import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { buscarPrestador, contatarPrestador, PrestadorDetalhe } from '@/services/marketplaceService';
 import { somenteDigitos } from '@/utils/masks';
+import { obterLocalizacaoComPermissao } from '@/services/locationService';
+import { formatarDistancia } from '@/utils/distancia';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProProfile'>;
 
@@ -28,7 +30,8 @@ export function ProProfileScreen({ route, navigation }: Props) {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    buscarPrestador(prestadorId)
+    obterLocalizacaoComPermissao()
+      .then((coordenadas) => buscarPrestador(prestadorId, coordenadas))
       .then(setPrestador)
       .catch(() => setErro('Não foi possível carregar este perfil.'))
       .finally(() => setCarregando(false));
@@ -109,6 +112,9 @@ export function ProProfileScreen({ route, navigation }: Props) {
             ⭐ {prestador.avaliacao?.toFixed(1) ?? '5.0'} ({prestador.total_avaliacoes} avaliações)
           </Text>
           <Text style={styles.servicos}>· {prestador.total_servicos} serviços feitos</Text>
+          {prestador.distancia_km != null && (
+            <Text style={styles.servicos}>· {formatarDistancia(prestador.distancia_km)} de você</Text>
+          )}
         </View>
 
         {prestador.valor_servico != null && (

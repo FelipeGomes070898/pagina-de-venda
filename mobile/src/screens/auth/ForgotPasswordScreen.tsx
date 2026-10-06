@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { KonectaLogo } from '@/components/common/KonectaLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { validarCPF, validarEmail, validarTelefoneBR } from '@/utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '@/utils/masks';
@@ -99,21 +100,15 @@ export function ForgotPasswordScreen({ navigation }: Props) {
             onChangeText={(v) => setTelefone(mascararTelefoneBR(v))}
             keyboardType="number-pad"
           />
-          <TextInput
-            style={styles.input}
+          <PasswordInput
             placeholder={t('forgotPassword.new_password_placeholder')}
-            placeholderTextColor={colors.muted}
             value={senhaNova}
             onChangeText={setSenhaNova}
-            secureTextEntry
           />
-          <TextInput
-            style={styles.input}
+          <PasswordInput
             placeholder={t('forgotPassword.confirm_password_placeholder')}
-            placeholderTextColor={colors.muted}
             value={confirmacao}
             onChangeText={setConfirmacao}
-            secureTextEntry
           />
 
           {erro && <Text style={styles.erro}>{erro}</Text>}

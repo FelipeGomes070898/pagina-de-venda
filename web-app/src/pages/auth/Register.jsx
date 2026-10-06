@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { GoogleLoginButton } from '../../components/GoogleLoginButton';
 import { AddressAutocompleteInput } from '../../components/AddressAutocompleteInput';
+import { PasswordInput } from '../../components/PasswordInput';
 import { validarCPF, validarEmail, validarTelefoneBR } from '../../utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '../../utils/masks';
 import { CATEGORIAS } from '../../constants/categorias';
@@ -137,16 +138,14 @@ export function Register() {
             setEndereco({ texto: dados.enderecoCompleto, cidade: dados.cidade, estado: dados.estado, lat: dados.lat, lng: dados.lng })
           }
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Criar senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Confirmar senha"
           value={confirmarSenha}
           onChange={(e) => setConfirmarSenha(e.target.value)}

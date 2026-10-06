@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { PasswordInput } from '../../components/common/PasswordInput';
 
 // dono pode criar rh/gerente/atendimento; rh pode criar gerente/atendimento
 const CARGOS_CRIAVEIS = {
@@ -105,9 +106,8 @@ export function Equipe() {
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
-          <input
+          <PasswordInput
             style={styles.input}
-            type="password"
             placeholder="Senha provisória"
             value={form.senha}
             onChange={(e) => setForm({ ...form, senha: e.target.value })}

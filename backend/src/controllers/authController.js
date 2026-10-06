@@ -30,7 +30,13 @@ async function login(req, res) {
     const token = gerarToken({ id: cliente.id, tipo: 'cliente' });
     return res.json({
       token,
-      usuario: { id: cliente.id, nome: cliente.nome, tipo: 'cliente', fotoUrl: cliente.foto_url },
+      usuario: {
+        id: cliente.id,
+        nome: cliente.nome,
+        tipo: 'cliente',
+        fotoUrl: cliente.foto_url,
+        cidade: cliente.cidade,
+      },
     });
   }
 
@@ -50,6 +56,7 @@ async function login(req, res) {
         nome: prestador.nome,
         tipo: 'prestador',
         fotoUrl: prestador.foto_url,
+        cidade: prestador.cidade,
       },
     });
   }
@@ -149,7 +156,13 @@ async function loginGoogle(req, res) {
     const token = gerarToken({ id: cliente.id, tipo: 'cliente' });
     return res.json({
       token,
-      usuario: { id: cliente.id, nome: cliente.nome, tipo: 'cliente', fotoUrl: cliente.foto_url },
+      usuario: {
+        id: cliente.id,
+        nome: cliente.nome,
+        tipo: 'cliente',
+        fotoUrl: cliente.foto_url,
+        cidade: cliente.cidade,
+      },
     });
   }
 
@@ -164,6 +177,7 @@ async function loginGoogle(req, res) {
         nome: prestador.nome,
         tipo: 'prestador',
         fotoUrl: prestador.foto_url,
+        cidade: prestador.cidade,
       },
     });
   }

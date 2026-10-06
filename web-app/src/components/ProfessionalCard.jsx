@@ -1,3 +1,5 @@
+import { formatarDistancia } from '../utils/distancia';
+
 export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando }) {
   const inicial = prestador.nome?.charAt(0)?.toUpperCase() || '?';
 
@@ -28,10 +30,6 @@ export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contata
       </button>
     </div>
   );
-}
-
-function formatarDistancia(km) {
-  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
 const styles = {

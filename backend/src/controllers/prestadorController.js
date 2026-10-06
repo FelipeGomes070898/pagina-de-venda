@@ -6,10 +6,12 @@ const Avaliacao = require('../models/Avaliacao');
 // próprio cadastro do prestador, que precisa desses campos) mas não podem
 // vazar nestes dois endpoints, que são públicos e sem autenticação — quem
 // quiser contato usa o chat do app ou o whatsapp que o prestador optou por
-// exibir.
+// exibir. lat/lng também ficam de fora: a distância já vem calculada em
+// distancia_km, então não tem motivo pra expor a coordenada exata de onde
+// o prestador mora/trabalha pra qualquer um que bater nesse endpoint.
 function ocultarPii(prestador) {
   // eslint-disable-next-line no-unused-vars
-  const { email, cpf, telefone, ...publico } = prestador;
+  const { email, cpf, telefone, lat, lng, ...publico } = prestador;
   return publico;
 }
 
@@ -29,7 +31,11 @@ async function listar(req, res) {
 }
 
 async function buscar(req, res) {
-  const prestador = await Prestador.buscarPorId(req.params.id);
+  const { lat, lng } = req.query;
+  const prestador = await Prestador.buscarPorId(req.params.id, {
+    lat: lat ? Number(lat) : undefined,
+    lng: lng ? Number(lng) : undefined,
+  });
   if (!prestador) return res.status(404).json({ erro: 'Prestador não encontrado' });
 
   const [fotos, avaliacoes] = await Promise.all([

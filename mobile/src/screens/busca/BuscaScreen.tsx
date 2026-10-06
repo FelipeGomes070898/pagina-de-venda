@@ -9,6 +9,8 @@ import { useCategoryStore } from '@/store/categoryStore';
 import { CategoryChip } from '@/components/common/CategoryChip';
 import { ProfessionalCard } from '@/components/cards/ProfessionalCard';
 import { contatarPrestador, listarPrestadores, Prestador } from '@/services/marketplaceService';
+import { Coordenadas, obterLocalizacaoComPermissao } from '@/services/locationService';
+import { useAuthStore } from '@/store/authStore';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'BuscaTab'>,
@@ -17,6 +19,7 @@ type Props = CompositeScreenProps<
 
 export function BuscaScreen({ navigation }: Props) {
   const categorias = useCategoryStore((s) => s.categorias);
+  const cidadeUsuario = useAuthStore((s) => s.usuario?.cidade);
 
   const [texto, setTexto] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
@@ -25,6 +28,11 @@ export function BuscaScreen({ navigation }: Props) {
   const [jaBuscou, setJaBuscou] = useState(false);
   const [contatandoId, setContatandoId] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null);
+
+  useEffect(() => {
+    obterLocalizacaoComPermissao().then(setCoordenadas);
+  }, []);
 
   useEffect(() => {
     const termo = texto.trim();
@@ -41,6 +49,9 @@ export function BuscaScreen({ navigation }: Props) {
         const lista = await listarPrestadores({
           busca: termo || undefined,
           segmento: categoriaAtiva || undefined,
+          cidade: cidadeUsuario || undefined,
+          lat: coordenadas?.lat,
+          lng: coordenadas?.lng,
         });
         setResultados(lista);
       } catch {
@@ -52,7 +63,7 @@ export function BuscaScreen({ navigation }: Props) {
     }, 400);
 
     return () => clearTimeout(temporizador);
-  }, [texto, categoriaAtiva]);
+  }, [texto, categoriaAtiva, coordenadas, cidadeUsuario]);
 
   async function aoContatar(prestador: Prestador) {
     setContatandoId(prestador.id);

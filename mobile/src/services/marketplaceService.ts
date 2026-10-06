@@ -52,8 +52,13 @@ export async function listarPrestadores(filtros: FiltrosMarketplace = {}): Promi
   return data;
 }
 
-export async function buscarPrestador(id: string): Promise<PrestadorDetalhe> {
-  const { data } = await api.get<PrestadorDetalhe>(`/api/prestadores/${id}`);
+export async function buscarPrestador(
+  id: string,
+  coordenadas?: { lat?: number; lng?: number } | null,
+): Promise<PrestadorDetalhe> {
+  const { data } = await api.get<PrestadorDetalhe>(`/api/prestadores/${id}`, {
+    params: { lat: coordenadas?.lat, lng: coordenadas?.lng },
+  });
   return data;
 }
 

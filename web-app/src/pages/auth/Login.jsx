@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { GoogleLoginButton } from '../../components/GoogleLoginButton';
+import { PasswordInput } from '../../components/PasswordInput';
 import { validarIdentificador } from '../../utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '../../utils/masks';
 import { loginComGoogle } from '../../services/googleAuthService';
@@ -107,9 +108,7 @@ export function Login() {
           value={identificador}
           onChange={(e) => aoDigitarIdentificador(e.target.value)}
         />
-        <input
-          style={styles.input}
-          type="password"
+        <PasswordInput
           placeholder="Sua senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}

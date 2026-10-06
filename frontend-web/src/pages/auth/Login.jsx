@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { PasswordInput } from '../../components/common/PasswordInput';
 
 export function Login() {
   const login = useAuthStore((s) => s.login);
@@ -41,9 +42,8 @@ export function Login() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
+        <PasswordInput
           style={styles.input}
-          type="password"
           placeholder="Senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}

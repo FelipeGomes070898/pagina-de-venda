@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { Prestador } from '@/services/marketplaceService';
+import { formatarDistancia } from '@/utils/distancia';
 
 interface Props {
   prestador: Prestador;
@@ -50,9 +51,6 @@ export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contata
   );
 }
 
-function formatarDistancia(km: number): string {
-  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
-}
 
 const styles = StyleSheet.create({
   card: {

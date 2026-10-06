@@ -15,6 +15,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
 import { AddressAutocompleteInput } from '@/components/common/AddressAutocompleteInput';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { useCategoryStore } from '@/store/categoryStore';
@@ -173,21 +174,15 @@ export function RegisterScreen({ navigation, route }: Props) {
           onChangeText={(texto) => setEndereco({ texto })}
           onSelecionar={(dados) => setEndereco({ texto: dados.enderecoCompleto, ...dados })}
         />
-        <TextInput
-          style={styles.input}
+        <PasswordInput
           placeholder={t('register.password_placeholder')}
-          placeholderTextColor={colors.muted}
           value={senha}
           onChangeText={setSenha}
-          secureTextEntry
         />
-        <TextInput
-          style={styles.input}
+        <PasswordInput
           placeholder={t('register.confirm_password_placeholder')}
-          placeholderTextColor={colors.muted}
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
-          secureTextEntry
         />
 
         {tipo === 'prestador' && (

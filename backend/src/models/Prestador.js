@@ -79,10 +79,31 @@ module.exports = {
     return rows[0] || null;
   },
 
-  async buscarPorId(id) {
+  // lat/lng opcionais (localização atual de quem está vendo o perfil) —
+  // sem eles, distancia_km volta null, igual listarAtivos sem localização.
+  async buscarPorId(id, { lat, lng } = {}) {
+    const usarDistancia = lat != null && lng != null;
+    let colunaDistancia = 'NULL AS distancia_km';
+    const valores = [id];
+
+    if (usarDistancia) {
+      valores.push(lat, lng);
+      colunaDistancia = `
+        CASE WHEN lat IS NULL OR lng IS NULL THEN NULL ELSE
+          ROUND((6371 * acos(
+            LEAST(1, GREATEST(-1,
+              cos(radians($2)) * cos(radians(lat)) *
+              cos(radians(lng) - radians($3)) +
+              sin(radians($2)) * sin(radians(lat))
+            ))
+          ))::numeric, 1)
+        END AS distancia_km
+      `;
+    }
+
     const { rows } = await pool.query(
-      `SELECT ${CAMPOS_PUBLICOS} FROM prestadores WHERE id = $1`,
-      [id],
+      `SELECT ${CAMPOS_PUBLICOS}, ${colunaDistancia} FROM prestadores WHERE id = $1`,
+      valores,
     );
     return rows[0] || null;
   },
@@ -95,8 +116,12 @@ module.exports = {
     const valores = [];
 
     if (cidade) {
+      // ILIKE (sem %) em vez de = : cidade vem de texto livre quando não
+      // tem Google Maps configurado (sem Places API, sem autocomplete
+      // padronizado) — "Porto Velho" e "porto velho" têm que contar como
+      // a mesma cidade.
       valores.push(cidade);
-      condicoes.push(`cidade = $${valores.length}`);
+      condicoes.push(`cidade ILIKE $${valores.length}`);
     }
     if (segmento) {
       valores.push(segmento);

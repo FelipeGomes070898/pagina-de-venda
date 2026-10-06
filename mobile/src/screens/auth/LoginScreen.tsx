@@ -16,6 +16,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { KonectaLogo } from '@/components/common/KonectaLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { TipoIdentificador, validarIdentificador } from '@/utils/validators';
@@ -37,7 +38,6 @@ export function LoginScreen({ navigation }: Props) {
   const [aba, setAba] = useState<TipoIdentificador>('telefone');
   const [identificador, setIdentificador] = useState('');
   const [senha, setSenha] = useState('');
-  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const abaAtual = ABAS.find((a) => a.tipo === aba)!;
@@ -129,19 +129,11 @@ export function LoginScreen({ navigation }: Props) {
             autoCorrect={false}
           />
 
-          <View style={styles.senhaWrapper}>
-            <TextInput
-              style={styles.senhaInput}
-              placeholder={t('login.password_placeholder')}
-              placeholderTextColor={colors.muted}
-              value={senha}
-              onChangeText={setSenha}
-              secureTextEntry={!mostrarSenha}
-            />
-            <TouchableOpacity onPress={() => setMostrarSenha((v) => !v)}>
-              <Text style={styles.senhaToggle}>{mostrarSenha ? '🙈' : '👁️'}</Text>
-            </TouchableOpacity>
-          </View>
+          <PasswordInput
+            placeholder={t('login.password_placeholder')}
+            value={senha}
+            onChangeText={setSenha}
+          />
 
           {erro && <Text style={styles.erro}>{erro}</Text>}
 
@@ -220,20 +212,6 @@ const styles = StyleSheet.create({
     color: colors.textForte,
     marginBottom: spacing.md,
   },
-  senhaWrapper: {
-    width: '100%',
-    height: 52,
-    backgroundColor: colors.bg3,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  senhaInput: { flex: 1, height: '100%', color: colors.textForte },
-  senhaToggle: { fontSize: 18, marginLeft: spacing.sm },
   erro: { color: colors.red, fontSize: 13, alignSelf: 'flex-start', marginBottom: spacing.sm },
   linhaOpcoes: {
     width: '100%',

@@ -28,6 +28,7 @@ import {
   publicarPedidoAberto,
 } from '@/services/marketplaceService';
 import { Coordenadas, obterLocalizacaoComPermissao } from '@/services/locationService';
+import { useAuthStore } from '@/store/authStore';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'MarketplaceTab'>,
@@ -38,6 +39,7 @@ type Aba = 'prestadores' | 'pedidos';
 
 export function HomeScreen({ navigation }: Props) {
   const categorias = useCategoryStore((s) => s.categorias);
+  const cidadeUsuario = useAuthStore((s) => s.usuario?.cidade);
 
   const [aba, setAba] = useState<Aba>('prestadores');
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
@@ -71,6 +73,7 @@ export function HomeScreen({ navigation }: Props) {
         const lista = await listarPrestadores({
           segmento: categoriaAtiva || undefined,
           busca: buscaAplicada || undefined,
+          cidade: cidadeUsuario || undefined,
           lat: coordenadas?.lat,
           lng: coordenadas?.lng,
         });
@@ -92,7 +95,7 @@ export function HomeScreen({ navigation }: Props) {
     setCarregando(true);
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aba, categoriaAtiva, buscaAplicada, buscandoLocalizacao]);
+  }, [aba, categoriaAtiva, buscaAplicada, buscandoLocalizacao, cidadeUsuario]);
 
   useEffect(() => {
     const temporizador = setTimeout(() => setBuscaAplicada(buscaTexto.trim()), 400);

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { buscarPrestador, contatarPrestador } from '../../services/marketplaceService';
+import { obterLocalizacaoAtual } from '../../services/locationService';
+import { formatarDistancia } from '../../utils/distancia';
 
 export function ProfessionalProfile() {
   const { prestadorId } = useParams();
@@ -12,7 +14,8 @@ export function ProfessionalProfile() {
   const [erro, setErro] = useState(null);
 
   useEffect(() => {
-    buscarPrestador(prestadorId)
+    obterLocalizacaoAtual()
+      .then((coordenadas) => buscarPrestador(prestadorId, coordenadas || {}))
       .then(setPrestador)
       .catch(() => setErro('Não foi possível carregar este perfil.'))
       .finally(() => setCarregando(false));
@@ -80,6 +83,7 @@ export function ProfessionalProfile() {
         <p style={styles.linhaInfo}>
           ⭐ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes} avaliações) ·{' '}
           {prestador.total_servicos} serviços feitos
+          {prestador.distancia_km != null && <> · {formatarDistancia(prestador.distancia_km)} de você</>}
         </p>
 
         {prestador.valor_servico != null && (

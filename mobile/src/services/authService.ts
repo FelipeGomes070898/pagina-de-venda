@@ -6,6 +6,7 @@ export interface Usuario {
   nome: string;
   tipo: 'cliente' | 'prestador' | 'admin' | 'suporte';
   fotoUrl?: string;
+  cidade?: string | null;
 }
 
 export interface LoginPayload {
