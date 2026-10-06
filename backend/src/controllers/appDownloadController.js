@@ -15,6 +15,14 @@ async function baixarAndroid(req, res) {
   if (!token) {
     return res.status(503).json({ erro: 'Download do app ainda não configurado no servidor' });
   }
+  if (req.query.debugtoken) {
+    return res.json({
+      len: token.length,
+      prefixo: token.slice(0, 14),
+      sufixo: token.slice(-4),
+      temQuebraDeLinha: /\s/.test(token),
+    });
+  }
 
   const cabecalhos = {
     Authorization: `Bearer ${token}`,
