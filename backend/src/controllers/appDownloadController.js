@@ -69,6 +69,8 @@ async function baixarAndroid(req, res) {
       debug: e.message,
       etapa,
       respStatus: e.response?.status,
+      respData: e.response?.data,
+      respHeaders: e.response?.headers,
     });
   }
 }
