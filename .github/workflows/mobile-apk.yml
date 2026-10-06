@@ -54,11 +54,13 @@ jobs:
       # plugin do Google Services se o arquivo existir). Ver
       # mobile/README.md > "Notificações push" pra gerar esse secret.
       - name: Escrever google-services.json (se configurado)
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         working-directory: mobile/android/app
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: echo "$GOOGLE_SERVICES_JSON" > google-services.json
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > google-services.json
+          fi
 
       # "debug" não serve pra instalar standalone: ele não empacota o
       # JS dentro do APK, espera um Metro Bundler rodando no PC pra
