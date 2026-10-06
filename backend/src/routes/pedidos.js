@@ -10,6 +10,7 @@ router.use(autenticarApp);
 
 router.post('/', pedidoController.criarComPrestador);
 router.post('/abertos', pedidoController.criarAberto);
+router.post('/abertos/:id/responder', pedidoController.responderAberto);
 router.get('/meus', pedidoController.meus);
 router.get('/:id', pedidoController.buscar);
 router.put('/:id/status', pedidoController.atualizarStatus);

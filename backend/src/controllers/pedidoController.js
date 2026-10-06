@@ -56,8 +56,34 @@ async function criarAberto(req, res) {
 }
 
 async function listarAbertos(req, res) {
-  const pedidos = await Pedido.listarAbertos();
+  const { cidade, segmento } = req.query;
+  const pedidos = await Pedido.listarAbertos({ cidade, segmento });
   res.json(pedidos);
+}
+
+// Prestador responde a um pedido em aberto (publicado por um cliente sem
+// escolher ninguém específico) — equivalente a "entrar em contato", só
+// que iniciado pelo prestador. A partir daqui segue o fluxo normal:
+// chat, proposta, fechamento.
+async function responderAberto(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Somente prestadores podem responder a um pedido aberto' });
+  }
+
+  const atualizado = await Pedido.responderAberto(req.params.id, req.usuarioApp.id);
+  if (!atualizado) {
+    return res.status(409).json({ erro: 'Este pedido já não está mais disponível' });
+  }
+
+  pushService
+    .enviarPush(atualizado.cliente_id, 'cliente', {
+      titulo: 'Um prestador respondeu seu pedido',
+      corpo: 'Toque para ver os detalhes e conversar.',
+      dados: { tipo: 'pedido_respondido', pedidoId: atualizado.id },
+    })
+    .catch(() => {});
+
+  res.json(atualizado);
 }
 
 async function meus(req, res) {
@@ -134,6 +160,7 @@ module.exports = {
   criarComPrestador,
   criarAberto,
   listarAbertos,
+  responderAberto,
   meus,
   buscar,
   atualizarStatus,

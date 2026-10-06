@@ -94,6 +94,7 @@ export interface MeuPerfil {
   avaliacao?: number;
   total_servicos?: number;
   total_avaliacoes?: number;
+  status?: 'ativo' | 'inadimplente' | 'bloqueado';
 }
 
 export async function meuPerfil(): Promise<MeuPerfil> {

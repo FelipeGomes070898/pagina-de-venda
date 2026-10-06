@@ -30,13 +30,49 @@ module.exports = {
     return rows[0];
   },
 
-  async listarAbertos() {
+  // `cidade` compara contra a cidade do CLIENTE que publicou o pedido
+  // (clientes.cidade) — mesmo princípio de "mesma cidade" usado no resto
+  // do marketplace, senão um prestador em Porto Velho veria pedidos de
+  // São Paulo.
+  async listarAbertos({ cidade, segmento } = {}) {
+    const condicoes = [`p.prestador_id IS NULL`, `p.status = 'pendente'`];
+    const valores = [];
+
+    if (cidade) {
+      valores.push(cidade);
+      condicoes.push(`c.cidade ILIKE $${valores.length}`);
+    }
+    if (segmento) {
+      valores.push(`%[${segmento}]%`);
+      condicoes.push(`p.descricao ILIKE $${valores.length}`);
+    }
+
     const { rows } = await pool.query(
-      `SELECT ${CAMPOS} FROM pedidos
-       WHERE prestador_id IS NULL AND status = 'pendente'
-       ORDER BY criado_em DESC`,
+      `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
+              p.valor, p.status, p.agendado_para, p.criado_em
+       FROM pedidos p
+       JOIN clientes c ON c.id = p.cliente_id
+       WHERE ${condicoes.join(' AND ')}
+       ORDER BY p.criado_em DESC`,
+      valores,
     );
     return rows;
+  },
+
+  // Prestador "assume" um pedido em aberto (sem dono prévio) — mesmo
+  // efeito de criarComPrestador, só que iniciado pelo prestador em vez
+  // do cliente. O WHERE prestador_id IS NULL torna isso atômico: se dois
+  // prestadores responderem ao mesmo tempo, só o primeiro UPDATE pega a
+  // linha, o segundo recebe 0 rows (tratado como "já respondido" no
+  // controller), nunca os dois.
+  async responderAberto(id, prestadorId) {
+    const { rows } = await pool.query(
+      `UPDATE pedidos SET prestador_id = $2
+       WHERE id = $1 AND prestador_id IS NULL AND status = 'pendente'
+       RETURNING ${CAMPOS}`,
+      [id, prestadorId],
+    );
+    return rows[0] || null;
   },
 
   async listarDoCliente(clienteId) {

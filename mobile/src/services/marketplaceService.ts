@@ -76,8 +76,17 @@ export async function publicarPedidoAberto(payload: {
   return data;
 }
 
-export async function listarPedidosAbertos(): Promise<Pedido[]> {
-  const { data } = await api.get<Pedido[]>('/api/pedidos/abertos');
+export async function listarPedidosAbertos(filtros: FiltrosMarketplace = {}): Promise<Pedido[]> {
+  const { data } = await api.get<Pedido[]>('/api/pedidos/abertos', {
+    params: { cidade: filtros.cidade, segmento: filtros.segmento },
+  });
+  return data;
+}
+
+// Prestador responde a um pedido em aberto (sem prestador vinculado
+// ainda) — equivalente a "entrar em contato", só que partindo dele.
+export async function responderPedidoAberto(pedidoId: string): Promise<Pedido> {
+  const { data } = await api.post<Pedido>(`/api/pedidos/abertos/${pedidoId}/responder`);
   return data;
 }
 

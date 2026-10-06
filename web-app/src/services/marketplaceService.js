@@ -22,7 +22,14 @@ export async function publicarPedidoAberto(payload) {
   return data;
 }
 
-export async function listarPedidosAbertos() {
-  const { data } = await api.get('/api/pedidos/abertos');
+export async function listarPedidosAbertos(filtros = {}) {
+  const { data } = await api.get('/api/pedidos/abertos', { params: filtros });
+  return data;
+}
+
+// Prestador responde a um pedido em aberto (sem prestador vinculado
+// ainda) — equivalente a "entrar em contato", só que partindo dele.
+export async function responderPedidoAberto(pedidoId) {
+  const { data } = await api.post(`/api/pedidos/abertos/${pedidoId}/responder`);
   return data;
 }

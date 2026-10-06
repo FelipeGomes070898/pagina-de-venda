@@ -111,10 +111,14 @@ module.exports = {
   // Marketplace: lista prestadores ativos, mais próximos primeiro quando
   // lat/lng são informados (distância por Haversine, em km). Sem
   // localização, cai para os mais recentes.
-  async listarAtivos({ cidade, segmento, busca, lat, lng, pagina = 1, porPagina = 20 } = {}) {
+  async listarAtivos({ cidade, segmento, busca, lat, lng, excluirId, pagina = 1, porPagina = 20 } = {}) {
     const condicoes = [`status = 'ativo'`];
     const valores = [];
 
+    if (excluirId) {
+      valores.push(excluirId);
+      condicoes.push(`id <> $${valores.length}`);
+    }
     if (cidade) {
       // ILIKE (sem %) em vez de = : cidade vem de texto livre quando não
       // tem Google Maps configurado (sem Places API, sem autocomplete

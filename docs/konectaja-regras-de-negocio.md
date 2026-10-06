@@ -153,9 +153,31 @@ Tabelas: `admins` (cargo, divisao_id, criado_por, ativo) e `divisoes`
 - **Preço definido pelo prestador.** Cada prestador cadastra o valor do seu
   serviço; esse valor aparece no card dele no marketplace.
 - **Cliente também pode publicar pedido no marketplace**, dizendo que
-  precisa de um serviço e sugerindo um valor (oferta reversa).
+  precisa de um serviço e sugerindo um valor (oferta reversa). **Prestador
+  pode responder a esse pedido** (`POST /api/pedidos/abertos/:id/responder`)
+  pra virar o prestador vinculado e seguir dali pro chat normal —
+  atômico (`WHERE prestador_id IS NULL`), então se dois prestadores
+  responderem ao mesmo tempo só o primeiro consegue, o segundo recebe
+  "pedido não está mais disponível".
 - **Ranking por proximidade:** usando a localização cadastrada por cliente e
   prestador, quem está mais perto aparece mais acima na lista.
+- **Home diferente por tipo de usuário.** Cliente e prestador logados veem
+  telas diferentes na página inicial (mobile: aba "Início"; web-app: `/`)
+  — não existia essa distinção até esta etapa, prestador caía na mesma
+  tela do cliente (inclusive via a si mesmo na lista, com um botão
+  "Contato" sem sentido nenhum). Agora:
+  - **Cliente** continua vendo o marketplace (buscar prestadores por
+    categoria/distância, ou publicar um pedido em aberto).
+  - **Prestador** vê um painel próprio: avaliação, total de serviços
+    concluídos, status da conta (ativo/inadimplente/bloqueado) — dados
+    que já vêm de `GET /api/auth/me`, sem endpoint novo — e a lista de
+    pedidos em aberto da própria cidade/categoria, com botão
+    "Responder". `GET /api/prestadores` também passou a excluir o
+    próprio prestador logado da lista (antes aparecia pra si mesmo em
+    qualquer tela que listasse prestadores, como a busca).
+  - Arquivos: `mobile/src/screens/home/{HomeScreen,ClienteHomeScreen,
+    PrestadorHomeScreen}.tsx`, `web-app/src/pages/marketplace/
+    {Marketplace,ClienteMarketplace,PrestadorHome}.jsx`.
 
 ## Contato e negociação
 
