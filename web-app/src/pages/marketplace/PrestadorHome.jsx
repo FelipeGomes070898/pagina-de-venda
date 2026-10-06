@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { NavHeader } from '../../components/NavHeader';
 import { CATEGORIAS } from '../../constants/categorias';
 import { meuPerfil } from '../../services/authService';
 import { listarPedidosAbertos, responderPedidoAberto } from '../../services/marketplaceService';
@@ -17,9 +18,8 @@ const ROTULO_STATUS = {
 // prestador caía na mesma tela do cliente, inclusive via a si mesmo na
 // lista com um botão "Contato" sem sentido nenhum.
 export function PrestadorHome() {
-  const { usuario, logout } = useAuthStore();
+  const cidadeUsuario = useAuthStore((s) => s.usuario?.cidade);
   const navigate = useNavigate();
-  const cidadeUsuario = usuario?.cidade;
 
   const [perfil, setPerfil] = useState(null);
   const [categoriaAtiva, setCategoriaAtiva] = useState(null);
@@ -67,17 +67,7 @@ export function PrestadorHome() {
 
   return (
     <div style={styles.pagina}>
-      <header style={styles.header}>
-        <div style={styles.marca}>KONECTA JÁ</div>
-        <div style={styles.headerDireita}>
-          <button style={styles.usuarioNome} onClick={() => navigate('/perfil')}>
-            {usuario?.nome}
-          </button>
-          <button style={styles.sair} onClick={logout}>
-            Sair
-          </button>
-        </div>
-      </header>
+      <NavHeader />
 
       <main style={styles.container}>
         <h1 style={styles.titulo}>Olá, {perfil?.nome?.split(' ')[0] || ''}</h1>
@@ -155,32 +145,6 @@ export function PrestadorHome() {
 
 const styles = {
   pagina: { minHeight: '100vh' },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px 24px',
-    borderBottom: '1px solid var(--konectaja-border)',
-  },
-  marca: { fontSize: 20, fontWeight: 900, color: 'var(--konectaja-laranja)', letterSpacing: 1 },
-  headerDireita: { display: 'flex', alignItems: 'center', gap: 12 },
-  usuarioNome: {
-    color: 'var(--konectaja-text)',
-    fontSize: 13,
-    fontWeight: 600,
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-  },
-  sair: {
-    background: 'transparent',
-    border: '1px solid var(--konectaja-border)',
-    color: 'var(--konectaja-muted)',
-    borderRadius: 8,
-    padding: '6px 12px',
-    fontSize: 12,
-  },
   container: { maxWidth: 640, margin: '0 auto', padding: 24 },
   titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 16px' },
   statsCard: {

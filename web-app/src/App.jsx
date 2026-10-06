@@ -8,6 +8,7 @@ import { BaixarApp } from './pages/BaixarApp';
 import { Marketplace } from './pages/marketplace/Marketplace';
 import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
 import { MeuPerfil } from './pages/profile/MeuPerfil';
+import { MeusChats } from './pages/chats/MeusChats';
 import { Chat } from './pages/chat/Chat';
 import { Review } from './pages/review/Review';
 
@@ -46,6 +47,14 @@ export default function App() {
           element={
             <RotaProtegida>
               <MeuPerfil />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/chats"
+          element={
+            <RotaProtegida>
+              <MeusChats />
             </RotaProtegida>
           }
         />

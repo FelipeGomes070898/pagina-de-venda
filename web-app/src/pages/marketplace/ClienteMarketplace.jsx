@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { NavHeader } from '../../components/NavHeader';
 import { ProfessionalCard } from '../../components/ProfessionalCard';
 import { CATEGORIAS } from '../../constants/categorias';
 import { obterLocalizacaoAtual } from '../../services/locationService';
@@ -12,8 +13,7 @@ import {
 } from '../../services/marketplaceService';
 
 export function ClienteMarketplace() {
-  const { usuario, logout } = useAuthStore();
-  const cidadeUsuario = usuario?.cidade;
+  const cidadeUsuario = useAuthStore((s) => s.usuario?.cidade);
   const navigate = useNavigate();
 
   const [aba, setAba] = useState('prestadores');
@@ -109,19 +109,7 @@ export function ClienteMarketplace() {
 
   return (
     <div style={styles.pagina}>
-      <header style={styles.header}>
-        <div style={styles.marca}>
-          KONECTA JÁ
-        </div>
-        <div style={styles.headerDireita}>
-          <button style={styles.usuarioNome} onClick={() => navigate('/perfil')}>
-            {usuario?.nome}
-          </button>
-          <button style={styles.sair} onClick={logout}>
-            Sair
-          </button>
-        </div>
-      </header>
+      <NavHeader />
 
       <main style={styles.container}>
         <h1 style={styles.titulo}>Marketplace</h1>
@@ -240,32 +228,6 @@ export function ClienteMarketplace() {
 
 const styles = {
   pagina: { minHeight: '100vh' },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px 24px',
-    borderBottom: '1px solid var(--konectaja-border)',
-  },
-  marca: { fontSize: 20, fontWeight: 900, color: 'var(--konectaja-laranja)', letterSpacing: 1 },
-  headerDireita: { display: 'flex', alignItems: 'center', gap: 12 },
-  usuarioNome: {
-    color: 'var(--konectaja-text)',
-    fontSize: 13,
-    fontWeight: 600,
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-  },
-  sair: {
-    background: 'transparent',
-    border: '1px solid var(--konectaja-border)',
-    color: 'var(--konectaja-muted)',
-    borderRadius: 8,
-    padding: '6px 12px',
-    fontSize: 12,
-  },
   container: { maxWidth: 640, margin: '0 auto', padding: 24 },
   titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 12px' },
   buscaInput: {

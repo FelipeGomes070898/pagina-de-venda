@@ -33,3 +33,8 @@ export async function responderPedidoAberto(pedidoId) {
   const { data } = await api.post(`/api/pedidos/abertos/${pedidoId}/responder`);
   return data;
 }
+
+export async function listarMinhasConversas() {
+  const { data } = await api.get('/api/pedidos/meus');
+  return data;
+}

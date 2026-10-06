@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { NavHeader } from '../../components/NavHeader';
 import { meuPerfil } from '../../services/authService';
 import { mascararCPF, mascararTelefoneBR } from '../../utils/masks';
 
@@ -12,7 +12,6 @@ const ROTULOS_COBRANCA = {
 
 export function MeuPerfil() {
   const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
 
   const [perfil, setPerfil] = useState(null);
   const [carregando, setCarregando] = useState(true);
@@ -25,16 +24,26 @@ export function MeuPerfil() {
       .finally(() => setCarregando(false));
   }, []);
 
-  if (carregando) return <div style={styles.centro}>Carregando...</div>;
-  if (erro || !perfil) return <div style={styles.centro}>{erro || 'Perfil não encontrado.'}</div>;
+  if (carregando) {
+    return (
+      <div style={styles.pagina}>
+        <NavHeader />
+        <div style={styles.centro}>Carregando...</div>
+      </div>
+    );
+  }
+  if (erro || !perfil) {
+    return (
+      <div style={styles.pagina}>
+        <NavHeader />
+        <div style={styles.centro}>{erro || 'Perfil não encontrado.'}</div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.pagina}>
-      <div style={styles.header}>
-        <button style={styles.voltar} onClick={() => navigate('/')}>
-          ← Marketplace
-        </button>
-      </div>
+      <NavHeader />
 
       <div style={styles.container}>
         <div style={styles.avatar}>{perfil.nome.charAt(0).toUpperCase()}</div>
@@ -87,21 +96,11 @@ function Campo({ label, valor }) {
 const styles = {
   pagina: { minHeight: '100vh' },
   centro: {
-    minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 48,
     color: 'var(--konectaja-muted)',
-  },
-  header: { display: 'flex' },
-  voltar: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--konectaja-azul)',
-    fontSize: 13,
-    fontWeight: 600,
-    padding: 16,
-    cursor: 'pointer',
   },
   container: { maxWidth: 480, margin: '0 auto', padding: '0 24px 32px' },
   avatar: {
