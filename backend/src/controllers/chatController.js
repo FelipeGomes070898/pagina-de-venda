@@ -1,6 +1,17 @@
 const Pedido = require('../models/Pedido');
 const Mensagem = require('../models/Mensagem');
 const Proposta = require('../models/Proposta');
+const pushService = require('../services/pushService');
+
+// Quem recebe a notificação é sempre a outra parte do pedido, nunca
+// quem acabou de agir. `null` quando o pedido ainda não tem prestador
+// vinculado (oferta aberta) — nesse caso não há pra quem notificar.
+function outraParte(pedido, remetente) {
+  if (remetente.tipo === 'cliente') {
+    return pedido.prestador_id ? { id: pedido.prestador_id, tipo: 'prestador' } : null;
+  }
+  return { id: pedido.cliente_id, tipo: 'cliente' };
+}
 
 async function carregarPedidoDoParticipante(req, res) {
   const pedido = await Pedido.buscarPorId(req.params.pedidoId);
@@ -43,6 +54,17 @@ async function enviarMensagem(req, res) {
     conteudo: conteudo.trim(),
   });
 
+  const destinatario = outraParte(pedido, req.usuarioApp);
+  if (destinatario) {
+    pushService
+      .enviarPush(destinatario.id, destinatario.tipo, {
+        titulo: 'Nova mensagem',
+        corpo: conteudo.trim().slice(0, 120),
+        dados: { tipo: 'mensagem', pedidoId: pedido.id },
+      })
+      .catch(() => {});
+  }
+
   res.status(201).json(mensagem);
 }
 
@@ -64,6 +86,17 @@ async function enviarProposta(req, res) {
   });
 
   await Mensagem.criarSistema(pedido.id, `Proposta enviada: R$ ${Number(valor).toFixed(2)}`);
+
+  const destinatario = outraParte(pedido, req.usuarioApp);
+  if (destinatario) {
+    pushService
+      .enviarPush(destinatario.id, destinatario.tipo, {
+        titulo: 'Nova proposta de valor',
+        corpo: `R$ ${Number(valor).toFixed(2)}${descricao ? ` — ${descricao}` : ''}`,
+        dados: { tipo: 'proposta', pedidoId: pedido.id },
+      })
+      .catch(() => {});
+  }
 
   res.status(201).json(proposta);
 }
@@ -101,6 +134,18 @@ async function responderProposta(req, res) {
   } else {
     await Mensagem.criarSistema(pedido.id, 'Proposta recusada.');
   }
+
+  // Notifica quem enviou a proposta original (não quem respondeu agora).
+  pushService
+    .enviarPush(proposta.remetente_id, proposta.remetente_tipo, {
+      titulo: acao === 'aceitar' ? 'Proposta aceita!' : 'Proposta recusada',
+      corpo:
+        acao === 'aceitar'
+          ? `Sua proposta de R$ ${Number(proposta.valor).toFixed(2)} foi aceita.`
+          : `Sua proposta de R$ ${Number(proposta.valor).toFixed(2)} foi recusada.`,
+      dados: { tipo: 'proposta_resposta', pedidoId: pedido.id },
+    })
+    .catch(() => {});
 
   res.json(propostaAtualizada);
 }

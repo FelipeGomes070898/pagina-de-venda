@@ -225,6 +225,11 @@ CREATE TABLE IF NOT EXISTS fcm_tokens (
   criado_em   TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- O mesmo token nunca pode pertencer a dois usuários: se o dispositivo
+-- trocar de conta, o INSERT ... ON CONFLICT (token) DO UPDATE em
+-- FcmToken.salvar reatribui o token ao novo usuário em vez de duplicar.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fcm_tokens_token ON fcm_tokens(token);
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

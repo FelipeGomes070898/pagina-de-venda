@@ -117,3 +117,11 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+// Push notifications (Firebase) — precisa de google-services.json (gerado
+// no Firebase Console e colocado nesta pasta, android/app/). Aplicar o
+// plugin sem o arquivo quebraria o build pra todo mundo; por isso só
+// aplica se ele existir. Ver mobile/README.md > "Notificações push".
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+}

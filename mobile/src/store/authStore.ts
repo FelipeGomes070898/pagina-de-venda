@@ -4,6 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAuthToken } from '@/services/api';
 import * as authService from '@/services/authService';
 import { CadastroPayload, LoginPayload, Usuario } from '@/services/authService';
+import {
+  registrarDispositivoParaNotificacoes,
+  removerDispositivoDasNotificacoes,
+} from '@/services/notificationService';
 
 interface AuthState {
   usuario: Usuario | null;
@@ -44,6 +48,7 @@ export const useAuthStore = create<AuthState>()(
           const { token, usuario } = await authService.login(payload);
           setAuthToken(token);
           set({ token, usuario, carregando: false });
+          registrarDispositivoParaNotificacoes().catch(() => {});
         } catch (e) {
           set({ carregando: false, erro: 'error_login_failed' });
           throw e;
@@ -56,6 +61,7 @@ export const useAuthStore = create<AuthState>()(
           const { token, usuario } = await authService.cadastro(payload);
           setAuthToken(token);
           set({ token, usuario, carregando: false });
+          registrarDispositivoParaNotificacoes().catch(() => {});
         } catch (e) {
           set({ carregando: false, erro: 'error_register_failed' });
           throw e;
@@ -67,9 +73,11 @@ export const useAuthStore = create<AuthState>()(
       definirSessao: ({ token, usuario }) => {
         setAuthToken(token);
         set({ token, usuario, erro: null });
+        registrarDispositivoParaNotificacoes().catch(() => {});
       },
 
       logout: () => {
+        removerDispositivoDasNotificacoes(get().token).catch(() => {});
         setAuthToken(null);
         set({ token: null, usuario: null });
       },
@@ -90,7 +98,10 @@ export const useAuthStore = create<AuthState>()(
       // 2. marcar hasHydrated — a navegação usa isso pra não decidir
       //    "não autenticado" antes da hora e piscar a tela de Login.
       onRehydrateStorage: () => (state) => {
-        if (state?.token) setAuthToken(state.token);
+        if (state?.token) {
+          setAuthToken(state.token);
+          registrarDispositivoParaNotificacoes().catch(() => {});
+        }
         useAuthStore.setState({ hasHydrated: true });
       },
     },

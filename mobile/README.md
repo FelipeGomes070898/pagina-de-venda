@@ -115,6 +115,39 @@ por isso funciona mesmo sem `android/`/`ios/` gerados. Só precisa de
 cadastro do prestador e no envio de endereço do chat) viram texto livre
 — sem sugestões nem lat/lng, mas sem quebrar nada.
 
+### Notificações push (nova mensagem, proposta, avaliação)
+
+Usa `@react-native-firebase/messaging`. Some sozinho se não estiver
+configurado — não pede permissão, não registra token, não quebra o
+login nem nenhuma outra tela. Pra ativar:
+
+1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
+   (gratuito, plano Spark já cobre isso).
+2. Dentro do projeto, adicione um app Android com o `applicationId`
+   `com.konectaja.app` (ver `android/app/build.gradle` → `namespace`) e
+   baixe o `google-services.json` gerado.
+3. Coloque esse arquivo em `android/app/google-services.json` — o
+   `android/app/build.gradle` já está preparado pra só aplicar o plugin
+   do Google Services quando o arquivo existir (sem ele, o build
+   continua normal, igual hoje).
+4. No CI (GitHub Actions), em vez de commitar o arquivo (ele tem um
+   identificador do projeto, mas nenhum segredo "secreto" de verdade —
+   ainda assim, mais seguro manter fora do repositório): cole o
+   conteúdo do `google-services.json` como secret
+   `GOOGLE_SERVICES_JSON` em Settings > Secrets and variables > Actions,
+   e adicione um passo no workflow (`.github/workflows/mobile-apk.yml`)
+   que escreve esse secret no arquivo antes do `./gradlew assembleRelease`.
+5. No backend (Vercel), gere uma chave de conta de serviço em
+   Firebase Console > Configurações do projeto > Contas de serviço >
+   Gerar nova chave privada, e cole o conteúdo do JSON gerado na
+   variável de ambiente `FIREBASE_SERVICE_ACCOUNT_JSON` (ver
+   `backend/src/config/firebase.js`).
+
+Sem os passos 2–4, `notificationService.ts` detecta que o módulo nativo
+não está disponível (`disponivel()` retorna `false`) e não faz nada. Sem
+o passo 5, o backend loga um aviso e não envia a notificação, mas nenhuma
+requisição falha por causa disso (mesmo padrão do `asaasService.js`).
+
 ## Stack
 
 React Native 0.73 + TypeScript, React Navigation (native-stack + bottom-tabs),

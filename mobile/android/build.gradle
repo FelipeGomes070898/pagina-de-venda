@@ -15,6 +15,11 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        // Push notifications (Firebase). O plugin só é aplicado em
+        // app/build.gradle se google-services.json existir — sem o
+        // arquivo (antes do dono criar o projeto no Firebase Console),
+        // o build continua normal, só sem notificações push.
+        classpath("com.google.gms:google-services:4.4.2")
     }
 }
 

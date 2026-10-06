@@ -15,6 +15,10 @@ android/local.properties
 *.keystore
 !debug.keystore
 
+# Push notifications (Firebase) — gerado no Firebase Console, específico
+# de cada ambiente/dono. Ver README.md > "Notificações push".
+android/app/google-services.json
+
 # Metro/Watchman
 .metro-health-check*
 

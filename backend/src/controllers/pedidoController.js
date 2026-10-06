@@ -1,6 +1,7 @@
 const Pedido = require('../models/Pedido');
 const Prestador = require('../models/Prestador');
 const asaasService = require('../services/asaasService');
+const pushService = require('../services/pushService');
 
 // Cliente toca em "Entrar em contato" com um prestador do marketplace.
 // Cria o pedido já com o valor anunciado pelo prestador (ponto de partida
@@ -22,6 +23,14 @@ async function criarComPrestador(req, res) {
     descricao,
     valor: prestador.valor_servico,
   });
+
+  pushService
+    .enviarPush(prestadorId, 'prestador', {
+      titulo: 'Novo pedido de serviço',
+      corpo: descricao ? descricao.slice(0, 120) : 'Um cliente quer contratar seu serviço.',
+      dados: { tipo: 'novo_pedido', pedidoId: pedido.id },
+    })
+    .catch(() => {});
 
   res.status(201).json(pedido);
 }
@@ -93,6 +102,14 @@ async function atualizarStatus(req, res) {
     if (prestador?.modelo_cobranca === 'percentual') {
       asaasService.cobrarTaxaServico(prestador, atualizado).catch(() => {});
     }
+
+    pushService
+      .enviarPush(atualizado.cliente_id, 'cliente', {
+        titulo: 'Serviço concluído',
+        corpo: 'Que tal avaliar o prestador?',
+        dados: { tipo: 'avaliar', pedidoId: atualizado.id },
+      })
+      .catch(() => {});
   }
 
   res.json(atualizado);

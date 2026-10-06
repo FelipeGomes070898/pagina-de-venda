@@ -7,6 +7,7 @@ const chat = require('./chat');
 const avaliacoes = require('./avaliacoes');
 const pagamentos = require('./pagamentos');
 const app = require('./app');
+const notificacoes = require('./notificacoes');
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/chat', chat);
 router.use('/avaliacoes', avaliacoes);
 router.use('/pagamentos', pagamentos);
 router.use('/app', app);
+router.use('/notificacoes', notificacoes);
 
 module.exports = router;

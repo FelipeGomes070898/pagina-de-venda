@@ -264,6 +264,24 @@ cobrável no modelo que escolheu no cadastro. ✅ Integração real feita:
 7. ~~Backend: endpoint de login unificado~~ ✅ feito — `POST /api/auth/login`
    (app, aceita celular/e-mail/CPF) e `POST /api/auth/admin/login`
    (painel, hierarquia interna) são rotas separadas.
+8. ~~Notificações push (nova mensagem, nova proposta, proposta
+   aceita/recusada, serviço concluído).~~ ✅ feito — igual Google/Maps,
+   com o mesmo princípio de degradar sem quebrar nada:
+   - Backend: `backend/src/services/pushService.js` (Firebase Admin
+     SDK), tabela `fcm_tokens` e `POST/DELETE /api/notificacoes/token`
+     pra salvar/remover o token do dispositivo. Gatilhos em
+     `chatController` (mensagem, proposta, resposta da proposta) e
+     `pedidoController` (novo pedido pro prestador, "avalie" pro
+     cliente quando concluído). Sem `FIREBASE_SERVICE_ACCOUNT_JSON`
+     configurada, só loga aviso e segue sem enviar nada.
+   - Mobile: `mobile/src/services/notificationService.ts`
+     (`@react-native-firebase/messaging`), registrado/removido no
+     login/cadastro/logout (`authStore.ts`) e com navegação direto pro
+     chat do pedido ao tocar na notificação (`AppNavigator.tsx`). Sem
+     `android/app/google-services.json`, o módulo nativo simplesmente
+     não está disponível e nada disso roda — não testável de ponta a
+     ponta aqui (exige projeto real no Firebase Console). Passo a
+     passo completo em `mobile/README.md` > "Notificações push".
 
 ### Primeiro acesso ao painel (conta do dono)
 
