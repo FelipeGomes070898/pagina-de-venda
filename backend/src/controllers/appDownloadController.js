@@ -15,21 +15,12 @@ async function baixarAndroid(req, res) {
   if (!token) {
     return res.status(503).json({ erro: 'Download do app ainda não configurado no servidor' });
   }
-  if (req.query.debugtoken) {
-    return res.json({
-      len: token.length,
-      prefixo: token.slice(0, 14),
-      sufixo: token.slice(-4),
-      temQuebraDeLinha: /\s/.test(token),
-    });
-  }
 
   const cabecalhos = {
     Authorization: `Bearer ${token}`,
     'User-Agent': 'konectaja-backend',
   };
 
-  let etapa = 'buscar release';
   try {
     const { data: release } = await axios.get(
       `https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}`,
@@ -38,10 +29,8 @@ async function baixarAndroid(req, res) {
 
     const asset = release.assets?.find((a) => a.name === NOME_ARQUIVO);
     if (!asset) {
-      return res.status(404).json({ erro: 'Instalador ainda não disponível', etapa, assets: release.assets?.map(a=>a.name) });
+      return res.status(404).json({ erro: 'Instalador ainda não disponível' });
     }
-
-    etapa = 'buscar asset: ' + asset.url;
 
     // O endpoint de asset do GitHub não devolve o arquivo em si — devolve
     // um 302 pra uma URL assinada e temporária (sem precisar de token)
@@ -61,17 +50,8 @@ async function baixarAndroid(req, res) {
     }
 
     res.redirect(302, urlAssinada);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error('baixarAndroid falhou:', etapa, e.message, e.response?.status, e.response?.data);
-    res.status(502).json({
-      erro: 'Não foi possível baixar o instalador agora. Tente novamente.',
-      debug: e.message,
-      etapa,
-      respStatus: e.response?.status,
-      respData: e.response?.data,
-      respHeaders: e.response?.headers,
-    });
+  } catch {
+    res.status(502).json({ erro: 'Não foi possível baixar o instalador agora. Tente novamente.' });
   }
 }
 
