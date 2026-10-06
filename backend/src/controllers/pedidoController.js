@@ -1,5 +1,6 @@
 const Pedido = require('../models/Pedido');
 const Prestador = require('../models/Prestador');
+const Cliente = require('../models/Cliente');
 const asaasService = require('../services/asaasService');
 const pushService = require('../services/pushService');
 
@@ -16,6 +17,9 @@ async function criarComPrestador(req, res) {
 
   const prestador = await Prestador.buscarPorId(prestadorId);
   if (!prestador) return res.status(404).json({ erro: 'Prestador não encontrado' });
+  if (prestador.status !== 'ativo') {
+    return res.status(409).json({ erro: 'Este prestador não está disponível pra novos pedidos no momento' });
+  }
 
   const pedido = await Pedido.criarComPrestador({
     clienteId: req.usuarioApp.id,
@@ -68,6 +72,13 @@ async function listarAbertos(req, res) {
 async function responderAberto(req, res) {
   if (req.usuarioApp.tipo !== 'prestador') {
     return res.status(403).json({ erro: 'Somente prestadores podem responder a um pedido aberto' });
+  }
+
+  const prestador = await Prestador.buscarPorId(req.usuarioApp.id);
+  if (prestador?.status !== 'ativo') {
+    return res.status(409).json({
+      erro: 'Sua conta está com pagamento pendente — regularize pra poder aceitar novos pedidos.',
+    });
   }
 
   const atualizado = await Pedido.responderAberto(req.params.id, req.usuarioApp.id);
@@ -123,6 +134,7 @@ async function atualizarStatus(req, res) {
   // o mesmo pedido for marcado concluído mais de uma vez.
   if (status === 'concluido' && pedido.status !== 'concluido' && atualizado.prestador_id) {
     await Prestador.incrementarServicos(atualizado.prestador_id);
+    await Cliente.incrementarServicos(atualizado.cliente_id);
 
     const prestador = await Prestador.buscarCompletoPorId(atualizado.prestador_id);
     if (prestador?.modelo_cobranca === 'percentual') {
@@ -137,6 +149,37 @@ async function atualizarStatus(req, res) {
       })
       .catch(() => {});
   }
+
+  res.json(atualizado);
+}
+
+const QUANDO_VALIDOS = ['antecipado', 'apos'];
+
+// Cliente avisa que já pagou (fora do app — Pix direto, dinheiro...) e
+// quando: antes do serviço ou depois de pronto. Só uma atestação, não
+// processa nenhum pagamento — fica registrado no pedido e aparece pro
+// prestador no chat.
+async function confirmarPagamento(req, res) {
+  const { quando } = req.body;
+  if (!QUANDO_VALIDOS.includes(quando)) {
+    return res.status(400).json({ erro: `quando deve ser um de: ${QUANDO_VALIDOS.join(', ')}` });
+  }
+
+  const pedido = await Pedido.buscarPorId(req.params.id);
+  if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado' });
+  if (pedido.cliente_id !== req.usuarioApp.id) {
+    return res.status(403).json({ erro: 'Somente o cliente do pedido pode confirmar o pagamento' });
+  }
+
+  const atualizado = await Pedido.confirmarPagamento(req.params.id, quando);
+
+  pushService
+    .enviarPush(atualizado.prestador_id, 'prestador', {
+      titulo: 'Cliente confirmou o pagamento',
+      corpo: quando === 'antecipado' ? 'Pagamento feito antecipado.' : 'Pagamento feito após o serviço.',
+      dados: { tipo: 'pagamento_confirmado', pedidoId: atualizado.id },
+    })
+    .catch(() => {});
 
   res.json(atualizado);
 }
@@ -164,5 +207,6 @@ module.exports = {
   meus,
   buscar,
   atualizarStatus,
+  confirmarPagamento,
   definirEndereco,
 };

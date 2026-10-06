@@ -10,6 +10,7 @@ router.post('/cadastro', authController.cadastro);
 router.post('/google', authController.loginGoogle);
 router.post('/recuperar-senha', authController.recuperarSenha);
 router.get('/me', autenticarApp, authController.meuPerfil);
+router.patch('/me/foto', autenticarApp, authController.atualizarFotoPerfil);
 
 // Painel administrativo (equipe interna)
 router.post('/admin/login', authController.loginAdmin);

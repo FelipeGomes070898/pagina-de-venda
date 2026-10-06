@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/database');
 
-const CAMPOS_PUBLICOS = `id, nome, email, telefone, cpf, foto_url, cidade, estado, idioma, criado_em`;
+const CAMPOS_PUBLICOS = `id, nome, email, telefone, cpf, foto_url, cidade, estado, idioma, total_servicos, avaliacao, total_avaliacoes, criado_em`;
 
 const COLUNA_POR_TIPO = {
   email: 'email',
@@ -61,6 +61,18 @@ module.exports = {
 
   async verificarSenha(senha, hash) {
     return bcrypt.compare(senha, hash);
+  },
+
+  async incrementarServicos(id) {
+    await pool.query(`UPDATE clientes SET total_servicos = total_servicos + 1 WHERE id = $1`, [id]);
+  },
+
+  async atualizarFoto(id, fotoUrl) {
+    const { rows } = await pool.query(
+      `UPDATE clientes SET foto_url = $2 WHERE id = $1 RETURNING ${CAMPOS_PUBLICOS}`,
+      [id, fotoUrl],
+    );
+    return rows[0] || null;
   },
 
   // "Esqueci minha senha" sem e-mail/SMS: confirma a identidade batendo

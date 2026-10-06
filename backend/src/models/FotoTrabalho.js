@@ -22,4 +22,21 @@ module.exports = {
     );
     return rows[0];
   },
+
+  // Só remove se a foto realmente for desse prestador — devolve a URL
+  // removida (null se não encontrou) pra quem chamou apagar do Blob
+  // também.
+  async remover(prestadorId, fotoId) {
+    const { rows } = await pool.query(
+      `DELETE FROM fotos_trabalhos WHERE id = $1 AND prestador_id = $2 RETURNING url`,
+      [fotoId, prestadorId],
+    );
+    if (!rows[0]) return null;
+
+    await pool.query(
+      `UPDATE prestadores SET total_fotos_trabalho = GREATEST(total_fotos_trabalho - 1, 0) WHERE id = $1`,
+      [prestadorId],
+    );
+    return rows[0].url;
+  },
 };

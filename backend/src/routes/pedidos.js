@@ -14,6 +14,7 @@ router.post('/abertos/:id/responder', pedidoController.responderAberto);
 router.get('/meus', pedidoController.meus);
 router.get('/:id', pedidoController.buscar);
 router.put('/:id/status', pedidoController.atualizarStatus);
+router.patch('/:id/confirmar-pagamento', pedidoController.confirmarPagamento);
 router.put('/:id/endereco', pedidoController.definirEndereco);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const Prestador = require('../models/Prestador');
 const FotoTrabalho = require('../models/FotoTrabalho');
 const Avaliacao = require('../models/Avaliacao');
+const { removerImagem } = require('../config/blob');
 
 // email/cpf/telefone vêm de CAMPOS_PUBLICOS (compartilhado com o retorno do
 // próprio cadastro do prestador, que precisa desses campos) mas não podem
@@ -52,4 +53,29 @@ async function buscar(req, res) {
   res.json({ ...ocultarPii(prestador), fotos, avaliacoes });
 }
 
-module.exports = { listar, buscar };
+// Álbum de trabalhos realizados — chamado depois que a imagem já subiu
+// direto pro Vercel Blob (ver uploadController.js), igual
+// atualizarFotoPerfil em authController.js.
+async function adicionarFotoTrabalho(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Somente prestadores têm álbum de trabalhos' });
+  }
+  const { url, legenda } = req.body;
+  if (!url) return res.status(400).json({ erro: 'url é obrigatória' });
+
+  const foto = await FotoTrabalho.adicionar(req.usuarioApp.id, { url, legenda });
+  res.status(201).json(foto);
+}
+
+async function removerFotoTrabalho(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Somente prestadores têm álbum de trabalhos' });
+  }
+  const urlRemovida = await FotoTrabalho.remover(req.usuarioApp.id, req.params.fotoId);
+  if (!urlRemovida) return res.status(404).json({ erro: 'Foto não encontrada' });
+
+  removerImagem(urlRemovida).catch(() => {});
+  res.status(204).end();
+}
+
+module.exports = { listar, buscar, adicionarFotoTrabalho, removerFotoTrabalho };

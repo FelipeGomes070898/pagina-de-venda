@@ -274,4 +274,25 @@ async function meuPerfil(req, res) {
   return res.json({ ...prestador, tipo: 'prestador' });
 }
 
-module.exports = { login, cadastro, loginGoogle, loginAdmin, recuperarSenha, meuPerfil };
+// Chamado depois que o app/site já subiu a imagem direto pro Vercel Blob
+// (ver uploadController.js) — aqui só salva a URL resultante no cadastro.
+async function atualizarFotoPerfil(req, res) {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ erro: 'url é obrigatória' });
+
+  const { id, tipo } = req.usuarioApp;
+  const atualizado =
+    tipo === 'cliente' ? await Cliente.atualizarFoto(id, url) : await Prestador.atualizarFoto(id, url);
+
+  res.json({ ...atualizado, tipo });
+}
+
+module.exports = {
+  login,
+  cadastro,
+  loginGoogle,
+  loginAdmin,
+  recuperarSenha,
+  meuPerfil,
+  atualizarFotoPerfil,
+};

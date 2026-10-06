@@ -230,6 +230,40 @@ CREATE TABLE IF NOT EXISTS fcm_tokens (
 -- FcmToken.salvar reatribui o token ao novo usuário em vez de duplicar.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fcm_tokens_token ON fcm_tokens(token);
 
+-- Colunas adicionadas depois da criação inicial das tabelas — ALTER em
+-- vez de entrar no CREATE TABLE porque o banco de produção já existe;
+-- CREATE TABLE IF NOT EXISTS não altera uma tabela que já está lá.
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS total_servicos INT DEFAULT 0;
+-- nota que PRESTADORES dão ao cliente (pontualidade, educação...) — nunca
+-- se mistura com prestadores.avaliacao, que só vem de clientes avaliando
+-- prestadores (ver tabela avaliacoes_clientes abaixo).
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS avaliacao DECIMAL(2,1) DEFAULT 5.0;
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS total_avaliacoes INT DEFAULT 0;
+-- preenchido pelo cliente no chat: "paguei antecipado" ou "paguei depois
+-- que o serviço terminou" — só uma atestação dele, não processa
+-- pagamento nenhum (isso continua fora do app, Pix direto pro prestador
+-- ou dinheiro, até existir split de pagamentos de verdade).
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento_confirmado_em TIMESTAMPTZ;
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento_quando VARCHAR(12);
+-- pagamento_quando: antecipado | apos
+
+-- Avaliação na outra direção: prestador avalia o cliente (educado,
+-- ofereceu água/café, ambiente organizado etc). Tabela separada de
+-- `avaliacoes` de propósito — nunca pode se misturar com a nota que o
+-- cliente dá pro prestador (prestadores.avaliacao continua vindo só de
+-- `avaliacoes`, nunca desta tabela).
+CREATE TABLE IF NOT EXISTS avaliacoes_clientes (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  cliente_id   UUID REFERENCES clientes(id),
+  prestador_id UUID REFERENCES prestadores(id),
+  pedido_id    UUID REFERENCES pedidos(id),
+  nota         INT CHECK (nota BETWEEN 1 AND 5),
+  comentario   TEXT,
+  tags         TEXT[], -- ['Pontual', 'Ofereceu água/café', 'Ambiente organizado', ...]
+  criado_em    TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_avaliacoes_clientes_cliente ON avaliacoes_clientes(cliente_id);
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

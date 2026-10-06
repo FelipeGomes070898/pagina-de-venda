@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 const CAMPOS = `
   id, cliente_id, prestador_id, descricao, endereco, lat, lng, valor,
-  status, agendado_para, criado_em
+  status, agendado_para, criado_em, pagamento_confirmado_em, pagamento_quando
 `;
 
 module.exports = {
@@ -119,6 +119,17 @@ module.exports = {
     const { rows } = await pool.query(
       `UPDATE pedidos SET status = 'andamento', valor = $2 WHERE id = $1 RETURNING ${CAMPOS}`,
       [id, valor],
+    );
+    return rows[0] || null;
+  },
+
+  // Atestação do cliente — não processa pagamento nenhum, só registra
+  // que ele diz ter pago (e quando), pro prestador ver no chat.
+  async confirmarPagamento(id, quando) {
+    const { rows } = await pool.query(
+      `UPDATE pedidos SET pagamento_confirmado_em = NOW(), pagamento_quando = $2
+       WHERE id = $1 RETURNING ${CAMPOS}`,
+      [id, quando],
     );
     return rows[0] || null;
   },

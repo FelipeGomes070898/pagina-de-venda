@@ -206,6 +206,14 @@ module.exports = {
     return rows[0] || null;
   },
 
+  async atualizarFoto(id, fotoUrl) {
+    const { rows } = await pool.query(
+      `UPDATE prestadores SET foto_url = $2 WHERE id = $1 RETURNING ${CAMPOS_PUBLICOS}`,
+      [id, fotoUrl],
+    );
+    return rows[0] || null;
+  },
+
   // Painel admin: lista todos os prestadores (qualquer status), com PII
   // visível — diferente de listarAtivos (marketplace público, só ativos).
   // `cidade` só vem preenchido quando quem pede é um gerente (restrito à
