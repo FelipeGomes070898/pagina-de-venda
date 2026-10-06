@@ -11,6 +11,11 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    # contents:write pra poder publicar/atualizar a Release abaixo — o
+    # padrão em alguns repositórios é read-only, o que faria esse passo
+    # falhar com 403 sem isso.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -67,3 +72,17 @@ jobs:
           name: konectaja-apk
           path: mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
+
+      # Além do artefato acima (só acessível com login no GitHub e some
+      # em 30 dias), publica numa Release de tag fixa ("app-mobile") —
+      # é nela que o backend busca o APK pra servir o link de download
+      # público do site (sem precisar de conta no GitHub).
+      - name: Publicar na Release "app-mobile" (link usado pelo site)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-mobile
+          name: App Android — build mais recente
+          body: Build mais recente do app Android, gerado automaticamente a cada atualização do código em mobile/.
+          files: mobile/android/app/build/outputs/apk/release/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

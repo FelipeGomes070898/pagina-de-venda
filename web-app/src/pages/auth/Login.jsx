@@ -138,6 +138,12 @@ export function Login() {
         <p style={styles.rodape}>
           Ainda não tem conta? <Link style={styles.link} to="/cadastro">Criar conta</Link>
         </p>
+        <p style={styles.rodape}>
+          Prefere usar pelo celular?{' '}
+          <Link style={styles.link} to="/baixar-app">
+            Baixar o app
+          </Link>
+        </p>
       </form>
     </div>
   );

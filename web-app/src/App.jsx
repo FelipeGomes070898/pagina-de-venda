@@ -4,6 +4,7 @@ import { RotaProtegida } from './components/RotaProtegida';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { RecuperarSenha } from './pages/auth/RecuperarSenha';
+import { BaixarApp } from './pages/BaixarApp';
 import { Marketplace } from './pages/marketplace/Marketplace';
 import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
 import { MeuPerfil } from './pages/profile/MeuPerfil';
@@ -22,6 +23,7 @@ export default function App() {
           path="/recuperar-senha"
           element={usuario ? <Navigate to="/" replace /> : <RecuperarSenha />}
         />
+        <Route path="/baixar-app" element={<BaixarApp />} />
 
         <Route
           path="/"
