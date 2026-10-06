@@ -3,6 +3,7 @@ const { OAuth2Client } = require('google-auth-library');
 const Admin = require('../models/Admin');
 const Cliente = require('../models/Cliente');
 const Prestador = require('../models/Prestador');
+const FotoTrabalho = require('../models/FotoTrabalho');
 const asaasService = require('../services/asaasService');
 
 const googleClient = process.env.GOOGLE_CLIENT_ID ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID) : null;
@@ -271,7 +272,8 @@ async function meuPerfil(req, res) {
 
   const prestador = await Prestador.buscarPorId(id);
   if (!prestador) return res.status(404).json({ erro: 'Conta não encontrada' });
-  return res.json({ ...prestador, tipo: 'prestador' });
+  const fotos = await FotoTrabalho.listarPorPrestador(id);
+  return res.json({ ...prestador, tipo: 'prestador', fotos });
 }
 
 // Chamado depois que o app/site já subiu a imagem direto pro Vercel Blob

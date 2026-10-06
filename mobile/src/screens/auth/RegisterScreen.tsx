@@ -241,6 +241,11 @@ export function RegisterScreen({ navigation, route }: Props) {
                 </Text>
               </TouchableOpacity>
             </View>
+            <Text style={styles.explicacaoCobranca}>
+              {modeloCobranca === 'percentual'
+                ? t('register.billing_explain_percent')
+                : t('register.billing_explain_fixed')}
+            </Text>
           </>
         )}
 
@@ -299,6 +304,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   rotulo: { color: colors.text, fontSize: 13, fontWeight: '600', marginBottom: spacing.sm },
+  explicacaoCobranca: { color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: spacing.xs },
   categorias: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
   chip: {
     paddingHorizontal: spacing.md,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
@@ -47,9 +47,13 @@ export function PerfilScreen(_props: Props) {
       </View>
 
       <View style={styles.card}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarTexto}>{(usuario?.nome || '?').charAt(0).toUpperCase()}</Text>
-        </View>
+        {perfil?.foto_url ? (
+          <Image source={{ uri: perfil.foto_url }} style={styles.avatarFoto} />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarTexto}>{(usuario?.nome || '?').charAt(0).toUpperCase()}</Text>
+          </View>
+        )}
         <Text style={styles.nome}>{usuario?.nome || 'Usuário'}</Text>
         <Text style={styles.tipo}>{ROTULO_TIPO[usuario?.tipo || ''] || usuario?.tipo}</Text>
       </View>
@@ -68,6 +72,21 @@ export function PerfilScreen(_props: Props) {
               <Campo label="Estado" valor={perfil.estado || '—'} />
             </View>
 
+            {perfil.tipo === 'cliente' && (
+              <View style={styles.secao}>
+                <Text style={styles.secaoTitulo}>Seu histórico</Text>
+                <Campo label="Serviços contratados" valor={String(perfil.total_servicos ?? 0)} />
+                <Campo
+                  label="Avaliação dos prestadores"
+                  valor={
+                    perfil.total_avaliacoes
+                      ? `⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`
+                      : 'Ainda sem avaliações'
+                  }
+                />
+              </View>
+            )}
+
             {perfil.tipo === 'prestador' && (
               <View style={styles.secao}>
                 <Text style={styles.secaoTitulo}>Dados de prestador</Text>
@@ -85,6 +104,20 @@ export function PerfilScreen(_props: Props) {
                   valor={`⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
                 />
                 <Campo label="Serviços concluídos" valor={String(perfil.total_servicos ?? 0)} />
+              </View>
+            )}
+
+            {perfil.tipo === 'prestador' && (perfil.fotos?.length ?? 0) > 0 && (
+              <View style={styles.secao}>
+                <Text style={styles.secaoTitulo}>Álbum de trabalhos</Text>
+                <View style={styles.albumGrade}>
+                  {perfil.fotos!.map((foto) => (
+                    <Image key={foto.id} source={{ uri: foto.url }} style={styles.albumFoto} />
+                  ))}
+                </View>
+                <Text style={styles.albumAjuda}>
+                  Pra adicionar ou remover fotos, use o site da Konecta Já pelo navegador por enquanto.
+                </Text>
               </View>
             )}
           </>
@@ -132,6 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   avatarTexto: { color: '#fff', fontWeight: '800', fontSize: 30 },
+  avatarFoto: { width: 72, height: 72, borderRadius: 36, marginBottom: spacing.md },
   nome: { color: colors.textForte, fontWeight: '800', fontSize: 18 },
   tipo: { color: colors.muted, fontSize: 13, marginTop: 2 },
   secao: {
@@ -152,6 +186,9 @@ const styles = StyleSheet.create({
   },
   campoLabel: { color: colors.muted, fontSize: 13 },
   campoValor: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
+  albumGrade: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  albumFoto: { width: 80, height: 80, borderRadius: radius.sm },
+  albumAjuda: { color: colors.muted, fontSize: 11, marginTop: spacing.sm },
   opcao: {
     backgroundColor: colors.bg2,
     borderRadius: radius.md,

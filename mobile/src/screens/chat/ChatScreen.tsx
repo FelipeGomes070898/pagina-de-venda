@@ -18,6 +18,7 @@ import {
   Conversa,
   Mensagem,
   Proposta,
+  confirmarPagamento,
   enviarEndereco,
   enviarMensagem,
   enviarProposta,
@@ -71,6 +72,7 @@ export function ChatScreen({ route, navigation }: Props) {
     texto: '',
   });
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
+  const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
 
   const listaRef = useRef<FlatList>(null);
 
@@ -160,6 +162,18 @@ export function ChatScreen({ route, navigation }: Props) {
     }
   }
 
+  async function aoConfirmarPagamento(quando: 'antecipado' | 'apos') {
+    setConfirmandoPagamento(true);
+    try {
+      await confirmarPagamento(pedidoId, quando);
+      await carregar();
+    } catch {
+      setErro('Não foi possível confirmar o pagamento.');
+    } finally {
+      setConfirmandoPagamento(false);
+    }
+  }
+
   if (carregando || !conversa) {
     return (
       <View style={styles.centro}>
@@ -231,6 +245,37 @@ export function ChatScreen({ route, navigation }: Props) {
         <Text style={styles.enderecoConfirmado}>📍 Endereço enviado: {conversa.pedido.endereco}</Text>
       )}
 
+      {meuTipo === 'cliente' && (pedidoFechado || pedidoConcluido) && (
+        <View style={styles.enderecoWrapper}>
+          {conversa.pedido.pagamento_confirmado_em ? (
+            <Text style={styles.enderecoConfirmado}>
+              💳 Pagamento confirmado por você (
+              {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
+            </Text>
+          ) : (
+            <>
+              <Text style={styles.enderecoRotulo}>Já pagou o prestador (Pix, dinheiro...)?</Text>
+              <View style={styles.linhaEnvio}>
+                <TouchableOpacity
+                  style={styles.botaoPagamento}
+                  onPress={() => aoConfirmarPagamento('antecipado')}
+                  disabled={confirmandoPagamento}
+                >
+                  <Text style={styles.botaoPagamentoTexto}>Paguei antes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.botaoPagamento}
+                  onPress={() => aoConfirmarPagamento('apos')}
+                  disabled={confirmandoPagamento}
+                >
+                  <Text style={styles.botaoPagamentoTexto}>Paguei depois</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
+      )}
+
       {pedidoFechado && (
         <TouchableOpacity
           style={styles.botaoConcluir}
@@ -252,7 +297,12 @@ export function ChatScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       )}
       {pedidoConcluido && meuTipo === 'prestador' && (
-        <Text style={styles.enderecoConfirmado}>Serviço concluído.</Text>
+        <TouchableOpacity
+          style={styles.botaoConcluir}
+          onPress={() => navigation.navigate('ReviewCliente', { pedidoId, clienteNome: prestadorNome })}
+        >
+          <Text style={styles.botaoConcluirTexto}>⭐ Avaliar cliente</Text>
+        </TouchableOpacity>
       )}
 
       {!pedidoConcluido && mostrarFormProposta && (
@@ -446,6 +496,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   botaoConcluirTexto: { color: colors.green, fontWeight: '700', fontSize: 13 },
+  botaoPagamento: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.laranja,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  botaoPagamentoTexto: { color: colors.laranja, fontWeight: '700', fontSize: 12 },
   linhaEnvio: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,

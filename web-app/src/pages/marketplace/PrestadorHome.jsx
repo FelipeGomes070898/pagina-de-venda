@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { NavHeader } from '../../components/NavHeader';
+import { BottomNav } from '../../components/BottomNav';
 import { CATEGORIAS } from '../../constants/categorias';
 import { meuPerfil } from '../../services/authService';
 import { listarPedidosAbertos, responderPedidoAberto } from '../../services/marketplaceService';
@@ -67,7 +67,7 @@ export function PrestadorHome() {
 
   return (
     <div style={styles.pagina}>
-      <NavHeader />
+      <BottomNav />
 
       <main style={styles.container}>
         <h1 style={styles.titulo}>Olá, {perfil?.nome?.split(' ')[0] || ''}</h1>
@@ -145,7 +145,7 @@ export function PrestadorHome() {
 
 const styles = {
   pagina: { minHeight: '100vh' },
-  container: { maxWidth: 640, margin: '0 auto', padding: 24 },
+  container: { maxWidth: 640, margin: '0 auto', padding: '24px 24px 104px' },
   titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 16px' },
   statsCard: {
     display: 'flex',

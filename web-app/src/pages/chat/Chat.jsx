@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { AddressAutocompleteInput } from '../../components/AddressAutocompleteInput';
 import {
   atualizarStatusPedido,
+  confirmarPagamento,
   enviarEndereco,
   enviarMensagem,
   enviarProposta,
@@ -50,6 +51,7 @@ export function Chat() {
   const [endereco, setEndereco] = useState({ texto: '', lat: null, lng: null });
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
+  const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
 
   const listaRef = useRef(null);
 
@@ -139,6 +141,18 @@ export function Chat() {
     }
   }
 
+  async function aoConfirmarPagamento(quando) {
+    setConfirmandoPagamento(true);
+    try {
+      await confirmarPagamento(pedidoId, quando);
+      await carregar();
+    } catch {
+      setErro('Não foi possível confirmar o pagamento.');
+    } finally {
+      setConfirmandoPagamento(false);
+    }
+  }
+
   if (carregando || !conversa) {
     return <div style={styles.centro}>Carregando...</div>;
   }
@@ -198,6 +212,37 @@ export function Chat() {
         <p style={styles.enderecoConfirmado}>📍 Endereço enviado: {conversa.pedido.endereco}</p>
       )}
 
+      {meuTipo === 'cliente' && (pedidoFechado || pedidoConcluido) && (
+        <div style={styles.pagamentoWrapper}>
+          {conversa.pedido.pagamento_confirmado_em ? (
+            <p style={styles.enderecoConfirmado}>
+              💳 Pagamento confirmado por você (
+              {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
+            </p>
+          ) : (
+            <>
+              <p style={styles.enderecoRotulo}>Já pagou o prestador (Pix, dinheiro...)?</p>
+              <div style={styles.linhaEnvio}>
+                <button
+                  style={styles.botaoPagamento}
+                  onClick={() => aoConfirmarPagamento('antecipado')}
+                  disabled={confirmandoPagamento}
+                >
+                  Paguei antes do serviço
+                </button>
+                <button
+                  style={styles.botaoPagamento}
+                  onClick={() => aoConfirmarPagamento('apos')}
+                  disabled={confirmandoPagamento}
+                >
+                  Paguei depois do serviço
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {pedidoFechado && (
         <button style={styles.botaoConcluir} onClick={aoMarcarConcluido} disabled={finalizando}>
           {finalizando ? 'Marcando...' : 'Marcar serviço como concluído'}
@@ -212,7 +257,14 @@ export function Chat() {
           ⭐ Avaliar prestador
         </button>
       )}
-      {pedidoConcluido && meuTipo === 'prestador' && <p style={styles.enderecoConfirmado}>Serviço concluído.</p>}
+      {pedidoConcluido && meuTipo === 'prestador' && (
+        <button
+          style={styles.botaoConcluir}
+          onClick={() => navigate(`/avaliar-cliente/${pedidoId}`, { state: { clienteNome: prestadorNome } })}
+        >
+          ⭐ Avaliar cliente
+        </button>
+      )}
 
       {!pedidoConcluido && mostrarFormProposta && (
         <div style={styles.linhaEnvio}>
@@ -322,6 +374,17 @@ const styles = {
   erro: { color: 'var(--konectaja-red)', fontSize: 12, textAlign: 'center' },
   enderecoWrapper: { maxWidth: 640, margin: '0 auto', width: '100%', padding: '0 16px 8px' },
   enderecoRotulo: { color: 'var(--konectaja-green)', fontSize: 12, fontWeight: 600, marginBottom: 6 },
+  pagamentoWrapper: { maxWidth: 640, margin: '0 auto', width: '100%', padding: '0 16px 8px' },
+  botaoPagamento: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    border: '1px solid var(--konectaja-laranja)',
+    background: 'transparent',
+    color: 'var(--konectaja-laranja)',
+    fontWeight: 700,
+    fontSize: 12,
+  },
   enderecoConfirmado: { color: 'var(--konectaja-muted)', fontSize: 12, textAlign: 'center', padding: '0 16px 8px' },
   botaoConcluir: {
     maxWidth: 640,

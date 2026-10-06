@@ -11,6 +11,7 @@ import { MeuPerfil } from './pages/profile/MeuPerfil';
 import { MeusChats } from './pages/chats/MeusChats';
 import { Chat } from './pages/chat/Chat';
 import { Review } from './pages/review/Review';
+import { ReviewCliente } from './pages/review/ReviewCliente';
 
 export default function App() {
   const usuario = useAuthStore((s) => s.usuario);
@@ -71,6 +72,14 @@ export default function App() {
           element={
             <RotaProtegida>
               <Review />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/avaliar-cliente/:pedidoId"
+          element={
+            <RotaProtegida>
+              <ReviewCliente />
             </RotaProtegida>
           }
         />

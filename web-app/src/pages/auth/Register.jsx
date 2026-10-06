@@ -191,6 +191,11 @@ export function Register() {
                 R$ 25,00 fixo por mês
               </button>
             </div>
+            <p style={styles.explicacaoCobranca}>
+              {modeloCobranca === 'percentual'
+                ? 'Você não paga nada enquanto não trabalha. A cada serviço marcado como concluído, cobramos 5% do valor combinado (o cliente continua te pagando direto, por Pix ou dinheiro). Se essa cobrança não for paga, sua conta fica temporariamente bloqueada pra novos pedidos até regularizar.'
+                : 'Cobramos R$ 25,00 uma vez por mês, independente de quantos serviços você fizer naquele mês — compensa se você trabalha bastante. O cliente sempre te paga direto (Pix ou dinheiro); essa taxa é só o acesso à plataforma.'}
+            </p>
           </>
         )}
 
@@ -254,6 +259,7 @@ const styles = {
     fontSize: 14,
   },
   rotulo: { color: 'var(--konectaja-text)', fontSize: 13, fontWeight: 600, margin: '4px 0 0' },
+  explicacaoCobranca: { color: 'var(--konectaja-muted)', fontSize: 12, lineHeight: 1.5, margin: '4px 0 0' },
   categorias: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   chip: {
     padding: '8px 14px',

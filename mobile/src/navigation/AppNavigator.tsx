@@ -12,6 +12,7 @@ import { MainTabsNavigator } from './MainTabsNavigator';
 import { ProProfileScreen } from '@/screens/profile/ProProfileScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { ReviewScreen } from '@/screens/orders/ReviewScreen';
+import { ReviewClienteScreen } from '@/screens/orders/ReviewClienteScreen';
 import { useAuthStore } from '@/store/authStore';
 import { configurarAberturaPorNotificacao } from '@/services/notificationService';
 
@@ -75,6 +76,7 @@ export function AppNavigator() {
             <Stack.Screen name="ProProfile" component={ProProfileScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="Review" component={ReviewScreen} />
+            <Stack.Screen name="ReviewCliente" component={ReviewClienteScreen} />
           </>
         )}
 

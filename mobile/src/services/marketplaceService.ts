@@ -33,6 +33,8 @@ export interface Pedido {
   valor: number | null;
   status: string;
   criado_em: string;
+  pagamento_confirmado_em: string | null;
+  pagamento_quando: 'antecipado' | 'apos' | null;
 }
 
 export interface Conversa extends Pedido {

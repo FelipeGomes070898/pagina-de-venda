@@ -78,6 +78,13 @@ export async function loginComGoogle(idToken: string): Promise<LoginGoogleRespon
   return data;
 }
 
+export interface FotoTrabalho {
+  id: string;
+  url: string;
+  legenda: string | null;
+  criado_em: string;
+}
+
 export interface MeuPerfil {
   id: string;
   nome: string;
@@ -87,14 +94,19 @@ export interface MeuPerfil {
   cidade: string | null;
   estado: string | null;
   tipo: 'cliente' | 'prestador';
+  foto_url?: string | null;
+  // cliente e prestador têm os dois, mas o sentido da nota é diferente
+  // (avaliação QUE o cliente recebeu dos prestadores vs. que o
+  // prestador recebeu dos clientes) — nunca se misturam no backend.
+  avaliacao?: number;
+  total_servicos?: number;
+  total_avaliacoes?: number;
   // só em prestador:
   segmento?: string | null;
   valor_servico?: number | null;
   modelo_cobranca?: 'percentual' | 'fixo_mensal';
-  avaliacao?: number;
-  total_servicos?: number;
-  total_avaliacoes?: number;
   status?: 'ativo' | 'inadimplente' | 'bloqueado';
+  fotos?: FotoTrabalho[];
 }
 
 export async function meuPerfil(): Promise<MeuPerfil> {

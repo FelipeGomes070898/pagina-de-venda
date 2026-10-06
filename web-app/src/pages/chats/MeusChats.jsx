@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NavHeader } from '../../components/NavHeader';
+import { BottomNav } from '../../components/BottomNav';
 import { listarMinhasConversas } from '../../services/marketplaceService';
 
 const ROTULO_STATUS = {
@@ -31,7 +31,7 @@ export function MeusChats() {
 
   return (
     <div style={styles.pagina}>
-      <NavHeader />
+      <BottomNav />
 
       <main style={styles.container}>
         <h1 style={styles.titulo}>Chats</h1>
@@ -78,7 +78,7 @@ export function MeusChats() {
 
 const styles = {
   pagina: { minHeight: '100vh' },
-  container: { maxWidth: 640, margin: '0 auto', padding: 24 },
+  container: { maxWidth: 640, margin: '0 auto', padding: '24px 24px 104px' },
   titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 16px' },
   erro: { color: 'var(--konectaja-red)', fontSize: 13 },
   info: { color: 'var(--konectaja-muted)', textAlign: 'center', marginTop: 32, fontSize: 13 },

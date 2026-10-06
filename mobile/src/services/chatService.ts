@@ -66,3 +66,13 @@ export async function enviarEndereco(
   const { data } = await api.put<Pedido>(`/api/pedidos/${pedidoId}/endereco`, payload);
   return data;
 }
+
+// quando: 'antecipado' (pagou antes do serviço) | 'apos' (pagou depois
+// de pronto). Só uma atestação do cliente, não processa pagamento.
+export async function confirmarPagamento(
+  pedidoId: string,
+  quando: 'antecipado' | 'apos',
+): Promise<Pedido> {
+  const { data } = await api.patch<Pedido>(`/api/pedidos/${pedidoId}/confirmar-pagamento`, { quando });
+  return data;
+}

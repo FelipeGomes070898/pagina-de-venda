@@ -15,4 +15,5 @@ export type RootStackParamList = {
   ProProfile: { prestadorId: string; prestadorNome: string };
   Chat: { pedidoId: string; prestadorNome: string };
   Review: { pedidoId: string; prestadorNome: string };
+  ReviewCliente: { pedidoId: string; clienteNome: string };
 };

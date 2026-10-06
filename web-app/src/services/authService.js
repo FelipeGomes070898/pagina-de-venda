@@ -19,3 +19,9 @@ export async function meuPerfil() {
   const { data } = await api.get('/api/auth/me');
   return data;
 }
+
+// Chamado depois que a foto já subiu pro Vercel Blob (ver uploadService.js).
+export async function atualizarFotoPerfil(url) {
+  const { data } = await api.patch('/api/auth/me/foto', { url });
+  return data;
+}
