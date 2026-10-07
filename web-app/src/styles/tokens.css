@@ -1,16 +1,22 @@
 :root {
   --konectaja-laranja: #d97706; /* laranja queimado — cor primária */
+  --konectaja-laranja-escuro: #b45309; /* fim do gradiente / hover */
+  --konectaja-laranja-soft: #fde9d0; /* fundo suave da cor primária */
   --konectaja-azul: #1f2937; /* azul profundo — secundária */
-  --konectaja-verde: #10b981; /* disponível / sucesso / avaliação */
-  --konectaja-bg: #fafafa;
+  --konectaja-verde: #15803d; /* disponível / sucesso / avaliação */
+  --konectaja-verde-soft: #dcf3e4;
+  --konectaja-bg: #faf8f5; /* off-white quente */
   --konectaja-bg2: #ffffff; /* cards e superfícies elevadas */
-  --konectaja-bg3: #f3f4f6; /* chrome secundário */
-  --konectaja-text: #374151;
-  --konectaja-text-forte: #111827;
-  --konectaja-muted: #6b7280;
-  --konectaja-border: #d1d5db;
-  --konectaja-green: #10b981;
-  --konectaja-red: #dc2626;
+  --konectaja-bg3: #f5f0e9; /* chrome secundário */
+  --konectaja-text: #44403c;
+  --konectaja-text-forte: #1c1917;
+  --konectaja-muted: #8a8580;
+  --konectaja-border: #e7e1d7;
+  --konectaja-green: #15803d;
+  --konectaja-red: #b91c1c;
+  --konectaja-shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05), 0 1px 1px rgba(28, 25, 23, 0.04);
+  --konectaja-shadow-md: 0 6px 16px rgba(28, 25, 23, 0.08);
+  --konectaja-shadow-lg: 0 18px 44px rgba(28, 25, 23, 0.16);
 }
 
 * {
@@ -26,8 +32,9 @@ body,
 body {
   margin: 0;
   background: var(--konectaja-bg);
+  background-image: radial-gradient(circle at 15% -10%, rgba(217, 119, 6, 0.06), transparent 45%);
   color: var(--konectaja-text);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 input,

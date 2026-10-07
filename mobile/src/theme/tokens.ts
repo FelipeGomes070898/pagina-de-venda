@@ -2,17 +2,19 @@
 // acessível, trabalho honesto, dinâmico, confiável."
 export const colors = {
   laranja: '#D97706', // laranja queimado — cor primária (botões, ações, destaque)
-  laranjaEscuro: '#B45309', // hover/pressed da cor primária
+  laranjaEscuro: '#B45309', // hover/pressed da cor primária / fim do gradiente
+  laranjaSoft: '#FDE9D0', // fundo suave da cor primária
   azul: '#1F2937', // azul profundo — secundária (texto forte, ícones de navegação)
-  bg: '#FAFAFA',
+  bg: '#FAF8F5', // off-white quente
   bg2: '#FFFFFF', // cards e superfícies elevadas
-  bg3: '#F3F4F6', // chrome secundário (chips inativos, divisores)
-  text: '#374151',
-  textForte: '#111827',
-  muted: '#6B7280',
-  border: '#D1D5DB',
-  green: '#10B981', // disponível / sucesso / avaliação
-  red: '#DC2626',
+  bg3: '#F5F0E9', // chrome secundário (chips inativos, divisores)
+  text: '#44403C',
+  textForte: '#1C1917',
+  muted: '#8A8580',
+  border: '#E7E1D7',
+  green: '#15803D', // disponível / sucesso / avaliação
+  greenSoft: '#DCF3E4',
+  red: '#B91C1C',
 };
 
 export const spacing = {
@@ -40,9 +42,18 @@ export const typography = {
 
 // Sombra suave padrão (elevação discreta dos cards).
 export const sombra = {
-  shadowColor: '#000000',
+  shadowColor: '#1C1917',
   shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.06,
-  shadowRadius: 8,
+  shadowOpacity: 0.08,
+  shadowRadius: 10,
   elevation: 2,
+};
+
+// Sombra mais forte (cards de destaque, botões flutuantes).
+export const sombraForte = {
+  shadowColor: '#1C1917',
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.16,
+  shadowRadius: 20,
+  elevation: 6,
 };

@@ -149,7 +149,15 @@ export function MeuPerfil() {
           ) : (
             <div style={styles.avatar}>{perfil.nome.charAt(0).toUpperCase()}</div>
           )}
-          <div style={styles.avatarEditar}>{enviandoFoto ? '...' : '📷'}</div>
+          <div style={styles.avatarEditar}>
+            {enviandoFoto ? (
+              '...'
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z" /><circle cx="12" cy="13.5" r="3.2" />
+              </svg>
+            )}
+          </div>
         </button>
         <input
           ref={inputFotoPerfil}
@@ -181,7 +189,7 @@ export function MeuPerfil() {
               label="Avaliação dos prestadores"
               valor={
                 perfil.total_avaliacoes
-                  ? `⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`
+                  ? `★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`
                   : 'Ainda sem avaliações'
               }
             />
@@ -200,7 +208,7 @@ export function MeuPerfil() {
               <Campo label="Cobrança da plataforma" valor={ROTULOS_COBRANCA[perfil.modelo_cobranca] || '—'} />
               <Campo
                 label="Avaliação"
-                valor={`⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`}
+                valor={`★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`}
               />
               <Campo label="Serviços concluídos" valor={String(perfil.total_servicos)} />
             </div>
@@ -333,28 +341,31 @@ const styles = {
   avatar: {
     width: 88,
     height: 88,
-    borderRadius: 44,
-    background: 'var(--konectaja-laranja)',
+    borderRadius: 999,
+    background: 'linear-gradient(135deg, #F6AD3C, var(--konectaja-laranja-escuro))',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 800,
     fontSize: 36,
+    boxShadow: '0 4px 10px rgba(180, 83, 9, 0.35)',
+    border: '2.5px solid #fff',
   },
-  avatarFoto: { width: 88, height: 88, borderRadius: 44, objectFit: 'cover' },
+  avatarFoto: { width: 88, height: 88, borderRadius: 999, objectFit: 'cover' },
   avatarEditar: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     background: 'var(--konectaja-bg2)',
     border: '1px solid var(--konectaja-border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: 'var(--konectaja-shadow-sm)',
     fontSize: 13,
   },
   nome: { color: 'var(--konectaja-text-forte)', fontSize: 20, textAlign: 'center', margin: 0 },

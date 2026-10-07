@@ -14,6 +14,18 @@ import {
 
 const INTERVALO_ATUALIZACAO_MS = 5000;
 
+const IconePin = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 21s-7-6.3-7-11.5A7 7 0 0 1 19 9.5C19 14.7 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.3" />
+  </svg>
+);
+
+const IconeCheck = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 12l5 5L20 6" />
+  </svg>
+);
+
 function montarLinhaDoTempo(conversa) {
   const itens = [
     ...conversa.mensagens.map((m) => ({ tipoItem: 'mensagem', id: `m-${m.id}`, criadoEm: m.criado_em, dado: m })),
@@ -229,14 +241,16 @@ export function Chat() {
       )}
 
       {conversa.pedido.endereco && (
-        <p style={styles.enderecoConfirmado}>📍 Endereço enviado: {conversa.pedido.endereco}</p>
+        <p style={styles.enderecoConfirmado}>
+          <IconePin /> Endereço enviado: {conversa.pedido.endereco}
+        </p>
       )}
 
       {meuTipo === 'cliente' && (pedidoFechado || pedidoConcluido) && (
         <div style={styles.pagamentoWrapper}>
           {conversa.pedido.pagamento_confirmado_em ? (
             <p style={styles.enderecoConfirmado}>
-              💳 Pagamento confirmado por você (
+              <IconeCheck /> Pagamento confirmado por você (
               {conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'},{' '}
               {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
             </p>
@@ -381,7 +395,7 @@ function CartaoProposta({ proposta, meuTipo, podeResponder, onResponder }) {
         </p>
       )}
       {proposta.status !== 'pendente' && (
-        <p style={styles.cartaoPropostaStatus}>{proposta.status === 'aceita' ? 'Aceita ✅' : 'Recusada'}</p>
+        <p style={styles.cartaoPropostaStatus}>{proposta.status === 'aceita' ? 'Aceita' : 'Recusada'}</p>
       )}
     </div>
   );
@@ -440,7 +454,16 @@ const styles = {
     fontSize: 11,
     padding: '4px 0',
   },
-  enderecoConfirmado: { color: 'var(--konectaja-muted)', fontSize: 12, textAlign: 'center', padding: '0 16px 8px' },
+  enderecoConfirmado: {
+    color: 'var(--konectaja-verde)',
+    fontSize: 12,
+    textAlign: 'center',
+    padding: '0 16px 8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
   botaoConcluir: {
     maxWidth: 640,
     width: 'calc(100% - 32px)',
