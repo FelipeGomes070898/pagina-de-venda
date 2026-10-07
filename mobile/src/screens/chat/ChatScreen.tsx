@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -74,6 +75,7 @@ export function ChatScreen({ route, navigation }: Props) {
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<'app' | 'pix_direto' | null>(null);
+  const [cancelando, setCancelando] = useState(false);
 
   const listaRef = useRef<FlatList>(null);
 
@@ -175,6 +177,27 @@ export function ChatScreen({ route, navigation }: Props) {
     }
   }
 
+  function aoCancelarPedido() {
+    Alert.alert('Cancelar pedido', 'Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.', [
+      { text: 'Voltar', style: 'cancel' },
+      {
+        text: 'Cancelar pedido',
+        style: 'destructive',
+        onPress: async () => {
+          setCancelando(true);
+          try {
+            await atualizarStatusPedido(pedidoId, 'cancelado');
+            await carregar();
+          } catch {
+            setErro('Não foi possível cancelar o pedido.');
+          } finally {
+            setCancelando(false);
+          }
+        },
+      },
+    ]);
+  }
+
   if (carregando || !conversa) {
     return (
       <View style={styles.centro}>
@@ -185,6 +208,8 @@ export function ChatScreen({ route, navigation }: Props) {
 
   const pedidoFechado = conversa.pedido.status === 'andamento';
   const pedidoConcluido = conversa.pedido.status === 'concluido';
+  const pedidoCancelado = conversa.pedido.status === 'cancelado';
+  const podeCancelar = !pedidoConcluido && !pedidoCancelado;
   const podeReceberEndereco = meuTipo === 'cliente' && pedidoFechado && !conversa.pedido.endereco;
 
   return (
@@ -322,7 +347,15 @@ export function ChatScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       )}
 
-      {!pedidoConcluido && mostrarFormProposta && (
+      {pedidoCancelado && <Text style={styles.pedidoCanceladoAviso}>Este pedido foi cancelado.</Text>}
+
+      {podeCancelar && (
+        <TouchableOpacity style={styles.botaoCancelar} onPress={aoCancelarPedido} disabled={cancelando}>
+          <Text style={styles.botaoCancelarTexto}>{cancelando ? 'Cancelando...' : 'Cancelar pedido'}</Text>
+        </TouchableOpacity>
+      )}
+
+      {!pedidoConcluido && !pedidoCancelado && mostrarFormProposta && (
         <View style={styles.linhaEnvio}>
           <TextInput
             style={styles.inputFlex}
@@ -338,24 +371,26 @@ export function ChatScreen({ route, navigation }: Props) {
         </View>
       )}
 
-      <View style={styles.rodape}>
-        <TouchableOpacity
-          style={styles.botaoProposta}
-          onPress={() => setMostrarFormProposta((v) => !v)}
-        >
-          <Text style={styles.botaoPropostaTexto}>R$</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={styles.inputMensagem}
-          placeholder="Escreva uma mensagem..."
-          placeholderTextColor={colors.muted}
-          value={texto}
-          onChangeText={setTexto}
-        />
-        <TouchableOpacity style={styles.botaoEnviar} onPress={aoEnviarMensagem} disabled={enviando}>
-          <Text style={styles.botaoEnviarTexto}>Enviar</Text>
-        </TouchableOpacity>
-      </View>
+      {!pedidoCancelado && (
+        <View style={styles.rodape}>
+          <TouchableOpacity
+            style={styles.botaoProposta}
+            onPress={() => setMostrarFormProposta((v) => !v)}
+          >
+            <Text style={styles.botaoPropostaTexto}>R$</Text>
+          </TouchableOpacity>
+          <TextInput
+            style={styles.inputMensagem}
+            placeholder="Escreva uma mensagem..."
+            placeholderTextColor={colors.muted}
+            value={texto}
+            onChangeText={setTexto}
+          />
+          <TouchableOpacity style={styles.botaoEnviar} onPress={aoEnviarMensagem} disabled={enviando}>
+            <Text style={styles.botaoEnviarTexto}>Enviar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -513,6 +548,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   botaoConcluirTexto: { color: colors.green, fontWeight: '700', fontSize: 13 },
+  botaoCancelar: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.red,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  botaoCancelarTexto: { color: colors.red, fontWeight: '700', fontSize: 13 },
+  pedidoCanceladoAviso: {
+    color: colors.red,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
   botaoPagamento: {
     flex: 1,
     backgroundColor: 'transparent',

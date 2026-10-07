@@ -125,8 +125,27 @@ async function atualizarStatus(req, res) {
   if (!Pedido.ehParte(pedido, req.usuarioApp)) {
     return res.status(403).json({ erro: 'Você não faz parte deste pedido' });
   }
+  if (['concluido', 'cancelado'].includes(pedido.status)) {
+    return res.status(409).json({ erro: 'Este pedido já foi finalizado e não pode mais mudar de status' });
+  }
 
   const atualizado = await Pedido.atualizarStatus(req.params.id, status);
+
+  if (status === 'cancelado') {
+    const outraParte =
+      req.usuarioApp.tipo === 'cliente'
+        ? { id: atualizado.prestador_id, tipo: 'prestador' }
+        : { id: atualizado.cliente_id, tipo: 'cliente' };
+    if (outraParte.id) {
+      pushService
+        .enviarPush(outraParte.id, outraParte.tipo, {
+          titulo: 'Pedido cancelado',
+          corpo: 'O outro lado cancelou este pedido.',
+          dados: { tipo: 'pedido_cancelado', pedidoId: atualizado.id },
+        })
+        .catch(() => {});
+    }
+  }
 
   // Serviço concluído + prestador no modelo "5% por serviço" → cobra a
   // taxa agora. Best-effort: não falha a requisição se o Asaas cair.

@@ -53,6 +53,7 @@ export function Chat() {
   const [finalizando, setFinalizando] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState(null);
+  const [cancelando, setCancelando] = useState(false);
 
   const listaRef = useRef(null);
 
@@ -154,12 +155,29 @@ export function Chat() {
     }
   }
 
+  async function aoCancelarPedido() {
+    if (!window.confirm('Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.')) {
+      return;
+    }
+    setCancelando(true);
+    try {
+      await atualizarStatusPedido(pedidoId, 'cancelado');
+      await carregar();
+    } catch {
+      setErro('Não foi possível cancelar o pedido.');
+    } finally {
+      setCancelando(false);
+    }
+  }
+
   if (carregando || !conversa) {
     return <div style={styles.centro}>Carregando...</div>;
   }
 
   const pedidoFechado = conversa.pedido.status === 'andamento';
   const pedidoConcluido = conversa.pedido.status === 'concluido';
+  const pedidoCancelado = conversa.pedido.status === 'cancelado';
+  const podeCancelar = !pedidoConcluido && !pedidoCancelado;
   const podeReceberEndereco = meuTipo === 'cliente' && pedidoFechado && !conversa.pedido.endereco;
 
   return (
@@ -283,7 +301,15 @@ export function Chat() {
         </button>
       )}
 
-      {!pedidoConcluido && mostrarFormProposta && (
+      {pedidoCancelado && <p style={styles.pedidoCanceladoAviso}>Este pedido foi cancelado.</p>}
+
+      {podeCancelar && (
+        <button style={styles.botaoCancelar} onClick={aoCancelarPedido} disabled={cancelando}>
+          {cancelando ? 'Cancelando...' : 'Cancelar pedido'}
+        </button>
+      )}
+
+      {!pedidoConcluido && !pedidoCancelado && mostrarFormProposta && (
         <div style={styles.linhaEnvio}>
           <input
             style={styles.inputFlex}
@@ -297,24 +323,26 @@ export function Chat() {
         </div>
       )}
 
-      <form style={styles.rodape} onSubmit={aoEnviarMensagem}>
-        <button
-          type="button"
-          style={styles.botaoProposta}
-          onClick={() => setMostrarFormProposta((v) => !v)}
-        >
-          R$
-        </button>
-        <input
-          style={styles.inputMensagem}
-          placeholder="Escreva uma mensagem..."
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-        />
-        <button style={styles.botaoEnviar} type="submit" disabled={enviando}>
-          Enviar
-        </button>
-      </form>
+      {!pedidoCancelado && (
+        <form style={styles.rodape} onSubmit={aoEnviarMensagem}>
+          <button
+            type="button"
+            style={styles.botaoProposta}
+            onClick={() => setMostrarFormProposta((v) => !v)}
+          >
+            R$
+          </button>
+          <input
+            style={styles.inputMensagem}
+            placeholder="Escreva uma mensagem..."
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+          />
+          <button style={styles.botaoEnviar} type="submit" disabled={enviando}>
+            Enviar
+          </button>
+        </form>
+      )}
     </div>
   );
 }
@@ -421,6 +449,25 @@ const styles = {
     color: 'var(--konectaja-green)',
     fontWeight: 700,
     fontSize: 13,
+  },
+  botaoCancelar: {
+    maxWidth: 640,
+    width: 'calc(100% - 32px)',
+    margin: '0 auto 8px',
+    background: 'transparent',
+    border: '1px solid var(--konectaja-red)',
+    borderRadius: 12,
+    padding: 10,
+    color: 'var(--konectaja-red)',
+    fontWeight: 700,
+    fontSize: 13,
+  },
+  pedidoCanceladoAviso: {
+    color: 'var(--konectaja-red)',
+    fontSize: 13,
+    fontWeight: 600,
+    textAlign: 'center',
+    padding: '0 16px 8px',
   },
   linhaEnvio: { display: 'flex', gap: 8, maxWidth: 640, margin: '0 auto', width: '100%', padding: '0 16px 8px' },
   inputFlex: { flex: 1, height: 44, borderRadius: 12, border: '1px solid var(--konectaja-border)', background: 'var(--konectaja-bg2)', color: 'var(--konectaja-text-forte)', padding: '0 14px', fontSize: 14 },
