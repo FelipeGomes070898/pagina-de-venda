@@ -246,6 +246,8 @@ ALTER TABLE clientes ADD COLUMN IF NOT EXISTS total_avaliacoes INT DEFAULT 0;
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento_confirmado_em TIMESTAMPTZ;
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento_quando VARCHAR(12);
 -- pagamento_quando: antecipado | apos
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagamento_forma VARCHAR(12);
+-- pagamento_forma: app | pix_direto
 
 -- Avaliação na outra direção: prestador avalia o cliente (educado,
 -- ofereceu água/café, ambiente organizado etc). Tabela separada de

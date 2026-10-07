@@ -68,11 +68,12 @@ export async function enviarEndereco(
 }
 
 // quando: 'antecipado' (pagou antes do serviço) | 'apos' (pagou depois
-// de pronto). Só uma atestação do cliente, não processa pagamento.
+// de pronto). forma: 'app' | 'pix_direto'. Só uma atestação do cliente,
+// não processa pagamento.
 export async function confirmarPagamento(
   pedidoId: string,
-  quando: 'antecipado' | 'apos',
+  payload: { quando: 'antecipado' | 'apos'; forma: 'app' | 'pix_direto' | null },
 ): Promise<Pedido> {
-  const { data } = await api.patch<Pedido>(`/api/pedidos/${pedidoId}/confirmar-pagamento`, { quando });
+  const { data } = await api.patch<Pedido>(`/api/pedidos/${pedidoId}/confirmar-pagamento`, payload);
   return data;
 }

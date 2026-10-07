@@ -35,6 +35,7 @@ export interface Pedido {
   criado_em: string;
   pagamento_confirmado_em: string | null;
   pagamento_quando: 'antecipado' | 'apos' | null;
+  pagamento_forma: 'app' | 'pix_direto' | null;
 }
 
 export interface Conversa extends Pedido {

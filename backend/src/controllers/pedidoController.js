@@ -154,15 +154,21 @@ async function atualizarStatus(req, res) {
 }
 
 const QUANDO_VALIDOS = ['antecipado', 'apos'];
+const FORMA_VALIDAS = ['app', 'pix_direto'];
 
-// Cliente avisa que já pagou (fora do app — Pix direto, dinheiro...) e
-// quando: antes do serviço ou depois de pronto. Só uma atestação, não
-// processa nenhum pagamento — fica registrado no pedido e aparece pro
-// prestador no chat.
+// Cliente avisa que já pagou — quando (antes/depois do serviço) e como
+// (pelo app ou direto no Pix do prestador). Só uma atestação, não
+// processa nenhum pagamento de verdade — fica registrado no pedido e
+// aparece pro prestador no chat. A cobrança da taxa da plataforma (5%)
+// acontece de qualquer forma quando o pedido é concluído (ver
+// atualizarStatus), independente de como o cliente pagou o prestador.
 async function confirmarPagamento(req, res) {
-  const { quando } = req.body;
+  const { quando, forma } = req.body;
   if (!QUANDO_VALIDOS.includes(quando)) {
     return res.status(400).json({ erro: `quando deve ser um de: ${QUANDO_VALIDOS.join(', ')}` });
+  }
+  if (forma && !FORMA_VALIDAS.includes(forma)) {
+    return res.status(400).json({ erro: `forma deve ser um de: ${FORMA_VALIDAS.join(', ')}` });
   }
 
   const pedido = await Pedido.buscarPorId(req.params.id);
@@ -171,7 +177,7 @@ async function confirmarPagamento(req, res) {
     return res.status(403).json({ erro: 'Somente o cliente do pedido pode confirmar o pagamento' });
   }
 
-  const atualizado = await Pedido.confirmarPagamento(req.params.id, quando);
+  const atualizado = await Pedido.confirmarPagamento(req.params.id, { quando, forma });
 
   pushService
     .enviarPush(atualizado.prestador_id, 'prestador', {

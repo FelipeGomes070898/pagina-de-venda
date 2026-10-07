@@ -31,8 +31,9 @@ export async function atualizarStatusPedido(pedidoId, status) {
 }
 
 // quando: 'antecipado' (pagou antes do serviço) | 'apos' (pagou depois
-// de pronto). Só uma atestação do cliente, não processa pagamento.
-export async function confirmarPagamento(pedidoId, quando) {
-  const { data } = await api.patch(`/api/pedidos/${pedidoId}/confirmar-pagamento`, { quando });
+// de pronto). forma: 'app' | 'pix_direto'. Só uma atestação do cliente,
+// não processa pagamento.
+export async function confirmarPagamento(pedidoId, { quando, forma }) {
+  const { data } = await api.patch(`/api/pedidos/${pedidoId}/confirmar-pagamento`, { quando, forma });
   return data;
 }

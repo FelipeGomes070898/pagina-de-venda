@@ -73,6 +73,7 @@ export function ChatScreen({ route, navigation }: Props) {
   });
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState<'app' | 'pix_direto' | null>(null);
 
   const listaRef = useRef<FlatList>(null);
 
@@ -165,7 +166,7 @@ export function ChatScreen({ route, navigation }: Props) {
   async function aoConfirmarPagamento(quando: 'antecipado' | 'apos') {
     setConfirmandoPagamento(true);
     try {
-      await confirmarPagamento(pedidoId, quando);
+      await confirmarPagamento(pedidoId, { quando, forma: formaPagamento });
       await carregar();
     } catch {
       setErro('Não foi possível confirmar o pagamento.');
@@ -250,11 +251,24 @@ export function ChatScreen({ route, navigation }: Props) {
           {conversa.pedido.pagamento_confirmado_em ? (
             <Text style={styles.enderecoConfirmado}>
               💳 Pagamento confirmado por você (
+              {conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'},{' '}
               {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
             </Text>
+          ) : !formaPagamento ? (
+            <>
+              <Text style={styles.enderecoRotulo}>Como você pagou (ou vai pagar) o prestador?</Text>
+              <View style={styles.linhaEnvio}>
+                <TouchableOpacity style={styles.botaoPagamento} onPress={() => setFormaPagamento('pix_direto')}>
+                  <Text style={styles.botaoPagamentoTexto}>Pix direto</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.botaoPagamento} onPress={() => setFormaPagamento('app')}>
+                  <Text style={styles.botaoPagamentoTexto}>Pelo app</Text>
+                </TouchableOpacity>
+              </View>
+            </>
           ) : (
             <>
-              <Text style={styles.enderecoRotulo}>Já pagou o prestador (Pix, dinheiro...)?</Text>
+              <Text style={styles.enderecoRotulo}>Pagou antes do serviço ou depois?</Text>
               <View style={styles.linhaEnvio}>
                 <TouchableOpacity
                   style={styles.botaoPagamento}
@@ -271,6 +285,9 @@ export function ChatScreen({ route, navigation }: Props) {
                   <Text style={styles.botaoPagamentoTexto}>Paguei depois</Text>
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity onPress={() => setFormaPagamento(null)}>
+                <Text style={styles.botaoVoltarPagamento}>← Voltar</Text>
+              </TouchableOpacity>
             </>
           )}
         </View>
@@ -506,6 +523,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   botaoPagamentoTexto: { color: colors.laranja, fontWeight: '700', fontSize: 12 },
+  botaoVoltarPagamento: { color: colors.muted, fontSize: 11, paddingVertical: 4 },
   linhaEnvio: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
