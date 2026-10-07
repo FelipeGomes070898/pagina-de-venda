@@ -81,6 +81,27 @@ export function Equipe() {
     }
   }
 
+  async function remover(membro) {
+    if (!window.confirm(`Excluir definitivamente o cadastro de ${membro.nome}? Essa ação não pode ser desfeita.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/admin/equipe/${membro.id}`);
+      await carregar();
+    } catch (e2) {
+      setErro(e2.response?.data?.erro || 'Não foi possível excluir o cadastro');
+    }
+  }
+
+  // Mesma regra de hierarquia que o backend aplica: dono e rh excluem
+  // gente abaixo deles; ninguém exclui o dono, nem a si mesmo, nem
+  // (sendo rh) outro rh.
+  function podeExcluir(membro) {
+    if (membro.cargo === 'dono' || membro.id === admin.id) return false;
+    if (admin.cargo === 'rh' && membro.cargo === 'rh') return false;
+    return ['dono', 'rh'].includes(admin.cargo);
+  }
+
   return (
     <div style={styles.container}>
       <h1 style={styles.titulo}>Equipe</h1>
@@ -167,10 +188,18 @@ export function Equipe() {
                 <td style={styles.td}>{membro.email}</td>
                 <td style={styles.td}>{ROTULOS_CARGO[membro.cargo] || membro.cargo}</td>
                 <td style={styles.td}>{membro.ativo ? 'Ativo' : 'Inativo'}</td>
-                <td style={styles.td}>
+                <td style={{ ...styles.td, display: 'flex', gap: 12 }}>
                   {membro.cargo !== 'dono' && membro.id !== admin.id && (
                     <button style={styles.linkBotao} onClick={() => alternarStatus(membro)}>
                       {membro.ativo ? 'Desativar' : 'Reativar'}
+                    </button>
+                  )}
+                  {podeExcluir(membro) && (
+                    <button
+                      style={{ ...styles.linkBotao, color: 'var(--konectaja-red)' }}
+                      onClick={() => remover(membro)}
+                    >
+                      Excluir
                     </button>
                   )}
                 </td>

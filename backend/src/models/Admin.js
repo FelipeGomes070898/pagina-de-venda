@@ -81,4 +81,15 @@ module.exports = {
     const senhaHash = await bcrypt.hash(senha, 10);
     await pool.query(`UPDATE admins SET senha_hash = $2 WHERE id = $1`, [id, senhaHash]);
   },
+
+  // Exclui definitivamente um membro da equipe. admins.criado_por
+  // referencia outro admin (quem o cadastrou) sem ON DELETE — então,
+  // se essa pessoa tiver cadastrado outros admins, limpamos essa
+  // referência antes de excluir, senão o DELETE falharia por violar a
+  // foreign key. As contas que ela criou continuam existindo, só
+  // perdem o rastro de quem as criou originalmente.
+  async remover(id) {
+    await pool.query(`UPDATE admins SET criado_por = NULL WHERE criado_por = $1`, [id]);
+    await pool.query(`DELETE FROM admins WHERE id = $1`, [id]);
+  },
 };

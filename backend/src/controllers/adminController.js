@@ -75,6 +75,30 @@ async function atualizarStatus(req, res) {
   res.json(atualizado);
 }
 
+// Exclui definitivamente um membro da equipe (não é só desativar).
+// Mesma regra de hierarquia do atualizarStatus: só dono e rh chegam
+// aqui (ver rota), ninguém exclui a si mesmo, ninguém exclui o dono,
+// e rh não exclui outro rh.
+async function remover(req, res) {
+  const { id } = req.params;
+
+  if (id === req.admin.id) {
+    return res.status(400).json({ erro: 'Você não pode excluir seu próprio cadastro' });
+  }
+
+  const alvo = await Admin.buscarPorId(id);
+  if (!alvo) return res.status(404).json({ erro: 'Admin não encontrado' });
+  if (alvo.cargo === 'dono') {
+    return res.status(403).json({ erro: 'Não é possível excluir o dono' });
+  }
+  if (req.admin.cargo === 'rh' && alvo.cargo === 'rh') {
+    return res.status(403).json({ erro: 'RH não pode excluir outro RH' });
+  }
+
+  await Admin.remover(id);
+  res.json({ ok: true });
+}
+
 // Qualquer admin logado troca a própria senha (Configurações) —
 // precisa confirmar a senha atual antes.
 async function alterarSenha(req, res) {
@@ -95,4 +119,4 @@ async function alterarSenha(req, res) {
   res.json({ ok: true });
 }
 
-module.exports = { criar, listar, buscar, atualizarStatus, alterarSenha };
+module.exports = { criar, listar, buscar, atualizarStatus, remover, alterarSenha };

@@ -28,6 +28,7 @@ router.get('/equipe', permitir('dono', 'rh', 'gerente'), adminController.listar)
 router.get('/equipe/:id', permitir('dono', 'rh'), adminController.buscar);
 router.post('/equipe', permitir('dono', 'rh'), adminController.criar);
 router.patch('/equipe/:id/status', permitir('dono', 'rh'), adminController.atualizarStatus);
+router.delete('/equipe/:id', permitir('dono', 'rh'), adminController.remover);
 
 // Divisões (usadas para vincular gerentes)
 router.get('/divisoes', permitir('dono', 'rh'), divisaoController.listar);
