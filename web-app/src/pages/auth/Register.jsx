@@ -59,8 +59,8 @@ export function Register() {
         googleId: perfilGoogle?.googleId || undefined,
       });
       navigate('/');
-    } catch {
-      setErro('Não foi possível criar sua conta. Tente novamente.');
+    } catch (erro) {
+      setErro(erro.response?.data?.erro || 'Não foi possível criar sua conta. Tente novamente.');
     }
   }
 

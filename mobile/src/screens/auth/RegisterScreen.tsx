@@ -79,8 +79,8 @@ export function RegisterScreen({ navigation, route }: Props) {
       // Sem navigation.replace aqui: o cadastro grava o token no
       // estado global, e é essa mudança que faz o AppNavigator trocar
       // sozinho pra pilha autenticada.
-    } catch {
-      setErro(t('register.error_register_failed'));
+    } catch (erro: any) {
+      setErro(erro.response?.data?.erro || t('register.error_register_failed'));
     }
   }
 
