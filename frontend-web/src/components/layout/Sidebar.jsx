@@ -7,6 +7,8 @@ const ITENS_MENU = [
   { rota: '/clientes', label: 'Clientes', cargos: ['dono', 'rh', 'gerente', 'atendimento'] },
   { rota: '/financeiro', label: 'Financeiro', cargos: ['dono'] },
   { rota: '/pagamentos', label: 'Pagamentos', cargos: ['dono'] },
+  { rota: '/cupons', label: 'Cupons', cargos: ['dono', 'rh', 'gerente', 'atendimento'] },
+  { rota: '/banners', label: 'Banners', cargos: ['dono', 'rh', 'gerente', 'atendimento'] },
   { rota: '/equipe', label: 'Equipe', cargos: ['dono', 'rh'] },
   { rota: '/suporte', label: 'Suporte', cargos: ['dono', 'rh', 'gerente', 'atendimento'] },
   {

@@ -5,6 +5,8 @@ const prestadorAdminController = require('../controllers/prestadorAdminControlle
 const clienteAdminController = require('../controllers/clienteAdminController');
 const financeiroController = require('../controllers/financeiroController');
 const dashboardController = require('../controllers/dashboardController');
+const cupomAdminController = require('../controllers/cupomAdminController');
+const bannerAdminController = require('../controllers/bannerAdminController');
 const {
   autenticarAdmin,
   permitir,
@@ -68,6 +70,27 @@ router.post(
 // Pagamentos e Financeiro (valores reais — só dono)
 router.get('/pagamentos', permitir('dono'), financeiroController.listarPagamentos);
 router.get('/financeiro/resumo', permitir('dono'), financeiroController.resumo);
+
+// Cupons e banners (Gestão/promoções) — leitura liberada a toda a
+// equipe, mutações reservadas a quem decide preço/campanha.
+router.get('/cupons', permitir(...TODOS_OS_CARGOS), cupomAdminController.listar);
+router.post('/cupons', permitir('dono', 'rh', 'gerente'), cupomAdminController.criar);
+router.patch(
+  '/cupons/:id/status',
+  permitir('dono', 'rh', 'gerente'),
+  cupomAdminController.atualizarStatus,
+);
+router.delete('/cupons/:id', permitir('dono', 'rh', 'gerente'), cupomAdminController.remover);
+
+router.get('/banners', permitir(...TODOS_OS_CARGOS), bannerAdminController.listar);
+router.post('/banners', permitir('dono', 'rh', 'gerente'), bannerAdminController.criar);
+router.put('/banners/:id', permitir('dono', 'rh', 'gerente'), bannerAdminController.atualizar);
+router.patch(
+  '/banners/:id/status',
+  permitir('dono', 'rh', 'gerente'),
+  bannerAdminController.atualizarStatus,
+);
+router.delete('/banners/:id', permitir('dono', 'rh', 'gerente'), bannerAdminController.remover);
 
 // Configurações: qualquer admin troca a própria senha
 router.patch('/me/senha', permitir(...TODOS_OS_CARGOS), adminController.alterarSenha);

@@ -7,9 +7,11 @@ import { CATEGORIAS } from '../../constants/categorias';
 import { obterLocalizacaoAtual } from '../../services/locationService';
 import {
   contatarPrestador,
+  listarBannersAtivos,
   listarPedidosAbertos,
   listarPrestadores,
   publicarPedidoAberto,
+  validarCupom,
 } from '../../services/marketplaceService';
 
 export function ClienteMarketplace() {
@@ -32,13 +34,38 @@ export function ClienteMarketplace() {
   const [mostrarFormPedido, setMostrarFormPedido] = useState(false);
   const [descricaoPedido, setDescricaoPedido] = useState('');
   const [valorPedido, setValorPedido] = useState('');
+  const [urgente, setUrgente] = useState(false);
+  const [cupomTexto, setCupomTexto] = useState('');
+  const [cupomAplicado, setCupomAplicado] = useState(null);
+  const [cupomErro, setCupomErro] = useState(null);
+  const [validandoCupom, setValidandoCupom] = useState(false);
   const [publicando, setPublicando] = useState(false);
+
+  const [banners, setBanners] = useState([]);
 
   useEffect(() => {
     obterLocalizacaoAtual()
       .then(setCoordenadas)
       .finally(() => setBuscandoLocalizacao(false));
+    listarBannersAtivos()
+      .then(setBanners)
+      .catch(() => {});
   }, []);
+
+  async function aoAplicarCupom() {
+    if (!cupomTexto.trim()) return;
+    setCupomErro(null);
+    setValidandoCupom(true);
+    try {
+      const resultado = await validarCupom(cupomTexto.trim(), Number(valorPedido.replace(',', '.')) || 0);
+      setCupomAplicado(resultado);
+    } catch {
+      setCupomAplicado(null);
+      setCupomErro('Cupom inválido ou expirado');
+    } finally {
+      setValidandoCupom(false);
+    }
+  }
 
   async function carregar() {
     setErro(null);
@@ -95,9 +122,14 @@ export function ClienteMarketplace() {
         descricao: descricaoPedido.trim(),
         valorSugerido: valorPedido ? Number(valorPedido.replace(',', '.')) : undefined,
         segmento: categoriaAtiva || undefined,
+        urgente,
+        cupomCodigo: cupomAplicado?.codigo,
       });
       setDescricaoPedido('');
       setValorPedido('');
+      setUrgente(false);
+      setCupomTexto('');
+      setCupomAplicado(null);
       setMostrarFormPedido(false);
       carregar();
     } catch {
@@ -112,6 +144,20 @@ export function ClienteMarketplace() {
       <BottomNav />
 
       <main style={styles.container}>
+        {banners.length > 0 && (
+          <div style={styles.banners}>
+            {banners.map((b) =>
+              b.link_url ? (
+                <a key={b.id} href={b.link_url} target="_blank" rel="noreferrer" style={styles.bannerLink}>
+                  <img src={b.imagem_url} alt={b.titulo || ''} style={styles.bannerImg} />
+                </a>
+              ) : (
+                <img key={b.id} src={b.imagem_url} alt={b.titulo || ''} style={styles.bannerImg} />
+              ),
+            )}
+          </div>
+        )}
+
         <h1 style={styles.titulo}>Marketplace</h1>
         {aba === 'prestadores' && (
           <input
@@ -201,6 +247,53 @@ export function ClienteMarketplace() {
                     value={valorPedido}
                     onChange={(e) => setValorPedido(e.target.value)}
                   />
+
+                  <label style={styles.urgenteLabel}>
+                    <input
+                      type="checkbox"
+                      checked={urgente}
+                      onChange={(e) => setUrgente(e.target.checked)}
+                    />
+                    Marcar como urgente (prioridade na lista, taxa adicional)
+                  </label>
+
+                  <div style={styles.cupomLinha}>
+                    <input
+                      style={{ ...styles.input, flex: 1 }}
+                      placeholder="Cupom de desconto (opcional)"
+                      value={cupomTexto}
+                      onChange={(e) => setCupomTexto(e.target.value.toUpperCase())}
+                      disabled={Boolean(cupomAplicado)}
+                    />
+                    {!cupomAplicado ? (
+                      <button
+                        style={styles.botaoOutline}
+                        onClick={aoAplicarCupom}
+                        disabled={validandoCupom || !cupomTexto.trim()}
+                        type="button"
+                      >
+                        {validandoCupom ? 'Validando...' : 'Aplicar'}
+                      </button>
+                    ) : (
+                      <button
+                        style={styles.botaoOutline}
+                        onClick={() => {
+                          setCupomAplicado(null);
+                          setCupomTexto('');
+                        }}
+                        type="button"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                  {cupomErro && <p style={styles.erro}>{cupomErro}</p>}
+                  {cupomAplicado && (
+                    <p style={styles.cupomSucesso}>
+                      Cupom {cupomAplicado.codigo} aplicado — desconto de R$ {cupomAplicado.desconto.toFixed(2)}
+                    </p>
+                  )}
+
                   <button style={styles.botaoPrimario} onClick={aoPublicarPedido} disabled={publicando}>
                     {publicando ? 'Publicando...' : 'Publicar'}
                   </button>
@@ -212,6 +305,7 @@ export function ClienteMarketplace() {
             ) : (
               pedidosAbertos.map((pedido) => (
                 <div key={pedido.id} style={styles.pedidoCard}>
+                  {pedido.urgente && <span style={styles.badgeUrgente}>URGENTE</span>}
                   <div>{pedido.descricao}</div>
                   {pedido.valor != null && (
                     <div style={styles.pedidoValor}>R$ {Number(pedido.valor).toFixed(2)}</div>
@@ -313,4 +407,33 @@ const styles = {
     color: 'var(--konectaja-text)',
   },
   pedidoValor: { color: 'var(--konectaja-green)', fontWeight: 700, marginTop: 6 },
+  banners: { display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 16 },
+  bannerLink: { flexShrink: 0 },
+  bannerImg: {
+    width: 280,
+    height: 110,
+    objectFit: 'cover',
+    borderRadius: 14,
+    flexShrink: 0,
+    display: 'block',
+  },
+  urgenteLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    color: 'var(--konectaja-text)',
+    fontSize: 13,
+  },
+  cupomLinha: { display: 'flex', gap: 8 },
+  cupomSucesso: { color: 'var(--konectaja-green)', fontSize: 12.5 },
+  badgeUrgente: {
+    display: 'inline-block',
+    background: 'var(--konectaja-red)',
+    color: '#fff',
+    fontSize: 10.5,
+    fontWeight: 800,
+    borderRadius: 6,
+    padding: '2px 8px',
+    marginBottom: 6,
+  },
 };

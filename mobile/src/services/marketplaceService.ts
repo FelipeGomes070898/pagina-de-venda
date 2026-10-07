@@ -44,6 +44,23 @@ export interface Pedido {
   pagamento_confirmado_em: string | null;
   pagamento_quando: 'antecipado' | 'apos' | null;
   pagamento_forma: 'app' | 'pix_direto' | null;
+  urgente?: boolean;
+  taxa_urgencia?: number | null;
+}
+
+export interface Banner {
+  id: string;
+  titulo: string | null;
+  imagem_url: string;
+  link_url: string | null;
+  ordem: number;
+}
+
+export interface CupomValidado {
+  codigo: string;
+  tipo: 'percentual' | 'fixo';
+  valor: number;
+  desconto: number;
 }
 
 export interface Conversa extends Pedido {
@@ -82,8 +99,20 @@ export async function publicarPedidoAberto(payload: {
   descricao: string;
   valorSugerido?: number;
   segmento?: string;
+  urgente?: boolean;
+  cupomCodigo?: string;
 }): Promise<Pedido> {
   const { data } = await api.post<Pedido>('/api/pedidos/abertos', payload);
+  return data;
+}
+
+export async function listarBannersAtivos(): Promise<Banner[]> {
+  const { data } = await api.get<Banner[]>('/api/banners/ativos');
+  return data;
+}
+
+export async function validarCupom(codigo: string, valorPedido: number): Promise<CupomValidado> {
+  const { data } = await api.post<CupomValidado>('/api/cupons/validar', { codigo, valorPedido });
   return data;
 }
 

@@ -3,30 +3,67 @@ const pool = require('../config/database');
 const CAMPOS = `
   id, cliente_id, prestador_id, descricao, endereco, lat, lng, valor,
   status, agendado_para, criado_em, pagamento_confirmado_em, pagamento_quando,
-  pagamento_forma
+  pagamento_forma, urgente, taxa_urgencia, cupom_codigo, desconto_valor
 `;
 
 module.exports = {
   // Cliente entra em contato com um prestador específico (fecha o valor
   // anunciado por padrão; pode ser renegociado depois no chat).
-  async criarComPrestador({ clienteId, prestadorId, descricao, valor }) {
+  async criarComPrestador({
+    clienteId,
+    prestadorId,
+    descricao,
+    valor,
+    urgente,
+    taxaUrgencia,
+    cupomCodigo,
+    descontoValor,
+  }) {
     const { rows } = await pool.query(
-      `INSERT INTO pedidos (cliente_id, prestador_id, descricao, valor, status)
-       VALUES ($1, $2, $3, $4, 'pendente')
+      `INSERT INTO pedidos
+         (cliente_id, prestador_id, descricao, valor, status, urgente, taxa_urgencia, cupom_codigo, desconto_valor)
+       VALUES ($1, $2, $3, $4, 'pendente', $5, $6, $7, $8)
        RETURNING ${CAMPOS}`,
-      [clienteId, prestadorId, descricao || null, valor || null],
+      [
+        clienteId,
+        prestadorId,
+        descricao || null,
+        valor || null,
+        Boolean(urgente),
+        taxaUrgencia || null,
+        cupomCodigo || null,
+        descontoValor || null,
+      ],
     );
     return rows[0];
   },
 
   // Cliente publica uma necessidade em aberto, sem prestador definido,
   // sugerindo um valor (oferta reversa no marketplace).
-  async criarAberto({ clienteId, descricao, valorSugerido, segmento }) {
+  async criarAberto({
+    clienteId,
+    descricao,
+    valorSugerido,
+    segmento,
+    urgente,
+    taxaUrgencia,
+    cupomCodigo,
+    descontoValor,
+  }) {
     const { rows } = await pool.query(
-      `INSERT INTO pedidos (cliente_id, descricao, valor, status)
-       VALUES ($1, $2, $3, 'pendente')
+      `INSERT INTO pedidos
+         (cliente_id, descricao, valor, status, urgente, taxa_urgencia, cupom_codigo, desconto_valor)
+       VALUES ($1, $2, $3, 'pendente', $4, $5, $6, $7)
        RETURNING ${CAMPOS}`,
-      [clienteId, segmento ? `[${segmento}] ${descricao || ''}`.trim() : descricao, valorSugerido || null],
+      [
+        clienteId,
+        segmento ? `[${segmento}] ${descricao || ''}`.trim() : descricao,
+        valorSugerido || null,
+        Boolean(urgente),
+        taxaUrgencia || null,
+        cupomCodigo || null,
+        descontoValor || null,
+      ],
     );
     return rows[0];
   },
@@ -50,11 +87,11 @@ module.exports = {
 
     const { rows } = await pool.query(
       `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
-              p.valor, p.status, p.agendado_para, p.criado_em
+              p.valor, p.status, p.agendado_para, p.criado_em, p.urgente, p.taxa_urgencia
        FROM pedidos p
        JOIN clientes c ON c.id = p.cliente_id
        WHERE ${condicoes.join(' AND ')}
-       ORDER BY p.criado_em DESC`,
+       ORDER BY p.urgente DESC, p.criado_em DESC`,
       valores,
     );
     return rows;
@@ -79,7 +116,8 @@ module.exports = {
   async listarDoCliente(clienteId) {
     const { rows } = await pool.query(
       `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
-              p.valor, p.status, p.agendado_para, p.criado_em, pr.nome AS contraparte_nome
+              p.valor, p.status, p.agendado_para, p.criado_em, p.urgente, p.taxa_urgencia,
+              pr.nome AS contraparte_nome
        FROM pedidos p
        LEFT JOIN prestadores pr ON pr.id = p.prestador_id
        WHERE p.cliente_id = $1
@@ -92,7 +130,8 @@ module.exports = {
   async listarDoPrestador(prestadorId) {
     const { rows } = await pool.query(
       `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
-              p.valor, p.status, p.agendado_para, p.criado_em, c.nome AS contraparte_nome
+              p.valor, p.status, p.agendado_para, p.criado_em, p.urgente, p.taxa_urgencia,
+              c.nome AS contraparte_nome
        FROM pedidos p
        LEFT JOIN clientes c ON c.id = p.cliente_id
        WHERE p.prestador_id = $1
@@ -142,6 +181,31 @@ module.exports = {
       [id, endereco, lat || null, lng || null],
     );
     return rows[0] || null;
+  },
+
+  // Contagem simples (sem valores) pro Dashboard geral — visível a toda
+  // a equipe, diferente de metricasNegocio() que carrega GMV/ticket
+  // médio e fica reservada à tela Financeiro (só dono).
+  async contarPorStatus() {
+    const { rows } = await pool.query(`SELECT status, COUNT(*) AS quantidade FROM pedidos GROUP BY status`);
+    return rows;
+  },
+
+  // Métricas de negócio pro painel admin (Financeiro / Dashboard): GMV e
+  // ticket médio só contam pedidos concluídos (dinheiro que de fato
+  // circulou), separado da receita de taxa de urgência e do desconto
+  // total concedido em cupons.
+  async metricasNegocio() {
+    const { rows } = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status = 'concluido') AS total_concluidos,
+         COALESCE(SUM(valor) FILTER (WHERE status = 'concluido'), 0) AS gmv,
+         COALESCE(AVG(valor) FILTER (WHERE status = 'concluido'), 0) AS ticket_medio,
+         COALESCE(SUM(taxa_urgencia) FILTER (WHERE status = 'concluido' AND urgente), 0) AS receita_urgencia,
+         COALESCE(SUM(desconto_valor) FILTER (WHERE status = 'concluido'), 0) AS desconto_cupons
+       FROM pedidos`,
+    );
+    return rows[0];
   },
 
   // Confere se o usuário autenticado do app (cliente ou prestador) é uma

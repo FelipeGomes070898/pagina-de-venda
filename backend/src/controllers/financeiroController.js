@@ -1,4 +1,5 @@
 const Pagamento = require('../models/Pagamento');
+const Pedido = require('../models/Pedido');
 
 async function listarPagamentos(req, res) {
   const { status, page } = req.query;
@@ -13,8 +14,8 @@ async function listarPagamentos(req, res) {
 }
 
 async function resumo(req, res) {
-  const dados = await Pagamento.resumo();
-  res.json(dados);
+  const [dados, metricas] = await Promise.all([Pagamento.resumo(), Pedido.metricasNegocio()]);
+  res.json({ ...dados, negocio: metricas });
 }
 
 module.exports = { listarPagamentos, resumo };

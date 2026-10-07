@@ -38,3 +38,13 @@ export async function listarMinhasConversas() {
   const { data } = await api.get('/api/pedidos/meus');
   return data;
 }
+
+export async function listarBannersAtivos() {
+  const { data } = await api.get('/api/banners/ativos');
+  return data;
+}
+
+export async function validarCupom(codigo, valorPedido) {
+  const { data } = await api.post('/api/cupons/validar', { codigo, valorPedido });
+  return data;
+}

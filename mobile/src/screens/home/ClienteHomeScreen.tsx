@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -20,12 +22,16 @@ import { CategoryChip } from '@/components/common/CategoryChip';
 import { ProfessionalCard } from '@/components/cards/ProfessionalCard';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import {
+  Banner,
   contatarPrestador,
+  CupomValidado,
+  listarBannersAtivos,
   listarPedidosAbertos,
   listarPrestadores,
   Pedido,
   Prestador,
   publicarPedidoAberto,
+  validarCupom,
 } from '@/services/marketplaceService';
 import { Coordenadas, obterLocalizacaoComPermissao } from '@/services/locationService';
 import { useAuthStore } from '@/store/authStore';
@@ -55,7 +61,14 @@ export function ClienteHomeScreen({ navigation }: Props) {
   const [mostrarFormPedido, setMostrarFormPedido] = useState(false);
   const [descricaoPedido, setDescricaoPedido] = useState('');
   const [valorPedido, setValorPedido] = useState('');
+  const [urgente, setUrgente] = useState(false);
+  const [cupomTexto, setCupomTexto] = useState('');
+  const [cupomAplicado, setCupomAplicado] = useState<CupomValidado | null>(null);
+  const [cupomErro, setCupomErro] = useState<string | null>(null);
+  const [validandoCupom, setValidandoCupom] = useState(false);
   const [publicando, setPublicando] = useState(false);
+
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null);
   const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(true);
@@ -64,7 +77,28 @@ export function ClienteHomeScreen({ navigation }: Props) {
     obterLocalizacaoComPermissao()
       .then(setCoordenadas)
       .finally(() => setBuscandoLocalizacao(false));
+    listarBannersAtivos()
+      .then(setBanners)
+      .catch(() => {});
   }, []);
+
+  async function aoAplicarCupom() {
+    if (!cupomTexto.trim()) return;
+    setCupomErro(null);
+    setValidandoCupom(true);
+    try {
+      const resultado = await validarCupom(
+        cupomTexto.trim(),
+        Number(valorPedido.replace(',', '.')) || 0,
+      );
+      setCupomAplicado(resultado);
+    } catch {
+      setCupomAplicado(null);
+      setCupomErro('Cupom inválido ou expirado');
+    } finally {
+      setValidandoCupom(false);
+    }
+  }
 
   async function carregar() {
     setErro(null);
@@ -127,9 +161,14 @@ export function ClienteHomeScreen({ navigation }: Props) {
         descricao: descricaoPedido.trim(),
         valorSugerido: valorPedido ? Number(valorPedido.replace(',', '.')) : undefined,
         segmento: categoriaAtiva || undefined,
+        urgente,
+        cupomCodigo: cupomAplicado?.codigo,
       });
       setDescricaoPedido('');
       setValorPedido('');
+      setUrgente(false);
+      setCupomTexto('');
+      setCupomAplicado(null);
       setMostrarFormPedido(false);
       carregar();
     } catch {
@@ -142,6 +181,18 @@ export function ClienteHomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        {banners.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.bannersScroll}
+            contentContainerStyle={styles.bannersConteudo}
+          >
+            {banners.map((b) => (
+              <Image key={b.id} source={{ uri: b.imagem_url }} style={styles.bannerImg} />
+            ))}
+          </ScrollView>
+        )}
         <Text style={styles.titulo}>Marketplace</Text>
         {aba === 'prestadores' && (
           <TextInput
@@ -259,6 +310,58 @@ export function ClienteHomeScreen({ navigation }: Props) {
                     onChangeText={setValorPedido}
                     keyboardType="decimal-pad"
                   />
+
+                  <View style={styles.urgenteLinha}>
+                    <Text style={styles.urgenteTexto}>
+                      Marcar como urgente (prioridade na lista, taxa adicional)
+                    </Text>
+                    <Switch
+                      value={urgente}
+                      onValueChange={setUrgente}
+                      trackColor={{ true: colors.laranja }}
+                    />
+                  </View>
+
+                  <View style={styles.cupomLinha}>
+                    <TextInput
+                      style={[styles.input, styles.cupomInput]}
+                      placeholder="Cupom de desconto (opcional)"
+                      placeholderTextColor={colors.muted}
+                      value={cupomTexto}
+                      onChangeText={(t) => setCupomTexto(t.toUpperCase())}
+                      autoCapitalize="characters"
+                      editable={!cupomAplicado}
+                    />
+                    {!cupomAplicado ? (
+                      <TouchableOpacity
+                        style={styles.cupomBotao}
+                        onPress={aoAplicarCupom}
+                        disabled={validandoCupom || !cupomTexto.trim()}
+                      >
+                        <Text style={styles.cupomBotaoTexto}>
+                          {validandoCupom ? 'Validando...' : 'Aplicar'}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.cupomBotao}
+                        onPress={() => {
+                          setCupomAplicado(null);
+                          setCupomTexto('');
+                        }}
+                      >
+                        <Text style={styles.cupomBotaoTexto}>Remover</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {cupomErro && <Text style={styles.erro}>{cupomErro}</Text>}
+                  {cupomAplicado && (
+                    <Text style={styles.cupomSucesso}>
+                      Cupom {cupomAplicado.codigo} aplicado — desconto de R${' '}
+                      {cupomAplicado.desconto.toFixed(2)}
+                    </Text>
+                  )}
+
                   <PrimaryButton
                     label="Publicar"
                     onPress={aoPublicarPedido}
@@ -270,6 +373,9 @@ export function ClienteHomeScreen({ navigation }: Props) {
           }
           renderItem={({ item }) => (
             <View style={styles.pedidoCard}>
+              {item.urgente && (
+                <Text style={styles.badgeUrgente}>URGENTE</Text>
+              )}
               <Text style={styles.pedidoDescricao}>{item.descricao}</Text>
               {item.valor != null && (
                 <Text style={styles.pedidoValor}>R$ {Number(item.valor).toFixed(2)}</Text>
@@ -332,4 +438,38 @@ const styles = StyleSheet.create({
   },
   pedidoDescricao: { color: colors.text, fontSize: 14 },
   pedidoValor: { color: colors.green, fontWeight: '700', marginTop: 4 },
+  bannersScroll: { marginBottom: spacing.md },
+  bannersConteudo: { gap: 10 },
+  bannerImg: { width: 260, height: 100, borderRadius: radius.md, marginRight: 10 },
+  urgenteLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  urgenteTexto: { color: colors.text, fontSize: 12.5, flex: 1, marginRight: spacing.sm },
+  cupomLinha: { flexDirection: 'row', gap: 8, marginBottom: spacing.sm },
+  cupomInput: { flex: 1, marginBottom: 0 },
+  cupomBotao: {
+    height: 48,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+  },
+  cupomBotaoTexto: { color: colors.text, fontSize: 12.5, fontWeight: '700' },
+  cupomSucesso: { color: colors.green, fontSize: 12, marginBottom: spacing.sm },
+  badgeUrgente: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.red,
+    color: '#fff',
+    fontSize: 10.5,
+    fontWeight: '800',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginBottom: 6,
+    overflow: 'hidden',
+  },
 });

@@ -284,6 +284,45 @@ CREATE TABLE IF NOT EXISTS servicos_prestador (
 CREATE INDEX IF NOT EXISTS idx_servicos_prestador_prestador ON servicos_prestador(prestador_id);
 CREATE INDEX IF NOT EXISTS idx_servicos_prestador_categoria ON servicos_prestador(categoria);
 
+-- Cupons de desconto (gestão/promoções no painel admin). Aplicados na
+-- criação do pedido (percentual sobre o valor, ou fixo em reais).
+CREATE TABLE IF NOT EXISTS cupons (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  codigo       VARCHAR(30) UNIQUE NOT NULL,
+  tipo         VARCHAR(12) NOT NULL, -- percentual | fixo
+  valor        DECIMAL(10,2) NOT NULL,
+  descricao    TEXT,
+  validade_fim DATE,
+  limite_uso   INT,
+  -- NULL = sem limite de usos totais
+  usos         INT DEFAULT 0,
+  ativo        BOOLEAN DEFAULT TRUE,
+  criado_em    TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT chk_cupons_tipo CHECK (tipo IN ('percentual', 'fixo'))
+);
+CREATE INDEX IF NOT EXISTS idx_cupons_codigo ON cupons(codigo);
+
+-- Banners promocionais exibidos no topo do marketplace (web + mobile),
+-- geridos pelo painel admin.
+CREATE TABLE IF NOT EXISTS banners (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  titulo     VARCHAR(100),
+  imagem_url TEXT NOT NULL,
+  link_url   TEXT,
+  ordem      INT DEFAULT 0,
+  ativo      BOOLEAN DEFAULT TRUE,
+  criado_em  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_banners_ativo ON banners(ativo);
+
+-- Taxa de urgência (cliente paga um adicional pra sinalizar prioridade)
+-- e rastro do cupom aplicado no pedido.
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS urgente BOOLEAN DEFAULT FALSE;
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS taxa_urgencia DECIMAL(10,2);
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cupom_codigo VARCHAR(30);
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS desconto_valor DECIMAL(10,2);
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

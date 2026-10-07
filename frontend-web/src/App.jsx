@@ -11,6 +11,8 @@ import { Pagamentos } from './pages/pagamentos/Pagamentos';
 import { Financeiro } from './pages/financeiro/Financeiro';
 import { Suporte } from './pages/suporte/Suporte';
 import { Configuracoes } from './pages/configuracoes/Configuracoes';
+import { Cupons } from './pages/cupons/Cupons';
+import { Banners } from './pages/banners/Banners';
 
 function Layout({ children }) {
   return (
@@ -90,6 +92,28 @@ export default function App() {
             <RotaProtegida cargosPermitidos={['dono']}>
               <Layout>
                 <Financeiro />
+              </Layout>
+            </RotaProtegida>
+          }
+        />
+
+        <Route
+          path="/cupons"
+          element={
+            <RotaProtegida>
+              <Layout>
+                <Cupons />
+              </Layout>
+            </RotaProtegida>
+          }
+        />
+
+        <Route
+          path="/banners"
+          element={
+            <RotaProtegida>
+              <Layout>
+                <Banners />
               </Layout>
             </RotaProtegida>
           }

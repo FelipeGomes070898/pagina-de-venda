@@ -19,6 +19,7 @@ export function Financeiro() {
   const totalRecebido = porStatus.pago?.total || 0;
   const totalPendente = porStatus.pendente?.total || 0;
   const totalVencido = porStatus.vencido?.total || 0;
+  const negocio = resumo?.negocio || {};
 
   return (
     <div style={styles.container}>
@@ -50,6 +51,33 @@ export function Financeiro() {
                 {formatarMoeda(totalVencido)}
               </div>
               <div style={styles.cardLabel}>{porStatus.vencido?.quantidade || 0} pagamento(s)</div>
+            </div>
+          </div>
+
+          <h2 style={{ ...styles.titulo, fontSize: 16, marginBottom: 12 }}>
+            Negócio (pedidos concluídos)
+          </h2>
+          <div style={styles.cards}>
+            <div style={styles.card}>
+              <div style={styles.cardLabel}>GMV</div>
+              <div style={styles.cardValor}>{formatarMoeda(negocio.gmv)}</div>
+              <div style={styles.cardLabel}>{negocio.total_concluidos || 0} serviço(s) concluído(s)</div>
+            </div>
+            <div style={styles.card}>
+              <div style={styles.cardLabel}>Ticket médio</div>
+              <div style={styles.cardValor}>{formatarMoeda(negocio.ticket_medio)}</div>
+            </div>
+            <div style={styles.card}>
+              <div style={styles.cardLabel}>Receita de urgência</div>
+              <div style={{ ...styles.cardValor, color: 'var(--konectaja-verde)' }}>
+                {formatarMoeda(negocio.receita_urgencia)}
+              </div>
+            </div>
+            <div style={styles.card}>
+              <div style={styles.cardLabel}>Desconto dado em cupons</div>
+              <div style={{ ...styles.cardValor, color: 'var(--konectaja-red)' }}>
+                {formatarMoeda(negocio.desconto_cupons)}
+              </div>
             </div>
           </div>
 

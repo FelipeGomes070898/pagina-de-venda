@@ -10,6 +10,8 @@ const pagamentos = require('./pagamentos');
 const app = require('./app');
 const notificacoes = require('./notificacoes');
 const uploads = require('./uploads');
+const cupons = require('./cupons');
+const banners = require('./banners');
 
 const router = Router();
 
@@ -24,5 +26,7 @@ router.use('/pagamentos', pagamentos);
 router.use('/app', app);
 router.use('/notificacoes', notificacoes);
 router.use('/uploads', uploads);
+router.use('/cupons', cupons);
+router.use('/banners', banners);
 
 module.exports = router;

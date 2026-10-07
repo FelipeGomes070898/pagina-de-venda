@@ -1,8 +1,30 @@
 const Pedido = require('../models/Pedido');
 const Prestador = require('../models/Prestador');
 const Cliente = require('../models/Cliente');
+const Cupom = require('../models/Cupom');
 const asaasService = require('../services/asaasService');
 const pushService = require('../services/pushService');
+
+const TAXA_URGENCIA_PERCENTUAL = 0.15; // 15% sobre o valor do pedido
+const TAXA_URGENCIA_MINIMA = 10; // piso de R$10, pra pedidos de valor baixo/sem valor
+
+function calcularTaxaUrgencia(valor) {
+  if (!valor) return TAXA_URGENCIA_MINIMA;
+  return Math.max(Number((valor * TAXA_URGENCIA_PERCENTUAL).toFixed(2)), TAXA_URGENCIA_MINIMA);
+}
+
+// Confere o cupom (se informado) e devolve { cupom, descontoValor } —
+// cupom vem null e descontoValor 0 se nenhum código foi passado, ou se o
+// código não existe/está inválido (não falha a criação do pedido por
+// isso, só ignora o desconto).
+async function resolverCupom(cupomCodigo, valor) {
+  if (!cupomCodigo) return { cupom: null, descontoValor: 0 };
+
+  const cupom = await Cupom.buscarPorCodigo(cupomCodigo);
+  if (!cupom || !Cupom.estaValido(cupom)) return { cupom: null, descontoValor: 0 };
+
+  return { cupom, descontoValor: Cupom.calcularDesconto(cupom, Number(valor) || 0) };
+}
 
 // Cliente toca em "Entrar em contato" com um prestador do marketplace.
 // Cria o pedido já com o valor anunciado pelo prestador (ponto de partida
@@ -12,7 +34,7 @@ async function criarComPrestador(req, res) {
     return res.status(403).json({ erro: 'Somente clientes podem contatar um prestador' });
   }
 
-  const { prestadorId, descricao } = req.body;
+  const { prestadorId, descricao, urgente, cupomCodigo } = req.body;
   if (!prestadorId) return res.status(400).json({ erro: 'prestadorId é obrigatório' });
 
   const prestador = await Prestador.buscarPorId(prestadorId);
@@ -21,12 +43,21 @@ async function criarComPrestador(req, res) {
     return res.status(409).json({ erro: 'Este prestador não está disponível pra novos pedidos no momento' });
   }
 
+  const valor = prestador.valor_servico;
+  const { cupom, descontoValor } = await resolverCupom(cupomCodigo, valor);
+  const taxaUrgencia = urgente ? calcularTaxaUrgencia(valor) : null;
+
   const pedido = await Pedido.criarComPrestador({
     clienteId: req.usuarioApp.id,
     prestadorId,
     descricao,
-    valor: prestador.valor_servico,
+    valor,
+    urgente,
+    taxaUrgencia,
+    cupomCodigo: cupom?.codigo,
+    descontoValor: descontoValor || null,
   });
+  if (cupom) Cupom.registrarUso(cupom.id).catch(() => {});
 
   pushService
     .enviarPush(prestadorId, 'prestador', {
@@ -46,15 +77,23 @@ async function criarAberto(req, res) {
     return res.status(403).json({ erro: 'Somente clientes podem publicar um pedido' });
   }
 
-  const { descricao, valorSugerido, segmento } = req.body;
+  const { descricao, valorSugerido, segmento, urgente, cupomCodigo } = req.body;
   if (!descricao) return res.status(400).json({ erro: 'Descreva o serviço que você precisa' });
+
+  const { cupom, descontoValor } = await resolverCupom(cupomCodigo, valorSugerido);
+  const taxaUrgencia = urgente ? calcularTaxaUrgencia(valorSugerido) : null;
 
   const pedido = await Pedido.criarAberto({
     clienteId: req.usuarioApp.id,
     descricao,
     valorSugerido,
     segmento,
+    urgente,
+    taxaUrgencia,
+    cupomCodigo: cupom?.codigo,
+    descontoValor: descontoValor || null,
   });
+  if (cupom) Cupom.registrarUso(cupom.id).catch(() => {});
 
   res.status(201).json(pedido);
 }
