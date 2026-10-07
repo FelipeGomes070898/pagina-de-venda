@@ -107,6 +107,7 @@ export interface MeuPerfil {
   modelo_cobranca?: 'percentual' | 'fixo_mensal';
   status?: 'ativo' | 'inadimplente' | 'bloqueado';
   fotos?: FotoTrabalho[];
+  servicos?: { id: string; categoria: string; valor: number | null; descricao?: string | null }[];
 }
 
 export async function meuPerfil(): Promise<MeuPerfil> {

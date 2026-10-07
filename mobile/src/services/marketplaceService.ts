@@ -1,5 +1,12 @@
 import { api } from './api';
 
+export interface ServicoPrestador {
+  id: string;
+  categoria: string;
+  valor: number | null;
+  descricao?: string | null;
+}
+
 export interface Prestador {
   id: string;
   nome: string;
@@ -16,6 +23,7 @@ export interface Prestador {
   total_avaliacoes: number;
   total_fotos_trabalho: number;
   distancia_km: number | null;
+  servicos?: ServicoPrestador[];
 }
 
 export interface PrestadorDetalhe extends Prestador {

@@ -1,6 +1,6 @@
 import { formatarDistancia } from '../utils/distancia';
 
-export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando }) {
+export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando, ocultarContato }) {
   const inicial = prestador.nome?.charAt(0)?.toUpperCase() || '?';
 
   return (
@@ -22,12 +22,19 @@ export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contata
           {prestador.valor_servico != null && (
             <div style={styles.preco}>R$ {Number(prestador.valor_servico).toFixed(2)}</div>
           )}
+          {prestador.servicos?.length > 0 && (
+            <div style={styles.tambemFaz}>
+              Também faz: {prestador.servicos.map((s) => s.categoria).join(', ')}
+            </div>
+          )}
         </div>
       </div>
 
-      <button style={styles.botao} onClick={onContatar} disabled={contatando}>
-        {contatando ? '...' : 'Contato'}
-      </button>
+      {!ocultarContato && (
+        <button style={styles.botao} onClick={onContatar} disabled={contatando}>
+          {contatando ? '...' : 'Contato'}
+        </button>
+      )}
     </div>
   );
 }
@@ -63,6 +70,7 @@ const styles = {
   linha: { color: 'var(--konectaja-text)', fontSize: 12, marginTop: 4 },
   distancia: { color: 'var(--konectaja-muted)', marginLeft: 4 },
   preco: { color: 'var(--konectaja-laranja)', fontWeight: 700, fontSize: 14, marginTop: 4 },
+  tambemFaz: { color: 'var(--konectaja-muted)', fontSize: 11, marginTop: 4 },
   botao: {
     background: 'var(--konectaja-laranja)',
     border: 'none',

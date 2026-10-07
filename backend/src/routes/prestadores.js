@@ -9,6 +9,9 @@ router.get('/', autenticarAppOpcional, prestadorController.listar);
 router.post('/me/fotos-trabalho', autenticarApp, prestadorController.adicionarFotoTrabalho);
 router.delete('/me/fotos-trabalho/:fotoId', autenticarApp, prestadorController.removerFotoTrabalho);
 
+router.post('/me/servicos', autenticarApp, prestadorController.adicionarServico);
+router.delete('/me/servicos/:servicoId', autenticarApp, prestadorController.removerServico);
+
 router.get('/:id', prestadorController.buscar);
 
 module.exports = router;

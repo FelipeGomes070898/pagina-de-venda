@@ -3,8 +3,10 @@ import { useAuthStore } from '../../store/authStore';
 import { BottomNav } from '../../components/BottomNav';
 import { meuPerfil, atualizarFotoPerfil } from '../../services/authService';
 import { adicionarFotoTrabalho, removerFotoTrabalho } from '../../services/fotoTrabalhoService';
+import { adicionarServico, removerServico } from '../../services/servicoPrestadorService';
 import { enviarImagem } from '../../services/uploadService';
 import { mascararCPF, mascararTelefoneBR } from '../../utils/masks';
+import { CATEGORIAS } from '../../constants/categorias';
 
 const ROTULOS_TIPO = { cliente: 'Cliente', prestador: 'Prestador de serviço' };
 const ROTULOS_COBRANCA = {
@@ -21,6 +23,9 @@ export function MeuPerfil() {
   const [erro, setErro] = useState(null);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const [enviandoFotoTrabalho, setEnviandoFotoTrabalho] = useState(false);
+  const [novaCategoria, setNovaCategoria] = useState('');
+  const [novoValor, setNovoValor] = useState('');
+  const [adicionandoServico, setAdicionandoServico] = useState(false);
   const inputFotoPerfil = useRef(null);
   const inputFotoTrabalho = useRef(null);
 
@@ -78,6 +83,36 @@ export function MeuPerfil() {
       setPerfil((p) => ({ ...p, fotos: p.fotos.filter((f) => f.id !== fotoId) }));
     } catch {
       setErro('Não foi possível remover a foto.');
+    }
+  }
+
+  async function aoAdicionarServico(e) {
+    e.preventDefault();
+    if (!novaCategoria.trim()) return;
+
+    setAdicionandoServico(true);
+    setErro(null);
+    try {
+      const servico = await adicionarServico({
+        categoria: novaCategoria.trim(),
+        valor: novoValor ? Number(novoValor.replace(',', '.')) : undefined,
+      });
+      setPerfil((p) => ({ ...p, servicos: [...(p.servicos ?? []), servico] }));
+      setNovaCategoria('');
+      setNovoValor('');
+    } catch {
+      setErro('Não foi possível adicionar esse serviço.');
+    } finally {
+      setAdicionandoServico(false);
+    }
+  }
+
+  async function aoRemoverServico(servicoId) {
+    try {
+      await removerServico(servicoId);
+      setPerfil((p) => ({ ...p, servicos: p.servicos.filter((s) => s.id !== servicoId) }));
+    } catch {
+      setErro('Não foi possível remover esse serviço.');
     }
   }
 
@@ -168,6 +203,56 @@ export function MeuPerfil() {
                 valor={`⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`}
               />
               <Campo label="Serviços concluídos" valor={String(perfil.total_servicos)} />
+            </div>
+
+            <div style={styles.secao}>
+              <h2 style={styles.secaoTitulo}>Área de serviço</h2>
+              <p style={styles.albumAjuda}>
+                Outros trabalhos que você também faz, além do seu serviço principal — aparecem no marketplace
+                pros clientes (e outros prestadores) encontrarem, cada um com sua própria diária.
+              </p>
+
+              {(perfil.servicos?.length ?? 0) > 0 && (
+                <div style={styles.listaServicos}>
+                  {perfil.servicos.map((servico) => (
+                    <div key={servico.id} style={styles.itemServico}>
+                      <div>
+                        <div style={styles.itemServicoCategoria}>{servico.categoria}</div>
+                        {servico.valor != null && (
+                          <div style={styles.itemServicoValor}>R$ {Number(servico.valor).toFixed(2)}</div>
+                        )}
+                      </div>
+                      <button style={styles.itemServicoRemover} onClick={() => aoRemoverServico(servico.id)}>
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <form style={styles.formServico} onSubmit={aoAdicionarServico}>
+                <input
+                  style={styles.inputServicoCategoria}
+                  placeholder="Ex.: Encanador, Diarista..."
+                  list="categorias-sugestao"
+                  value={novaCategoria}
+                  onChange={(e) => setNovaCategoria(e.target.value)}
+                />
+                <datalist id="categorias-sugestao">
+                  {CATEGORIAS.map((cat) => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
+                <input
+                  style={styles.inputServicoValor}
+                  placeholder="Diária (R$)"
+                  value={novoValor}
+                  onChange={(e) => setNovoValor(e.target.value)}
+                />
+                <button style={styles.botaoAdicionarServico} type="submit" disabled={adicionandoServico}>
+                  {adicionandoServico ? '...' : '+ Adicionar'}
+                </button>
+              </form>
             </div>
 
             <div style={styles.secao}>
@@ -298,6 +383,57 @@ const styles = {
   },
   campoLabel: { color: 'var(--konectaja-muted)' },
   campoValor: { color: 'var(--konectaja-text-forte)', fontWeight: 600, textAlign: 'right' },
+  listaServicos: { display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 },
+  itemServico: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'var(--konectaja-bg3)',
+    borderRadius: 10,
+    padding: '8px 12px',
+  },
+  itemServicoCategoria: { color: 'var(--konectaja-text-forte)', fontWeight: 600, fontSize: 13 },
+  itemServicoValor: { color: 'var(--konectaja-laranja)', fontWeight: 700, fontSize: 12, marginTop: 2 },
+  itemServicoRemover: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    border: 'none',
+    background: 'transparent',
+    color: 'var(--konectaja-muted)',
+    fontSize: 13,
+  },
+  formServico: { display: 'flex', gap: 8, flexWrap: 'wrap' },
+  inputServicoCategoria: {
+    flex: '1 1 160px',
+    height: 44,
+    borderRadius: 12,
+    border: '1px solid var(--konectaja-border)',
+    background: 'var(--konectaja-bg2)',
+    color: 'var(--konectaja-text-forte)',
+    padding: '0 14px',
+    fontSize: 13,
+  },
+  inputServicoValor: {
+    flex: '1 1 100px',
+    height: 44,
+    borderRadius: 12,
+    border: '1px solid var(--konectaja-border)',
+    background: 'var(--konectaja-bg2)',
+    color: 'var(--konectaja-text-forte)',
+    padding: '0 14px',
+    fontSize: 13,
+  },
+  botaoAdicionarServico: {
+    flex: '1 1 100%',
+    height: 44,
+    borderRadius: 12,
+    border: 'none',
+    background: 'var(--konectaja-laranja)',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 13,
+  },
   albumHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   seloCompleto: {
     fontSize: 11,

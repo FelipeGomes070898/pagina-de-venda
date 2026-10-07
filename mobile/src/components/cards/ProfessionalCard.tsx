@@ -6,12 +6,13 @@ import { formatarDistancia } from '@/utils/distancia';
 
 interface Props {
   prestador: Prestador;
-  onContatar: () => void;
+  onContatar?: () => void;
   onAbrirPerfil: () => void;
   contatando?: boolean;
+  ocultarContato?: boolean;
 }
 
-export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando }: Props) {
+export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contatando, ocultarContato }: Props) {
   const inicial = prestador.nome?.charAt(0)?.toUpperCase() || '?';
 
   return (
@@ -37,16 +38,23 @@ export function ProfessionalCard({ prestador, onContatar, onAbrirPerfil, contata
           {prestador.valor_servico != null && (
             <Text style={styles.preco}>R$ {Number(prestador.valor_servico).toFixed(2)}</Text>
           )}
+          {(prestador.servicos?.length ?? 0) > 0 && (
+            <Text style={styles.tambemFaz}>
+              Também faz: {prestador.servicos!.map((s) => s.categoria).join(', ')}
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.botao, contatando && styles.botaoDesabilitado]}
-        onPress={onContatar}
-        disabled={contatando}
-      >
-        <Text style={styles.botaoTexto}>{contatando ? '...' : 'Contato'}</Text>
-      </TouchableOpacity>
+      {!ocultarContato && (
+        <TouchableOpacity
+          style={[styles.botao, contatando && styles.botaoDesabilitado]}
+          onPress={onContatar}
+          disabled={contatando}
+        >
+          <Text style={styles.botaoTexto}>{contatando ? '...' : 'Contato'}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -81,6 +89,7 @@ const styles = StyleSheet.create({
   estrelas: { color: colors.text, fontSize: 12 },
   distancia: { color: colors.muted, fontSize: 12, marginLeft: 4 },
   preco: { color: colors.laranja, fontWeight: '700', fontSize: 14, marginTop: 4 },
+  tambemFaz: { color: colors.muted, fontSize: 11, marginTop: 4 },
   botao: {
     backgroundColor: colors.laranja,
     borderRadius: radius.sm,

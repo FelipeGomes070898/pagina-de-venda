@@ -111,6 +111,22 @@ export function ProProfileScreen({ route, navigation }: Props) {
 
         {prestador.bio && <Text style={styles.bio}>{prestador.bio}</Text>}
 
+        {(prestador.servicos?.length ?? 0) > 0 && (
+          <View style={styles.secao}>
+            <Text style={styles.secaoTitulo}>Outros serviços que faz</Text>
+            <View style={styles.listaServicosExtra}>
+              {prestador.servicos!.map((servico) => (
+                <View key={servico.id} style={styles.itemServicoExtra}>
+                  <Text style={styles.itemServicoExtraTexto}>{servico.categoria}</Text>
+                  {servico.valor != null && (
+                    <Text style={styles.itemServicoExtraValor}>R$ {Number(servico.valor).toFixed(2)}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {prestador.fotos.length > 0 && (
           <View style={styles.secao}>
             <Text style={styles.secaoTitulo}>Trabalhos anteriores</Text>
@@ -210,6 +226,19 @@ const styles = StyleSheet.create({
   bio: { color: colors.text, fontSize: 14, textAlign: 'center', marginTop: spacing.md },
   secao: { marginTop: spacing.xl },
   secaoTitulo: { color: colors.textForte, fontSize: 15, fontWeight: '700', marginBottom: spacing.sm },
+  listaServicosExtra: { gap: 8 },
+  itemServicoExtra: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  itemServicoExtraTexto: { color: colors.text, fontSize: 13 },
+  itemServicoExtraValor: { color: colors.laranja, fontWeight: '700', fontSize: 13 },
   fotoTrabalho: {
     width: 110,
     height: 110,

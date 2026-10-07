@@ -1,10 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { meuPerfil, MeuPerfil } from '@/services/authService';
+import { adicionarServico, removerServico } from '@/services/servicoPrestadorService';
 import { mascararCPF, mascararTelefoneBR } from '@/utils/masks';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'PerfilTab'>;
@@ -25,6 +36,9 @@ export function PerfilScreen(_props: Props) {
 
   const [perfil, setPerfil] = useState<MeuPerfil | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [novaCategoria, setNovaCategoria] = useState('');
+  const [novoValor, setNovoValor] = useState('');
+  const [adicionandoServico, setAdicionandoServico] = useState(false);
 
   useEffect(() => {
     meuPerfil()
@@ -38,6 +52,33 @@ export function PerfilScreen(_props: Props) {
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Sair', style: 'destructive', onPress: logout },
     ]);
+  }
+
+  async function aoAdicionarServico() {
+    if (!novaCategoria.trim()) return;
+    setAdicionandoServico(true);
+    try {
+      const servico = await adicionarServico({
+        categoria: novaCategoria.trim(),
+        valor: novoValor ? Number(novoValor.replace(',', '.')) : undefined,
+      });
+      setPerfil((p) => (p ? { ...p, servicos: [...(p.servicos ?? []), servico] } : p));
+      setNovaCategoria('');
+      setNovoValor('');
+    } catch {
+      Alert.alert('Erro', 'Não foi possível adicionar esse serviço.');
+    } finally {
+      setAdicionandoServico(false);
+    }
+  }
+
+  async function aoRemoverServico(servicoId: string) {
+    try {
+      await removerServico(servicoId);
+      setPerfil((p) => (p ? { ...p, servicos: p.servicos?.filter((s) => s.id !== servicoId) } : p));
+    } catch {
+      Alert.alert('Erro', 'Não foi possível remover esse serviço.');
+    }
   }
 
   return (
@@ -104,6 +145,61 @@ export function PerfilScreen(_props: Props) {
                   valor={`⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
                 />
                 <Campo label="Serviços concluídos" valor={String(perfil.total_servicos ?? 0)} />
+              </View>
+            )}
+
+            {perfil.tipo === 'prestador' && (
+              <View style={styles.secao}>
+                <Text style={styles.secaoTitulo}>Área de serviço</Text>
+                <Text style={styles.albumAjuda}>
+                  Outros trabalhos que você também faz, além do seu serviço principal — aparecem no marketplace
+                  pros clientes (e outros prestadores) encontrarem.
+                </Text>
+
+                {(perfil.servicos?.length ?? 0) > 0 && (
+                  <View style={styles.listaServicos}>
+                    {perfil.servicos!.map((servico) => (
+                      <View key={servico.id} style={styles.itemServico}>
+                        <View>
+                          <Text style={styles.itemServicoCategoria}>{servico.categoria}</Text>
+                          {servico.valor != null && (
+                            <Text style={styles.itemServicoValor}>R$ {Number(servico.valor).toFixed(2)}</Text>
+                          )}
+                        </View>
+                        <TouchableOpacity onPress={() => aoRemoverServico(servico.id)}>
+                          <Text style={styles.itemServicoRemover}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                <View style={styles.formServico}>
+                  <TextInput
+                    style={styles.inputServicoCategoria}
+                    placeholder="Ex.: Encanador, Diarista..."
+                    placeholderTextColor={colors.muted}
+                    value={novaCategoria}
+                    onChangeText={setNovaCategoria}
+                  />
+                  <TextInput
+                    style={styles.inputServicoValor}
+                    placeholder="Diária (R$)"
+                    placeholderTextColor={colors.muted}
+                    value={novoValor}
+                    onChangeText={setNovoValor}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.botaoAdicionarServico}
+                  onPress={aoAdicionarServico}
+                  disabled={adicionandoServico}
+                >
+                  <Text style={styles.botaoAdicionarServicoTexto}>
+                    {adicionandoServico ? '...' : '+ Adicionar'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -186,6 +282,51 @@ const styles = StyleSheet.create({
   },
   campoLabel: { color: colors.muted, fontSize: 13 },
   campoValor: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
+  listaServicos: { gap: 8, marginBottom: spacing.sm },
+  itemServico: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.bg3,
+    borderRadius: radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  itemServicoCategoria: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
+  itemServicoValor: { color: colors.laranja, fontWeight: '700', fontSize: 12, marginTop: 2 },
+  itemServicoRemover: { color: colors.muted, fontSize: 14, paddingHorizontal: 8 },
+  formServico: { flexDirection: 'row', gap: 8, marginTop: spacing.sm },
+  inputServicoCategoria: {
+    flex: 1.4,
+    height: 44,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    color: colors.textForte,
+    paddingHorizontal: 12,
+    fontSize: 13,
+  },
+  inputServicoValor: {
+    flex: 1,
+    height: 44,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    color: colors.textForte,
+    paddingHorizontal: 12,
+    fontSize: 13,
+  },
+  botaoAdicionarServico: {
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.laranja,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+  },
+  botaoAdicionarServicoTexto: { color: '#fff', fontWeight: '700', fontSize: 13 },
   albumGrade: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   albumFoto: { width: 80, height: 80, borderRadius: radius.sm },
   albumAjuda: { color: colors.muted, fontSize: 11, marginTop: spacing.sm },

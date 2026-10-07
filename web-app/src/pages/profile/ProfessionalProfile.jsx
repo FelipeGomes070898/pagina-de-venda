@@ -82,6 +82,22 @@ export function ProfessionalProfile() {
 
         {prestador.bio && <p style={styles.bio}>{prestador.bio}</p>}
 
+        {prestador.servicos?.length > 0 && (
+          <div style={styles.secao}>
+            <h2 style={styles.secaoTitulo}>Outros serviços que faz</h2>
+            <div style={styles.listaServicos}>
+              {prestador.servicos.map((servico) => (
+                <div key={servico.id} style={styles.itemServico}>
+                  <span>{servico.categoria}</span>
+                  {servico.valor != null && (
+                    <span style={styles.itemServicoValor}>R$ {Number(servico.valor).toFixed(2)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {prestador.fotos?.length > 0 && (
           <div style={styles.secao}>
             <h2 style={styles.secaoTitulo}>Trabalhos anteriores</h2>
@@ -158,6 +174,18 @@ const styles = {
   bio: { color: 'var(--konectaja-text)', fontSize: 14, textAlign: 'center', marginTop: 16 },
   secao: { marginTop: 32 },
   secaoTitulo: { color: 'var(--konectaja-text-forte)', fontSize: 15, fontWeight: 700, marginBottom: 8 },
+  listaServicos: { display: 'flex', flexDirection: 'column', gap: 8 },
+  itemServico: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    background: 'var(--konectaja-bg2)',
+    border: '1px solid var(--konectaja-border)',
+    borderRadius: 10,
+    padding: '10px 14px',
+    fontSize: 13,
+    color: 'var(--konectaja-text)',
+  },
+  itemServicoValor: { color: 'var(--konectaja-laranja)', fontWeight: 700 },
   fotos: { display: 'flex', gap: 8, overflowX: 'auto' },
   foto: { width: 110, height: 110, borderRadius: 12, objectFit: 'cover', background: 'var(--konectaja-bg2)' },
   semAvaliacoes: { color: 'var(--konectaja-muted)', fontSize: 13 },

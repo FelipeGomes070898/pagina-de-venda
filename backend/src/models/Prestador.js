@@ -129,11 +129,21 @@ module.exports = {
     }
     if (segmento) {
       valores.push(segmento);
-      condicoes.push(`segmento = $${valores.length}`);
+      condicoes.push(
+        `(segmento = $${valores.length} OR EXISTS (
+           SELECT 1 FROM servicos_prestador sp
+           WHERE sp.prestador_id = prestadores.id AND sp.categoria = $${valores.length}
+         ))`,
+      );
     }
     if (busca) {
       valores.push(`%${busca}%`);
-      condicoes.push(`(nome ILIKE $${valores.length} OR segmento ILIKE $${valores.length})`);
+      condicoes.push(
+        `(nome ILIKE $${valores.length} OR segmento ILIKE $${valores.length} OR EXISTS (
+           SELECT 1 FROM servicos_prestador sp
+           WHERE sp.prestador_id = prestadores.id AND sp.categoria ILIKE $${valores.length}
+         ))`,
+      );
     }
 
     const usarDistancia = lat != null && lng != null;
@@ -168,7 +178,11 @@ module.exports = {
     const idxOffset = valores.length;
 
     const { rows } = await pool.query(
-      `SELECT ${CAMPOS_PUBLICOS}, ${colunaDistancia}
+      `SELECT ${CAMPOS_PUBLICOS}, ${colunaDistancia},
+         COALESCE((
+           SELECT json_agg(json_build_object('id', sp.id, 'categoria', sp.categoria, 'valor', sp.valor) ORDER BY sp.criado_em)
+           FROM servicos_prestador sp WHERE sp.prestador_id = prestadores.id
+         ), '[]') AS servicos
        FROM prestadores
        WHERE ${condicoes.join(' AND ')}
        ${ordenacao}

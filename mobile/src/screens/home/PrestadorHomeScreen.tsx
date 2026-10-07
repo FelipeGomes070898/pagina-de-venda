@@ -17,7 +17,14 @@ import { MainTabParamList, RootStackParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useCategoryStore } from '@/store/categoryStore';
 import { CategoryChip } from '@/components/common/CategoryChip';
-import { Pedido, listarPedidosAbertos, responderPedidoAberto } from '@/services/marketplaceService';
+import { ProfessionalCard } from '@/components/cards/ProfessionalCard';
+import {
+  Pedido,
+  Prestador,
+  listarPedidosAbertos,
+  listarPrestadores,
+  responderPedidoAberto,
+} from '@/services/marketplaceService';
 import { meuPerfil, MeuPerfil } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 
@@ -42,8 +49,10 @@ export function PrestadorHomeScreen({ navigation }: Props) {
   const categorias = useCategoryStore((s) => s.categorias);
 
   const [perfil, setPerfil] = useState<MeuPerfil | null>(null);
+  const [aba, setAba] = useState<'pedidos' | 'prestadores'>('pedidos');
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [outrosPrestadores, setOutrosPrestadores] = useState<Prestador[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [respondendoId, setRespondendoId] = useState<string | null>(null);
@@ -52,11 +61,19 @@ export function PrestadorHomeScreen({ navigation }: Props) {
   async function carregar() {
     setErro(null);
     try {
-      const [listaPedidos] = await Promise.all([
-        listarPedidosAbertos({ cidade: cidadeUsuario || undefined, segmento: categoriaAtiva || undefined }),
-        meuPerfil().then(setPerfil),
-      ]);
-      setPedidos(listaPedidos);
+      if (aba === 'pedidos') {
+        const [listaPedidos] = await Promise.all([
+          listarPedidosAbertos({ cidade: cidadeUsuario || undefined, segmento: categoriaAtiva || undefined }),
+          meuPerfil().then(setPerfil),
+        ]);
+        setPedidos(listaPedidos);
+      } else {
+        const [listaPrestadores] = await Promise.all([
+          listarPrestadores({ cidade: cidadeUsuario || undefined, segmento: categoriaAtiva || undefined }),
+          meuPerfil().then(setPerfil),
+        ]);
+        setOutrosPrestadores(listaPrestadores);
+      }
     } catch {
       setErro('Não foi possível carregar. Puxe para atualizar.');
     } finally {
@@ -66,7 +83,7 @@ export function PrestadorHomeScreen({ navigation }: Props) {
   }
 
   // useFocusEffect cobre tanto o carregamento inicial quanto a troca de
-  // categoria/cidade (mesmas deps de um useEffect normal) e também
+  // categoria/cidade/aba (mesmas deps de um useEffect normal) e também
   // recarrega toda vez que a aba ganha foco de novo — o status/avaliação
   // pode ter mudado (ex.: voltando de um pedido concluído).
   useFocusEffect(
@@ -74,7 +91,7 @@ export function PrestadorHomeScreen({ navigation }: Props) {
       setCarregando(true);
       carregar();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [categoriaAtiva, cidadeUsuario]),
+    }, [aba, categoriaAtiva, cidadeUsuario]),
   );
 
   function aoAtualizar() {
@@ -122,7 +139,24 @@ export function PrestadorHomeScreen({ navigation }: Props) {
           </View>
         )}
 
-        <Text style={styles.subtitulo}>Pedidos em aberto perto de você</Text>
+        <View style={styles.abas}>
+          <TouchableOpacity
+            style={[styles.aba, aba === 'pedidos' && styles.abaAtiva]}
+            onPress={() => setAba('pedidos')}
+          >
+            <Text style={[styles.abaTexto, aba === 'pedidos' && styles.abaTextoAtivo]}>
+              Pedidos em aberto
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.aba, aba === 'prestadores' && styles.abaAtiva]}
+            onPress={() => setAba('prestadores')}
+          >
+            <Text style={[styles.abaTexto, aba === 'prestadores' && styles.abaTextoAtivo]}>
+              Outros prestadores
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -147,7 +181,7 @@ export function PrestadorHomeScreen({ navigation }: Props) {
 
       {carregando ? (
         <ActivityIndicator color={colors.laranja} style={{ marginTop: spacing.xl }} />
-      ) : (
+      ) : aba === 'pedidos' ? (
         <FlatList
           data={pedidos}
           keyExtractor={(item) => item.id}
@@ -176,6 +210,23 @@ export function PrestadorHomeScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={
             <Text style={styles.vazio}>Nenhum pedido em aberto na sua cidade ainda.</Text>
+          }
+        />
+      ) : (
+        <FlatList
+          data={outrosPrestadores}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.lista}
+          refreshControl={<RefreshControl refreshing={atualizando} onRefresh={aoAtualizar} />}
+          renderItem={({ item }) => (
+            <ProfessionalCard
+              prestador={item}
+              onAbrirPerfil={() => navigation.navigate('ProProfile', { prestadorId: item.id, prestadorNome: item.nome })}
+              ocultarContato
+            />
+          )}
+          ListEmptyComponent={
+            <Text style={styles.vazio}>Nenhum outro prestador na sua cidade ainda.</Text>
           }
         />
       )}
@@ -214,6 +265,18 @@ const styles = StyleSheet.create({
   statusBolinha: { width: 8, height: 8, borderRadius: 4 },
   statusTexto: { fontSize: 12, fontWeight: '700' },
   subtitulo: { fontSize: 15, fontWeight: '700', color: colors.textForte, marginTop: spacing.lg },
+  abas: {
+    flexDirection: 'row',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.md,
+    padding: 4,
+    gap: 4,
+    marginTop: spacing.lg,
+  },
+  aba: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },
+  abaAtiva: { backgroundColor: colors.laranja },
+  abaTexto: { color: colors.muted, fontWeight: '600', fontSize: 13 },
+  abaTextoAtivo: { color: '#fff' },
   categoriasScroll: { marginTop: spacing.sm, maxHeight: 44 },
   categoriasConteudo: { paddingHorizontal: spacing.lg },
   erro: { color: colors.red, fontSize: 13, paddingHorizontal: spacing.lg, marginTop: spacing.sm },

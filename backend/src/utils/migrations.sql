@@ -266,6 +266,24 @@ CREATE TABLE IF NOT EXISTS avaliacoes_clientes (
 );
 CREATE INDEX IF NOT EXISTS idx_avaliacoes_clientes_cliente ON avaliacoes_clientes(cliente_id);
 
+-- Serviços extras que o prestador oferece além do segmento principal do
+-- cadastro (ex.: cadastrou como "Pedreiro", mas também faz "Encanador" e
+-- "Servente" com diárias diferentes cada um). Aparecem no marketplace
+-- como se fossem o segmento dele — um cliente buscando "Encanador" acha
+-- esse prestador mesmo o segmento principal sendo outro. Outros
+-- prestadores também veem esses serviços navegando no marketplace, do
+-- mesmo jeito que um cliente veria.
+CREATE TABLE IF NOT EXISTS servicos_prestador (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE,
+  categoria    VARCHAR(80) NOT NULL,
+  valor        DECIMAL(10,2),
+  descricao    TEXT,
+  criado_em    TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_servicos_prestador_prestador ON servicos_prestador(prestador_id);
+CREATE INDEX IF NOT EXISTS idx_servicos_prestador_categoria ON servicos_prestador(categoria);
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

@@ -2,9 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { BottomNav } from '../../components/BottomNav';
+import { ProfessionalCard } from '../../components/ProfessionalCard';
 import { CATEGORIAS } from '../../constants/categorias';
 import { meuPerfil } from '../../services/authService';
-import { listarPedidosAbertos, responderPedidoAberto } from '../../services/marketplaceService';
+import {
+  listarPedidosAbertos,
+  listarPrestadores,
+  responderPedidoAberto,
+} from '../../services/marketplaceService';
 
 const ROTULO_STATUS = {
   ativo: { texto: 'Conta ativa', cor: 'var(--konectaja-verde)' },
@@ -22,8 +27,10 @@ export function PrestadorHome() {
   const navigate = useNavigate();
 
   const [perfil, setPerfil] = useState(null);
+  const [aba, setAba] = useState('pedidos');
   const [categoriaAtiva, setCategoriaAtiva] = useState(null);
   const [pedidos, setPedidos] = useState([]);
+  const [outrosPrestadores, setOutrosPrestadores] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [respondendoId, setRespondendoId] = useState(null);
   const [erro, setErro] = useState(null);
@@ -31,11 +38,19 @@ export function PrestadorHome() {
   async function carregar() {
     setErro(null);
     try {
-      const [listaPedidos] = await Promise.all([
-        listarPedidosAbertos({ cidade: cidadeUsuario || undefined, segmento: categoriaAtiva || undefined }),
-        meuPerfil().then(setPerfil),
-      ]);
-      setPedidos(listaPedidos);
+      if (aba === 'pedidos') {
+        const [listaPedidos] = await Promise.all([
+          listarPedidosAbertos({ cidade: cidadeUsuario || undefined, segmento: categoriaAtiva || undefined }),
+          meuPerfil().then(setPerfil),
+        ]);
+        setPedidos(listaPedidos);
+      } else {
+        const [listaPrestadores] = await Promise.all([
+          listarPrestadores({ cidade: cidadeUsuario || undefined, segmento: categoriaAtiva || undefined }),
+          meuPerfil().then(setPerfil),
+        ]);
+        setOutrosPrestadores(listaPrestadores);
+      }
     } catch {
       setErro('Não foi possível carregar. Tente novamente.');
     } finally {
@@ -47,7 +62,7 @@ export function PrestadorHome() {
     setCarregando(true);
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoriaAtiva, cidadeUsuario]);
+  }, [aba, categoriaAtiva, cidadeUsuario]);
 
   async function aoResponder(pedido) {
     setRespondendoId(pedido.id);
@@ -91,7 +106,20 @@ export function PrestadorHome() {
           </div>
         )}
 
-        <h2 style={styles.subtitulo}>Pedidos em aberto perto de você</h2>
+        <div style={styles.abas}>
+          <button
+            style={{ ...styles.aba, ...(aba === 'pedidos' ? styles.abaAtiva : {}) }}
+            onClick={() => setAba('pedidos')}
+          >
+            Pedidos em aberto
+          </button>
+          <button
+            style={{ ...styles.aba, ...(aba === 'prestadores' ? styles.abaAtiva : {}) }}
+            onClick={() => setAba('prestadores')}
+          >
+            Outros prestadores
+          </button>
+        </div>
 
         <div style={styles.categorias}>
           <button
@@ -115,27 +143,40 @@ export function PrestadorHome() {
 
         {carregando ? (
           <p style={styles.info}>Carregando...</p>
-        ) : pedidos.length === 0 ? (
-          <p style={styles.info}>Nenhum pedido em aberto na sua cidade ainda.</p>
-        ) : (
-          pedidos.map((pedido) => (
-            <div key={pedido.id} style={styles.pedidoCard}>
-              <div>{pedido.descricao}</div>
-              <div style={styles.pedidoRodape}>
-                {pedido.valor != null ? (
-                  <span style={styles.pedidoValor}>R$ {Number(pedido.valor).toFixed(2)}</span>
-                ) : (
-                  <span style={styles.pedidoSemValor}>Sem valor sugerido</span>
-                )}
-                <button
-                  style={styles.botaoResponder}
-                  onClick={() => aoResponder(pedido)}
-                  disabled={respondendoId === pedido.id}
-                >
-                  {respondendoId === pedido.id ? 'Respondendo...' : 'Responder'}
-                </button>
+        ) : aba === 'pedidos' ? (
+          pedidos.length === 0 ? (
+            <p style={styles.info}>Nenhum pedido em aberto na sua cidade ainda.</p>
+          ) : (
+            pedidos.map((pedido) => (
+              <div key={pedido.id} style={styles.pedidoCard}>
+                <div>{pedido.descricao}</div>
+                <div style={styles.pedidoRodape}>
+                  {pedido.valor != null ? (
+                    <span style={styles.pedidoValor}>R$ {Number(pedido.valor).toFixed(2)}</span>
+                  ) : (
+                    <span style={styles.pedidoSemValor}>Sem valor sugerido</span>
+                  )}
+                  <button
+                    style={styles.botaoResponder}
+                    onClick={() => aoResponder(pedido)}
+                    disabled={respondendoId === pedido.id}
+                  >
+                    {respondendoId === pedido.id ? 'Respondendo...' : 'Responder'}
+                  </button>
+                </div>
               </div>
-            </div>
+            ))
+          )
+        ) : outrosPrestadores.length === 0 ? (
+          <p style={styles.info}>Nenhum outro prestador na sua cidade ainda.</p>
+        ) : (
+          outrosPrestadores.map((p) => (
+            <ProfessionalCard
+              key={p.id}
+              prestador={p}
+              onAbrirPerfil={() => navigate(`/prestador/${p.id}`)}
+              ocultarContato
+            />
           ))
         )}
       </main>
@@ -169,6 +210,26 @@ const styles = {
   },
   statusBolinha: { width: 8, height: 8, borderRadius: 4 },
   subtitulo: { color: 'var(--konectaja-text-forte)', fontSize: 16, marginTop: 24, marginBottom: 12 },
+  abas: {
+    display: 'flex',
+    background: 'var(--konectaja-bg2)',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  aba: {
+    flex: 1,
+    padding: '10px 0',
+    borderRadius: 8,
+    border: 'none',
+    background: 'transparent',
+    color: 'var(--konectaja-muted)',
+    fontSize: 13,
+    fontWeight: 600,
+  },
+  abaAtiva: { background: 'var(--konectaja-laranja)', color: '#fff' },
   categorias: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   chip: {
     padding: '8px 14px',

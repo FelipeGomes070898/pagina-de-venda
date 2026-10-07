@@ -1,6 +1,7 @@
 const Prestador = require('../models/Prestador');
 const FotoTrabalho = require('../models/FotoTrabalho');
 const Avaliacao = require('../models/Avaliacao');
+const ServicoPrestador = require('../models/ServicoPrestador');
 const { removerImagem } = require('../config/blob');
 
 // email/cpf/telefone vêm de CAMPOS_PUBLICOS (compartilhado com o retorno do
@@ -45,12 +46,13 @@ async function buscar(req, res) {
   });
   if (!prestador) return res.status(404).json({ erro: 'Prestador não encontrado' });
 
-  const [fotos, avaliacoes] = await Promise.all([
+  const [fotos, avaliacoes, servicos] = await Promise.all([
     FotoTrabalho.listarPorPrestador(prestador.id),
     Avaliacao.listarPorPrestador(prestador.id),
+    ServicoPrestador.listarPorPrestador(prestador.id),
   ]);
 
-  res.json({ ...ocultarPii(prestador), fotos, avaliacoes });
+  res.json({ ...ocultarPii(prestador), fotos, avaliacoes, servicos });
 }
 
 // Álbum de trabalhos realizados — chamado depois que a imagem já subiu
@@ -78,4 +80,42 @@ async function removerFotoTrabalho(req, res) {
   res.status(204).end();
 }
 
-module.exports = { listar, buscar, adicionarFotoTrabalho, removerFotoTrabalho };
+// "Área de serviço": outros trabalhos que o prestador também faz, além
+// do segmento principal do cadastro — cada um com a própria diária.
+// Aparecem no marketplace (Prestador.listarAtivos casa busca/segmento
+// contra isso também) e no perfil público dele.
+async function adicionarServico(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Somente prestadores têm área de serviço' });
+  }
+  const { categoria, valor, descricao } = req.body;
+  if (!categoria || !categoria.trim()) {
+    return res.status(400).json({ erro: 'categoria é obrigatória' });
+  }
+
+  const servico = await ServicoPrestador.adicionar(req.usuarioApp.id, {
+    categoria: categoria.trim(),
+    valor: valor || null,
+    descricao,
+  });
+  res.status(201).json(servico);
+}
+
+async function removerServico(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Somente prestadores têm área de serviço' });
+  }
+  const removido = await ServicoPrestador.remover(req.usuarioApp.id, req.params.servicoId);
+  if (!removido) return res.status(404).json({ erro: 'Serviço não encontrado' });
+
+  res.status(204).end();
+}
+
+module.exports = {
+  listar,
+  buscar,
+  adicionarFotoTrabalho,
+  removerFotoTrabalho,
+  adicionarServico,
+  removerServico,
+};
