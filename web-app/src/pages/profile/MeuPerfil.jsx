@@ -47,8 +47,8 @@ export function MeuPerfil() {
       const url = await enviarImagem(arquivo, `perfil/${usuario.tipo}/${usuario.id}/foto.jpg`);
       const atualizado = await atualizarFotoPerfil(url);
       setPerfil((p) => ({ ...p, ...atualizado }));
-    } catch {
-      setErro('Não foi possível enviar a foto. Verifique sua internet e tente de novo.');
+    } catch (erro) {
+      setErro(erro.message || 'Não foi possível enviar a foto. Verifique sua internet e tente de novo.');
     } finally {
       setEnviandoFoto(false);
     }
@@ -65,8 +65,8 @@ export function MeuPerfil() {
       const url = await enviarImagem(arquivo, `trabalhos/${usuario.id}/${Date.now()}.jpg`);
       await adicionarFotoTrabalho({ url });
       carregar();
-    } catch {
-      setErro('Não foi possível enviar a foto. Verifique sua internet e tente de novo.');
+    } catch (erro) {
+      setErro(erro.message || 'Não foi possível enviar a foto. Verifique sua internet e tente de novo.');
     } finally {
       setEnviandoFotoTrabalho(false);
     }

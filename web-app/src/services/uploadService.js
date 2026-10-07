@@ -3,6 +3,17 @@ import { useAuthStore } from '../store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
 
+// Em alguns navegadores (principalmente WebViews Android), canvas.toBlob
+// às vezes nunca chama o callback — nem sucesso nem erro — travando a
+// Promise pra sempre. Esse timeout garante que o upload sempre acaba
+// com sucesso ou erro, nunca girando infinitamente sem explicação.
+function comTimeout(promessa, ms, mensagemErro) {
+  return Promise.race([
+    promessa,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(mensagemErro)), ms)),
+  ]);
+}
+
 // Redimensiona/comprime no navegador antes de subir — foto de celular
 // direto da câmera pode ter vários MB, e a maior parte disso é
 // resolução que a tela nunca vai mostrar. Cai graciosamente pro arquivo
@@ -33,17 +44,22 @@ export async function enviarImagem(arquivo, pathname) {
 
   let corpo = arquivo;
   try {
-    corpo = await redimensionar(arquivo);
+    corpo = await comTimeout(redimensionar(arquivo), 8000, 'timeout compressão');
   } catch {
-    // segue com o arquivo original
+    // segue com o arquivo original (compressão falhou ou travou)
+    corpo = arquivo;
   }
 
-  const resultado = await upload(pathname, corpo, {
-    access: 'public',
-    contentType: 'image/jpeg',
-    handleUploadUrl: `${API_URL}/api/uploads/handle-blob`,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  const resultado = await comTimeout(
+    upload(pathname, corpo, {
+      access: 'public',
+      contentType: 'image/jpeg',
+      handleUploadUrl: `${API_URL}/api/uploads/handle-blob`,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    }),
+    30000,
+    'Tempo esgotado enviando a foto. Verifique sua internet e tente de novo.',
+  );
 
   return resultado.url;
 }
