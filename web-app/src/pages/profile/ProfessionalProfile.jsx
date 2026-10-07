@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 import { buscarPrestador, contatarPrestador } from '../../services/marketplaceService';
 import { obterLocalizacaoAtual } from '../../services/locationService';
 import { formatarDistancia } from '../../utils/distancia';
@@ -7,6 +8,7 @@ import { formatarDistancia } from '../../utils/distancia';
 export function ProfessionalProfile() {
   const { prestadorId } = useParams();
   const navigate = useNavigate();
+  const meuTipo = useAuthStore((s) => s.usuario?.tipo);
 
   const [prestador, setPrestador] = useState(null);
   const [carregando, setCarregando] = useState(true);
@@ -128,12 +130,20 @@ export function ProfessionalProfile() {
 
         {erro && <p style={styles.erroTexto}>{erro}</p>}
 
-        <button style={styles.botaoContato} onClick={aoContatar} disabled={contatando}>
-          {contatando ? 'Entrando em contato...' : 'Solicitar serviço'}
-        </button>
-        <p style={styles.avisoChat}>
-          A conversa com {prestador.nome} acontece aqui dentro do app, no chat do pedido.
-        </p>
+        {meuTipo === 'prestador' ? (
+          <p style={styles.avisoChat}>
+            Você está vendo este perfil como prestador. Só clientes podem solicitar serviço.
+          </p>
+        ) : (
+          <>
+            <button style={styles.botaoContato} onClick={aoContatar} disabled={contatando}>
+              {contatando ? 'Entrando em contato...' : 'Solicitar serviço'}
+            </button>
+            <p style={styles.avisoChat}>
+              A conversa com {prestador.nome} acontece aqui dentro do app, no chat do pedido.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

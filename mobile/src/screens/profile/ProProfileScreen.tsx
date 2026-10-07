@@ -16,11 +16,13 @@ import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { buscarPrestador, contatarPrestador, PrestadorDetalhe } from '@/services/marketplaceService';
 import { obterLocalizacaoComPermissao } from '@/services/locationService';
 import { formatarDistancia } from '@/utils/distancia';
+import { useAuthStore } from '@/store/authStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProProfile'>;
 
 export function ProProfileScreen({ route, navigation }: Props) {
   const { prestadorId, prestadorNome } = route.params;
+  const meuTipo = useAuthStore((s) => s.usuario?.tipo);
 
   const [prestador, setPrestador] = useState<PrestadorDetalhe | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -157,15 +159,23 @@ export function ProProfileScreen({ route, navigation }: Props) {
 
         {erro && <Text style={styles.erroAcao}>{erro}</Text>}
 
-        <PrimaryButton
-          label="Solicitar serviço"
-          onPress={aoSolicitar}
-          loading={contatando}
-          style={styles.botaoContato}
-        />
-        <Text style={styles.avisoChat}>
-          A conversa com {prestador.nome} acontece aqui dentro do app, no chat do pedido.
-        </Text>
+        {meuTipo === 'prestador' ? (
+          <Text style={styles.avisoChat}>
+            Você está vendo este perfil como prestador. Só clientes podem solicitar serviço.
+          </Text>
+        ) : (
+          <>
+            <PrimaryButton
+              label="Solicitar serviço"
+              onPress={aoSolicitar}
+              loading={contatando}
+              style={styles.botaoContato}
+            />
+            <Text style={styles.avisoChat}>
+              A conversa com {prestador.nome} acontece aqui dentro do app, no chat do pedido.
+            </Text>
+          </>
+        )}
       </View>
     </ScrollView>
   );
