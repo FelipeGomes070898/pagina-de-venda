@@ -17,7 +17,7 @@ export function KonectaLogo({ size = 'lg' }: Props) {
 
 const styles = StyleSheet.create({
   wrapper: { alignItems: 'center' },
-  marca: { fontWeight: '900', color: colors.laranja, letterSpacing: 1 },
+  marca: { fontWeight: '900', color: colors.laranjaEscuro, letterSpacing: 1 },
   grande: { fontSize: 32 },
   pequeno: { fontSize: 18 },
 });

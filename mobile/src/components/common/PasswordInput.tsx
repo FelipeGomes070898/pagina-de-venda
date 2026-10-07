@@ -20,7 +20,7 @@ export function PasswordInput({ containerStyle, ...inputProps }: Props) {
         {...inputProps}
       />
       <TouchableOpacity onPress={() => setMostrar((v) => !v)} hitSlop={8}>
-        <Text style={styles.toggle}>{mostrar ? '🙈' : '👁️'}</Text>
+        <Text style={styles.toggle}>{mostrar ? 'Ocultar' : 'Ver'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 52,
     backgroundColor: colors.bg3,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
@@ -40,5 +40,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   input: { flex: 1, height: '100%', color: colors.textForte },
-  toggle: { fontSize: 18, marginLeft: spacing.sm },
+  toggle: { fontSize: 12, fontWeight: '700', color: colors.muted, marginLeft: spacing.sm },
 });

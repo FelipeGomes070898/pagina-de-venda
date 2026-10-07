@@ -24,7 +24,7 @@ const CHAVE_ONBOARDING_VISTO = '@konectaja/onboarding_visto';
 const SLIDES = [
   { icone: '🔍', chaveTitulo: 'onboarding.slide1_title', chaveTexto: 'onboarding.slide1_text' },
   { icone: '💬', chaveTitulo: 'onboarding.slide2_title', chaveTexto: 'onboarding.slide2_text' },
-  { icone: '⭐', chaveTitulo: 'onboarding.slide3_title', chaveTexto: 'onboarding.slide3_text' },
+  { icone: '★', chaveTitulo: 'onboarding.slide3_title', chaveTexto: 'onboarding.slide3_text' },
 ];
 
 export function OnboardingScreen({ navigation }: Props) {

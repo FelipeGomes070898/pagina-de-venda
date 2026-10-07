@@ -121,7 +121,7 @@ export function PerfilScreen(_props: Props) {
                   label="Avaliação dos prestadores"
                   valor={
                     perfil.total_avaliacoes
-                      ? `⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`
+                      ? `★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`
                       : 'Ainda sem avaliações'
                   }
                 />
@@ -142,7 +142,7 @@ export function PerfilScreen(_props: Props) {
                 />
                 <Campo
                   label="Avaliação"
-                  valor={`⭐ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
+                  valor={`★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
                 />
                 <Campo label="Serviços concluídos" valor={String(perfil.total_servicos ?? 0)} />
               </View>

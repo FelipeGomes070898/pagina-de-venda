@@ -122,7 +122,7 @@ export function PrestadorHomeScreen({ navigation }: Props) {
 
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <Text style={styles.statValor}>⭐ {Number(perfil?.avaliacao ?? 5).toFixed(1)}</Text>
+            <Text style={styles.statValor}>★ {Number(perfil?.avaliacao ?? 5).toFixed(1)}</Text>
             <Text style={styles.statLabel}>{perfil?.total_avaliacoes ?? 0} avaliações</Text>
           </View>
           <View style={styles.statDivisor} />

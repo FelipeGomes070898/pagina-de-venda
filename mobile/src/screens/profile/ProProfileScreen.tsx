@@ -99,7 +99,7 @@ export function ProProfileScreen({ route, navigation }: Props) {
 
         <View style={styles.linhaInfo}>
           <Text style={styles.estrelas}>
-            ⭐ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes} avaliações)
+            ★ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes} avaliações)
           </Text>
           <Text style={styles.servicos}>· {prestador.total_servicos} serviços feitos</Text>
           {prestador.distancia_km != null && (
@@ -149,7 +149,7 @@ export function ProProfileScreen({ route, navigation }: Props) {
               <View key={av.id} style={styles.avaliacaoCard}>
                 <View style={styles.avaliacaoHeader}>
                   <Text style={styles.avaliacaoNome}>{av.cliente_nome}</Text>
-                  <Text style={styles.avaliacaoNota}>{'⭐'.repeat(av.nota)}</Text>
+                  <Text style={styles.avaliacaoNota}>{'★'.repeat(av.nota)}</Text>
                 </View>
                 {av.comentario && <Text style={styles.avaliacaoComentario}>{av.comentario}</Text>}
               </View>

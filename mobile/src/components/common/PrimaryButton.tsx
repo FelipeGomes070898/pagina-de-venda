@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ViewStyle,
 } from 'react-native';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, sombra, spacing } from '@/theme/tokens';
 
 interface Props {
   label: string;
@@ -50,15 +50,15 @@ export function PrimaryButton({
 const styles = StyleSheet.create({
   base: {
     height: 52,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
-  primary: { backgroundColor: colors.laranja },
+  primary: { backgroundColor: colors.laranjaEscuro, ...sombra },
   outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
+    backgroundColor: colors.bg2,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   desabilitado: { opacity: 0.5 },

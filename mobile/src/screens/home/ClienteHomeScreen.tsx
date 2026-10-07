@@ -208,7 +208,7 @@ export function ClienteHomeScreen({ navigation }: Props) {
         {aba === 'prestadores' && !buscandoLocalizacao && (
           <Text style={styles.localizacaoInfo}>
             {coordenadas
-              ? '📍 Ordenado pelos prestadores mais próximos de você'
+              ? 'Ordenado pelos prestadores mais próximos de você'
               : 'Ative a localização para ver quem está mais perto'}
           </Text>
         )}

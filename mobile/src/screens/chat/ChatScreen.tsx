@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import {
   Conversa,
@@ -269,14 +269,14 @@ export function ChatScreen({ route, navigation }: Props) {
       )}
 
       {conversa.pedido.endereco && (
-        <Text style={styles.enderecoConfirmado}>📍 Endereço enviado: {conversa.pedido.endereco}</Text>
+        <Text style={styles.enderecoConfirmado}>Endereço enviado: {conversa.pedido.endereco}</Text>
       )}
 
       {meuTipo === 'cliente' && (pedidoFechado || pedidoConcluido) && (
         <View style={styles.enderecoWrapper}>
           {conversa.pedido.pagamento_confirmado_em ? (
             <Text style={styles.enderecoConfirmado}>
-              💳 Pagamento confirmado por você (
+              Pagamento confirmado por você (
               {conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'},{' '}
               {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
             </Text>
@@ -336,7 +336,7 @@ export function ChatScreen({ route, navigation }: Props) {
           style={styles.botaoConcluir}
           onPress={() => navigation.navigate('Review', { pedidoId, prestadorNome })}
         >
-          <Text style={styles.botaoConcluirTexto}>⭐ Avaliar prestador</Text>
+          <Text style={styles.botaoConcluirTexto}>★ Avaliar prestador</Text>
         </TouchableOpacity>
       )}
       {pedidoConcluido && meuTipo === 'prestador' && (
@@ -344,7 +344,7 @@ export function ChatScreen({ route, navigation }: Props) {
           style={styles.botaoConcluir}
           onPress={() => navigation.navigate('ReviewCliente', { pedidoId, clienteNome: prestadorNome })}
         >
-          <Text style={styles.botaoConcluirTexto}>⭐ Avaliar cliente</Text>
+          <Text style={styles.botaoConcluirTexto}>★ Avaliar cliente</Text>
         </TouchableOpacity>
       )}
 
@@ -452,7 +452,7 @@ function CartaoProposta({
       )}
       {proposta.status !== 'pendente' && (
         <Text style={styles.cartaoPropostaStatus}>
-          {proposta.status === 'aceita' ? 'Aceita ✅' : 'Recusada'}
+          {proposta.status === 'aceita' ? 'Aceita' : 'Recusada'}
         </Text>
       )}
     </View>
@@ -491,24 +491,26 @@ const styles = StyleSheet.create({
   balao: {
     maxWidth: '80%',
     backgroundColor: colors.bg2,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
+    ...sombra,
   },
-  balaoMeu: { backgroundColor: colors.laranja, borderColor: colors.laranja },
+  balaoMeu: { backgroundColor: colors.laranjaEscuro, borderColor: colors.laranjaEscuro },
   balaoTexto: { color: colors.textForte, fontSize: 14 },
   balaoTextoMeu: { color: '#fff' },
   cartaoProposta: {
     alignSelf: 'center',
     backgroundColor: colors.bg2,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.laranja,
+    borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.sm,
     minWidth: 200,
     alignItems: 'center',
+    ...sombra,
   },
   cartaoPropostaValor: { color: colors.laranja, fontWeight: '800', fontSize: 18 },
   cartaoPropostaStatus: { color: colors.muted, fontSize: 12, marginTop: 4 },
@@ -536,7 +538,8 @@ const styles = StyleSheet.create({
   },
   enderecoRotulo: { color: colors.green, fontSize: 12, fontWeight: '600', marginBottom: 6 },
   enderecoConfirmado: {
-    color: colors.muted,
+    color: colors.green,
+    fontWeight: '600',
     fontSize: 12,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -622,8 +625,8 @@ const styles = StyleSheet.create({
   inputMensagem: {
     flex: 1,
     height: 44,
-    backgroundColor: colors.bg2,
-    borderRadius: radius.md,
+    backgroundColor: colors.bg3,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
@@ -631,11 +634,12 @@ const styles = StyleSheet.create({
   },
   botaoEnviar: {
     height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.laranja,
+    borderRadius: radius.lg,
+    backgroundColor: colors.laranjaEscuro,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
+    ...sombra,
   },
-  botaoEnviarTexto: { color: colors.textForte, fontWeight: '700', fontSize: 12 },
+  botaoEnviarTexto: { color: '#fff', fontWeight: '700', fontSize: 12 },
 });
