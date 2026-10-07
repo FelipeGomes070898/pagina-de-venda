@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+require('./utils/expressAsync').instalar();
 const rotas = require('./routes');
 const { tratarErros } = require('./middlewares/erros');
 
