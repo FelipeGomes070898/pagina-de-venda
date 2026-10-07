@@ -5,6 +5,25 @@ import { buscarPrestador, contatarPrestador } from '../../services/marketplaceSe
 import { obterLocalizacaoAtual } from '../../services/locationService';
 import { formatarDistancia } from '../../utils/distancia';
 
+const IconeEstrela = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline', verticalAlign: '-2px' }}>
+    <path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2Z" />
+  </svg>
+);
+
+const IconeVoltar = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 5l-7 7 7 7" />
+  </svg>
+);
+
+const IconeCompartilhar = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+    <path d="M8.6 10.5 15.4 6.8M8.6 13.5l6.8 3.7" />
+  </svg>
+);
+
 export function ProfessionalProfile() {
   const { prestadorId } = useParams();
   const navigate = useNavigate();
@@ -56,10 +75,10 @@ export function ProfessionalProfile() {
     <div style={styles.pagina}>
       <div style={styles.header}>
         <button style={styles.voltar} onClick={() => navigate('/')}>
-          ← Marketplace
+          <IconeVoltar /> Marketplace
         </button>
         <button style={styles.voltar} onClick={aoCompartilhar}>
-          Compartilhar ⤴
+          Compartilhar <IconeCompartilhar />
         </button>
       </div>
 
@@ -73,7 +92,7 @@ export function ProfessionalProfile() {
         <p style={styles.segmento}>{prestador.segmento || 'Serviços gerais'}</p>
 
         <p style={styles.linhaInfo}>
-          ⭐ {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes} avaliações) ·{' '}
+          <IconeEstrela /> {Number(prestador.avaliacao ?? 5).toFixed(1)} ({prestador.total_avaliacoes} avaliações) ·{' '}
           {prestador.total_servicos} serviços feitos
           {prestador.distancia_km != null && <> · {formatarDistancia(prestador.distancia_km)} de você</>}
         </p>
@@ -120,7 +139,9 @@ export function ProfessionalProfile() {
               <div key={av.id} style={styles.avaliacaoCard}>
                 <div style={styles.avaliacaoHeader}>
                   <span style={styles.avaliacaoNome}>{av.cliente_nome}</span>
-                  <span>{'⭐'.repeat(av.nota)}</span>
+                  <span style={{ color: 'var(--konectaja-laranja)', display: 'flex', gap: 1 }}>
+                    {Array.from({ length: av.nota }).map((_, i) => <IconeEstrela key={i} size={12} />)}
+                  </span>
                 </div>
                 {av.comentario && <p style={styles.avaliacaoComentario}>{av.comentario}</p>}
               </div>
@@ -153,22 +174,35 @@ const styles = {
   pagina: { minHeight: '100vh' },
   centro: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--konectaja-muted)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  voltar: { background: 'transparent', border: 'none', color: 'var(--konectaja-azul)', fontSize: 13, fontWeight: 600, padding: 16, cursor: 'pointer' },
+  voltar: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--konectaja-text)',
+    fontSize: 13,
+    fontWeight: 700,
+    padding: 16,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
   container: { maxWidth: 480, margin: '0 auto', padding: '0 24px 32px' },
   fotoPerfil: {
     width: 120,
     height: 120,
-    borderRadius: 60,
+    borderRadius: 999,
     objectFit: 'cover',
     background: 'var(--konectaja-bg2)',
     display: 'block',
     margin: '0 auto 16px',
+    border: '3px solid #fff',
+    boxShadow: 'var(--konectaja-shadow-md)',
   },
   avatar: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    background: 'var(--konectaja-laranja)',
+    borderRadius: 999,
+    background: 'linear-gradient(135deg, #F6AD3C, var(--konectaja-laranja-escuro))',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
@@ -176,11 +210,13 @@ const styles = {
     fontWeight: 800,
     fontSize: 48,
     margin: '0 auto 16px',
+    border: '3px solid #fff',
+    boxShadow: '0 4px 14px rgba(180, 83, 9, 0.35)',
   },
-  nome: { color: 'var(--konectaja-text-forte)', fontSize: 20, textAlign: 'center', margin: 0 },
+  nome: { color: 'var(--konectaja-text-forte)', fontSize: 20, textAlign: 'center', margin: 0, fontWeight: 800 },
   segmento: { color: 'var(--konectaja-muted)', fontSize: 14, textAlign: 'center', marginTop: 4 },
   linhaInfo: { color: 'var(--konectaja-text)', fontSize: 13, textAlign: 'center', marginTop: 8 },
-  preco: { color: 'var(--konectaja-laranja)', fontWeight: 800, fontSize: 18, textAlign: 'center', marginTop: 8 },
+  preco: { color: 'var(--konectaja-laranja-escuro)', fontWeight: 800, fontSize: 18, textAlign: 'center', marginTop: 8 },
   bio: { color: 'var(--konectaja-text)', fontSize: 14, textAlign: 'center', marginTop: 16 },
   secao: { marginTop: 32 },
   secaoTitulo: { color: 'var(--konectaja-text-forte)', fontSize: 15, fontWeight: 700, marginBottom: 8 },
@@ -190,16 +226,24 @@ const styles = {
     justifyContent: 'space-between',
     background: 'var(--konectaja-bg2)',
     border: '1px solid var(--konectaja-border)',
-    borderRadius: 10,
+    borderRadius: 14,
     padding: '10px 14px',
     fontSize: 13,
     color: 'var(--konectaja-text)',
+    boxShadow: 'var(--konectaja-shadow-sm)',
   },
-  itemServicoValor: { color: 'var(--konectaja-laranja)', fontWeight: 700 },
+  itemServicoValor: { color: 'var(--konectaja-laranja-escuro)', fontWeight: 700 },
   fotos: { display: 'flex', gap: 8, overflowX: 'auto' },
-  foto: { width: 110, height: 110, borderRadius: 12, objectFit: 'cover', background: 'var(--konectaja-bg2)' },
+  foto: { width: 110, height: 110, borderRadius: 16, objectFit: 'cover', background: 'var(--konectaja-bg2)' },
   semAvaliacoes: { color: 'var(--konectaja-muted)', fontSize: 13 },
-  avaliacaoCard: { background: 'var(--konectaja-bg2)', border: '1px solid var(--konectaja-border)', borderRadius: 12, padding: 14, marginBottom: 8 },
+  avaliacaoCard: {
+    background: 'var(--konectaja-bg2)',
+    border: '1px solid var(--konectaja-border)',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 8,
+    boxShadow: 'var(--konectaja-shadow-sm)',
+  },
   avaliacaoHeader: { display: 'flex', justifyContent: 'space-between' },
   avaliacaoNome: { color: 'var(--konectaja-text-forte)', fontWeight: 600, fontSize: 13 },
   avaliacaoComentario: { color: 'var(--konectaja-text)', fontSize: 13, marginTop: 4 },
@@ -207,13 +251,14 @@ const styles = {
   botaoContato: {
     width: '100%',
     height: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     border: 'none',
-    background: 'var(--konectaja-laranja)',
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
     color: '#fff',
     fontWeight: 700,
     fontSize: 14,
     marginTop: 32,
+    boxShadow: 'var(--konectaja-shadow-md)',
   },
   avisoChat: {
     color: 'var(--konectaja-muted)',

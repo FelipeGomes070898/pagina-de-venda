@@ -13,7 +13,10 @@ export function BaixarApp() {
         <p style={styles.subtitulo}>Pra usar no seu celular Android.</p>
 
         <a href={urlDownload} style={styles.botaoBaixar}>
-          ⬇ Baixar agora
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8, verticalAlign: '-4px' }}>
+            <path d="M12 3v12m0 0-5-5m5 5 5-5" /><path d="M5 19h14" />
+          </svg>
+          Baixar agora
         </a>
 
         <div style={styles.passos}>
@@ -62,7 +65,7 @@ const styles = {
   marca: {
     fontSize: 24,
     fontWeight: 900,
-    color: 'var(--konectaja-laranja)',
+    color: 'var(--konectaja-laranja-escuro)',
     textAlign: 'center',
     letterSpacing: 1,
     marginBottom: 24,
@@ -87,18 +90,20 @@ const styles = {
     width: '100%',
     boxSizing: 'border-box',
     padding: '22px 24px',
-    borderRadius: 16,
-    background: 'var(--konectaja-laranja)',
+    borderRadius: 18,
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
     color: '#fff',
     fontWeight: 800,
     fontSize: 22,
+    boxShadow: 'var(--konectaja-shadow-md)',
   },
   passos: {
     marginTop: 40,
     background: 'var(--konectaja-bg2)',
     border: '1px solid var(--konectaja-border)',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 24,
+    boxShadow: 'var(--konectaja-shadow-sm)',
   },
   passosTitulo: {
     color: 'var(--konectaja-text-forte)',
@@ -111,14 +116,15 @@ const styles = {
     flexShrink: 0,
     width: 36,
     height: 36,
-    borderRadius: 18,
-    background: 'var(--konectaja-laranja)',
+    borderRadius: 999,
+    background: 'linear-gradient(135deg, #F6AD3C, var(--konectaja-laranja-escuro))',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 800,
     fontSize: 16,
+    boxShadow: '0 4px 10px rgba(180, 83, 9, 0.35)',
   },
   passoTexto: { color: 'var(--konectaja-text)', fontSize: 17, lineHeight: 1.5, margin: 0 },
   ajuda: {

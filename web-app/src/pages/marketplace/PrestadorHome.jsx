@@ -11,6 +11,12 @@ import {
   responderPedidoAberto,
 } from '../../services/marketplaceService';
 
+const IconeEstrela = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline', verticalAlign: '-2px', marginRight: 2 }}>
+    <path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2Z" />
+  </svg>
+);
+
 const ROTULO_STATUS = {
   ativo: { texto: 'Conta ativa', cor: 'var(--konectaja-verde)' },
   inadimplente: { texto: 'Pagamento pendente', cor: 'var(--konectaja-laranja)' },
@@ -89,7 +95,7 @@ export function PrestadorHome() {
 
         <div style={styles.statsCard}>
           <div style={styles.statItem}>
-            <div style={styles.statValor}>⭐ {Number(perfil?.avaliacao ?? 5).toFixed(1)}</div>
+            <div style={styles.statValor}><IconeEstrela />{Number(perfil?.avaliacao ?? 5).toFixed(1)}</div>
             <div style={styles.statLabel}>{perfil?.total_avaliacoes ?? 0} avaliações</div>
           </div>
           <div style={styles.statDivisor} />
@@ -192,12 +198,13 @@ const styles = {
     display: 'flex',
     background: 'var(--konectaja-bg2)',
     border: '1px solid var(--konectaja-border)',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 20,
+    boxShadow: 'var(--konectaja-shadow-sm)',
   },
   statItem: { flex: 1, textAlign: 'center' },
   statDivisor: { width: 1, background: 'var(--konectaja-border)' },
-  statValor: { fontSize: 22, fontWeight: 800, color: 'var(--konectaja-text-forte)' },
+  statValor: { fontSize: 22, fontWeight: 800, color: 'var(--konectaja-text-forte)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 },
   statLabel: { fontSize: 12, color: 'var(--konectaja-muted)', marginTop: 4 },
   statusChip: {
     display: 'inline-flex',
@@ -212,24 +219,29 @@ const styles = {
   subtitulo: { color: 'var(--konectaja-text-forte)', fontSize: 16, marginTop: 24, marginBottom: 12 },
   abas: {
     display: 'flex',
-    background: 'var(--konectaja-bg2)',
-    borderRadius: 12,
-    padding: 4,
+    background: 'var(--konectaja-bg3)',
+    borderRadius: 14,
+    padding: 5,
     gap: 4,
     marginTop: 24,
     marginBottom: 16,
+    border: '1px solid var(--konectaja-border)',
   },
   aba: {
     flex: 1,
     padding: '10px 0',
-    borderRadius: 8,
+    borderRadius: 10,
     border: 'none',
     background: 'transparent',
     color: 'var(--konectaja-muted)',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700,
   },
-  abaAtiva: { background: 'var(--konectaja-laranja)', color: '#fff' },
+  abaAtiva: {
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
+    color: '#fff',
+    boxShadow: 'var(--konectaja-shadow-sm)',
+  },
   categorias: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   chip: {
     padding: '8px 14px',
@@ -237,29 +249,36 @@ const styles = {
     border: '1px solid var(--konectaja-border)',
     background: 'var(--konectaja-bg2)',
     color: 'var(--konectaja-text)',
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: 700,
   },
-  chipAtiva: { background: 'var(--konectaja-laranja)', borderColor: 'var(--konectaja-laranja)', color: '#fff' },
+  chipAtiva: {
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
+    borderColor: 'var(--konectaja-laranja)',
+    color: '#fff',
+  },
   erro: { color: 'var(--konectaja-red)', fontSize: 13 },
   info: { color: 'var(--konectaja-muted)', textAlign: 'center', marginTop: 32, fontSize: 13 },
   pedidoCard: {
     background: 'var(--konectaja-bg2)',
     border: '1px solid var(--konectaja-border)',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 10,
     color: 'var(--konectaja-text)',
+    boxShadow: 'var(--konectaja-shadow-sm)',
   },
   pedidoRodape: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   pedidoValor: { color: 'var(--konectaja-verde)', fontWeight: 700 },
   pedidoSemValor: { color: 'var(--konectaja-muted)', fontSize: 12, fontStyle: 'italic' },
   botaoResponder: {
-    background: 'var(--konectaja-laranja)',
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
     border: 'none',
-    borderRadius: 8,
-    padding: '8px 14px',
+    borderRadius: 10,
+    padding: '9px 16px',
     color: '#fff',
     fontWeight: 700,
     fontSize: 12,
+    boxShadow: 'var(--konectaja-shadow-sm)',
   },
 };
