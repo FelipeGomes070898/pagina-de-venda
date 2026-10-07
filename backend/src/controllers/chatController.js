@@ -121,6 +121,9 @@ async function responderProposta(req, res) {
   if (proposta.remetente_id === req.usuarioApp.id) {
     return res.status(403).json({ erro: 'Você não pode responder a própria proposta' });
   }
+  if (acao === 'aceitar' && ['concluido', 'cancelado'].includes(pedido.status)) {
+    return res.status(409).json({ erro: 'Este pedido já foi finalizado — não é possível aceitar propostas' });
+  }
 
   const novoStatus = acao === 'aceitar' ? 'aceita' : 'recusada';
   const propostaAtualizada = await Proposta.atualizarStatus(proposta.id, novoStatus);

@@ -201,6 +201,7 @@ export function Chat() {
               key={item.id}
               proposta={item.dado}
               meuTipo={meuTipo}
+              podeResponder={!pedidoConcluido && !pedidoCancelado}
               onResponder={(acao) => aoResponderProposta(item.dado, acao)}
             />
           ),
@@ -359,12 +360,12 @@ function BalaoMensagem({ mensagem, meuTipo }) {
   );
 }
 
-function CartaoProposta({ proposta, meuTipo, onResponder }) {
+function CartaoProposta({ proposta, meuTipo, podeResponder, onResponder }) {
   const minhaProposta = proposta.remetente_tipo === meuTipo;
   return (
     <div style={styles.cartaoProposta}>
       <div style={styles.cartaoPropostaValor}>R$ {Number(proposta.valor).toFixed(2)}</div>
-      {proposta.status === 'pendente' && !minhaProposta && (
+      {proposta.status === 'pendente' && !minhaProposta && podeResponder && (
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button style={styles.botaoAceitar} onClick={() => onResponder('aceitar')}>
             Aceitar
@@ -374,8 +375,10 @@ function CartaoProposta({ proposta, meuTipo, onResponder }) {
           </button>
         </div>
       )}
-      {proposta.status === 'pendente' && minhaProposta && (
-        <p style={styles.cartaoPropostaStatus}>Aguardando resposta...</p>
+      {proposta.status === 'pendente' && (minhaProposta || !podeResponder) && (
+        <p style={styles.cartaoPropostaStatus}>
+          {podeResponder ? 'Aguardando resposta...' : 'Pedido já finalizado'}
+        </p>
       )}
       {proposta.status !== 'pendente' && (
         <p style={styles.cartaoPropostaStatus}>{proposta.status === 'aceita' ? 'Aceita ✅' : 'Recusada'}</p>

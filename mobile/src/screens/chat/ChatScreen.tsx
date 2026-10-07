@@ -234,6 +234,7 @@ export function ChatScreen({ route, navigation }: Props) {
             <CartaoProposta
               proposta={item.dado}
               meuTipo={meuTipo}
+              podeResponder={!pedidoConcluido && !pedidoCancelado}
               onResponder={(acao) => aoResponderProposta(item.dado, acao)}
             />
           )
@@ -421,10 +422,12 @@ function BalaoMensagem({
 function CartaoProposta({
   proposta,
   meuTipo,
+  podeResponder,
   onResponder,
 }: {
   proposta: Proposta;
   meuTipo?: string;
+  podeResponder: boolean;
   onResponder: (acao: 'aceitar' | 'recusar') => void;
 }) {
   const minhaProposta = proposta.remetente_tipo === meuTipo;
@@ -432,7 +435,7 @@ function CartaoProposta({
   return (
     <View style={styles.cartaoProposta}>
       <Text style={styles.cartaoPropostaValor}>R$ {Number(proposta.valor).toFixed(2)}</Text>
-      {proposta.status === 'pendente' && !minhaProposta && (
+      {proposta.status === 'pendente' && !minhaProposta && podeResponder && (
         <View style={styles.cartaoPropostaAcoes}>
           <TouchableOpacity style={styles.botaoAceitar} onPress={() => onResponder('aceitar')}>
             <Text style={styles.botaoAceitarTexto}>Aceitar</Text>
@@ -442,8 +445,10 @@ function CartaoProposta({
           </TouchableOpacity>
         </View>
       )}
-      {proposta.status === 'pendente' && minhaProposta && (
-        <Text style={styles.cartaoPropostaStatus}>Aguardando resposta...</Text>
+      {proposta.status === 'pendente' && (minhaProposta || !podeResponder) && (
+        <Text style={styles.cartaoPropostaStatus}>
+          {podeResponder ? 'Aguardando resposta...' : 'Pedido já finalizado'}
+        </Text>
       )}
       {proposta.status !== 'pendente' && (
         <Text style={styles.cartaoPropostaStatus}>
