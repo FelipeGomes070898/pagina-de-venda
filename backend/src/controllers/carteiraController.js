@@ -1,5 +1,6 @@
 const CarteiraTransacao = require('../models/CarteiraTransacao');
 const Cliente = require('../models/Cliente');
+const Prestador = require('../models/Prestador');
 const asaasService = require('../services/asaasService');
 
 const VALOR_MINIMO_DEPOSITO = 5;
@@ -31,14 +32,14 @@ async function meuExtrato(req, res) {
   res.json(extrato);
 }
 
-// Cliente gera uma cobrança (Pix/cartão/boleto, via página hospedada
-// do Asaas) pra colocar dinheiro na carteira. O valor só entra de
+// Qualquer um dos dois tipos gera uma cobrança (Pix/cartão/boleto, via
+// página hospedada do Asaas) pra colocar dinheiro na carteira — um
+// prestador também pode ser cliente de outro prestador, então também
+// pode depositar pra pagar por um serviço. O valor só entra de
 // verdade quando o webhook confirmar o pagamento (ver
 // pagamentoController.webhook).
 async function criarDeposito(req, res) {
-  if (req.usuarioApp.tipo !== 'cliente') {
-    return res.status(403).json({ erro: 'Somente clientes podem depositar na carteira' });
-  }
+  const { id, tipo } = req.usuarioApp;
 
   const valor = Number(req.body.valor);
   if (!valor || valor < VALOR_MINIMO_DEPOSITO) {
@@ -47,13 +48,14 @@ async function criarDeposito(req, res) {
       .json({ erro: `Informe um valor de pelo menos R$ ${VALOR_MINIMO_DEPOSITO.toFixed(2)}` });
   }
 
-  const cliente = await Cliente.buscarCompletoPorId(req.usuarioApp.id);
-  if (!cliente) return res.status(404).json({ erro: 'Conta não encontrada' });
+  const usuario =
+    tipo === 'prestador' ? await Prestador.buscarCompletoPorId(id) : await Cliente.buscarCompletoPorId(id);
+  if (!usuario) return res.status(404).json({ erro: 'Conta não encontrada' });
 
-  const cobranca = await asaasService.criarCobrancaDeposito(cliente, valor);
+  const cobranca = await asaasService.criarCobrancaDeposito(usuario, tipo, valor);
   await CarteiraTransacao.registrarDeposito({
-    usuarioId: cliente.id,
-    usuarioTipo: 'cliente',
+    usuarioId: id,
+    usuarioTipo: tipo,
     valor,
     asaasPaymentId: cobranca.id,
   });

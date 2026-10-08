@@ -155,19 +155,23 @@ async function garantirClienteAsaasCliente(cliente) {
   }
 }
 
-// Carteira: cria a cobrança que o cliente paga (Pix/cartão/boleto, via
+// Carteira: cria a cobrança que o usuário paga (Pix/cartão/boleto, via
 // a página hospedada do Asaas — invoiceUrl) pra colocar dinheiro na
-// carteira. Quem chama já grava a transação 'pendente' antes
+// carteira. Qualquer um dos dois tipos pode depositar — um prestador
+// também pode ser cliente de outro prestador, então precisa poder
+// colocar dinheiro na própria carteira pra pagar por um serviço. Quem
+// chama já grava a transação 'pendente' antes
 // (CarteiraTransacao.registrarDeposito) — ela só vira 'concluido'
 // quando o webhook confirmar o pagamento.
-async function criarCobrancaDeposito(cliente, valor) {
+async function criarCobrancaDeposito(usuario, tipo, valor) {
   if (!asaasConfigurado()) {
     const erro = new Error('Depósito indisponível neste servidor no momento.');
     erro.status = 503;
     throw erro;
   }
 
-  const customerId = await garantirClienteAsaasCliente(cliente);
+  const customerId =
+    tipo === 'prestador' ? await garantirClienteAsaas(usuario) : await garantirClienteAsaasCliente(usuario);
   if (!customerId) {
     const erro = new Error('Não foi possível preparar o depósito — tente novamente em instantes.');
     erro.status = 502;
