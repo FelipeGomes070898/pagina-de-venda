@@ -12,6 +12,7 @@ import { Marketplace } from './pages/marketplace/Marketplace';
 import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
 import { MeuPerfil } from './pages/profile/MeuPerfil';
 import { MeusChats } from './pages/chats/MeusChats';
+import { Carteira } from './pages/carteira/Carteira';
 import { Chat } from './pages/chat/Chat';
 import { Review } from './pages/review/Review';
 import { ReviewCliente } from './pages/review/ReviewCliente';
@@ -68,6 +69,14 @@ export default function App() {
           element={
             <RotaProtegida>
               <MeusChats />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/carteira"
+          element={
+            <RotaProtegida>
+              <Carteira />
             </RotaProtegida>
           }
         />

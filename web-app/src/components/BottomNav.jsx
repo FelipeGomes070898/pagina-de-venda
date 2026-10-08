@@ -11,6 +11,9 @@ const ICONES = {
   perfil: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.4" /><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2" /></svg>
   ),
+  carteira: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.4" /><path d="M3 10h18" /><circle cx="16.5" cy="14.3" r="1.1" fill="currentColor" stroke="none" /></svg>
+  ),
   sair: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" /><path d="m15 16 4-4-4-4" /><path d="M19 12H9" /></svg>
   ),
@@ -23,6 +26,7 @@ const ICONES = {
 const LINKS = [
   { para: '/', rotulo: 'Início', icone: 'inicio' },
   { para: '/chats', rotulo: 'Chats', icone: 'chats' },
+  { para: '/carteira', rotulo: 'Carteira', icone: 'carteira' },
   { para: '/perfil', rotulo: 'Perfil', icone: 'perfil' },
 ];
 

@@ -5,6 +5,7 @@ import { MainTabParamList } from './types';
 import { HomeScreen } from '@/screens/home/HomeScreen';
 import { BuscaScreen } from '@/screens/busca/BuscaScreen';
 import { ChatsListScreen } from '@/screens/chat/ChatsListScreen';
+import { CarteiraScreen } from '@/screens/carteira/CarteiraScreen';
 import { PerfilScreen } from '@/screens/profile/PerfilScreen';
 import { colors } from '@/theme/tokens';
 
@@ -14,6 +15,7 @@ const ICONES: Record<keyof MainTabParamList, string> = {
   MarketplaceTab: '🏠',
   BuscaTab: '🔍',
   ChatsTab: '💬',
+  CarteiraTab: '👛',
   PerfilTab: '👤',
 };
 
@@ -40,6 +42,7 @@ export function MainTabsNavigator() {
       <Tab.Screen name="MarketplaceTab" component={HomeScreen} options={{ tabBarLabel: 'Início' }} />
       <Tab.Screen name="BuscaTab" component={BuscaScreen} options={{ tabBarLabel: 'Busca' }} />
       <Tab.Screen name="ChatsTab" component={ChatsListScreen} options={{ tabBarLabel: 'Chats' }} />
+      <Tab.Screen name="CarteiraTab" component={CarteiraScreen} options={{ tabBarLabel: 'Carteira' }} />
       <Tab.Screen name="PerfilTab" component={PerfilScreen} options={{ tabBarLabel: 'Perfil' }} />
     </Tab.Navigator>
   );

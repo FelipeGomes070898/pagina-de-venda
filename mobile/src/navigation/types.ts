@@ -2,6 +2,7 @@ export type MainTabParamList = {
   MarketplaceTab: undefined;
   BuscaTab: undefined;
   ChatsTab: undefined;
+  CarteiraTab: undefined;
   PerfilTab: undefined;
 };
 
