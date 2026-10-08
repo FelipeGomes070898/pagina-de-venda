@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { RotaProtegida } from './components/RotaProtegida';
+import { Splash } from './components/Splash';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { RecuperarSenha } from './pages/auth/RecuperarSenha';
@@ -16,6 +18,11 @@ import { AjudaBar } from './components/AjudaBar';
 
 export default function App() {
   const usuario = useAuthStore((s) => s.usuario);
+  const [mostrarSplash, setMostrarSplash] = useState(true);
+
+  if (mostrarSplash) {
+    return <Splash onFinish={() => setMostrarSplash(false)} />;
+  }
 
   return (
     <BrowserRouter>

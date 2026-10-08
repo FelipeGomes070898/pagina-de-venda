@@ -74,3 +74,142 @@ button {
 [data-alto-contraste='true'] body {
   background-image: none;
 }
+
+/* Vinheta de abertura — ver src/components/Splash.jsx. */
+.konecta-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: var(--konectaja-bg);
+  background-image: radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.1), transparent 55%);
+  animation: kj-splash-in 0.5s ease-out;
+}
+
+.konecta-splash--saindo {
+  animation: kj-splash-out 0.35s ease-in forwards;
+}
+
+.konecta-splash__marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: kj-splash-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.konecta-splash__wordmark {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--konectaja-text-forte);
+}
+
+.konecta-splash__wordmark-destaque {
+  color: var(--konectaja-laranja);
+}
+
+.konecta-splash__slogan {
+  margin: 0;
+  color: var(--konectaja-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.konecta-splash__trilha {
+  position: absolute;
+  bottom: 56px;
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--konectaja-bg3);
+  overflow: hidden;
+}
+
+.konecta-splash__barra {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro));
+  animation: kj-splash-barra 1.5s ease-out forwards;
+}
+
+.kj-logo-elo-tras {
+  transform-origin: center;
+  animation: kj-logo-rotar-tras 2.4s ease-in-out infinite;
+}
+
+.kj-logo-elo-frente {
+  transform-origin: center;
+  animation: kj-logo-rotar-frente 2.4s ease-in-out infinite;
+}
+
+.kj-logo-spark {
+  transform-origin: center;
+  animation: kj-logo-pulso 1.3s ease-in-out infinite;
+}
+
+@keyframes kj-splash-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes kj-splash-out {
+  to {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes kj-splash-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.82) translateY(8px);
+  }
+}
+
+@keyframes kj-splash-barra {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes kj-logo-rotar-tras {
+  0%,
+  100% {
+    transform: rotate(35deg);
+  }
+  50% {
+    transform: rotate(29deg);
+  }
+}
+
+@keyframes kj-logo-rotar-frente {
+  0%,
+  100% {
+    transform: rotate(-35deg);
+  }
+  50% {
+    transform: rotate(-29deg);
+  }
+}
+
+@keyframes kj-logo-pulso {
+  0%,
+  100% {
+    opacity: 1;
+    r: 4.5;
+  }
+  50% {
+    opacity: 0.6;
+    r: 5.5;
+  }
+}
