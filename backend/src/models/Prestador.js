@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/database');
+const { tabelaExiste } = require('../utils/schema');
 
 const CAMPOS_PUBLICOS = `
   id, nome, email, telefone, cpf, whatsapp, segmento, valor_servico,
@@ -112,6 +113,12 @@ module.exports = {
   // lat/lng são informados (distância por Haversine, em km). Sem
   // localização, cai para os mais recentes.
   async listarAtivos({ cidade, segmento, busca, lat, lng, excluirId, pagina = 1, porPagina = 20 } = {}) {
+    // servicos_prestador só existe em bancos que já rodaram a migração
+    // mais recente — sem essa checagem, o marketplace inteiro quebra
+    // (não só a busca por serviço extra) num ambiente que ainda não
+    // rodou migrations.sql. Degrada pra "sem serviços extras" até lá.
+    const comServicosExtras = await tabelaExiste('servicos_prestador');
+
     const condicoes = [`status = 'ativo'`];
     const valores = [];
 
@@ -130,19 +137,23 @@ module.exports = {
     if (segmento) {
       valores.push(segmento);
       condicoes.push(
-        `(segmento = $${valores.length} OR EXISTS (
-           SELECT 1 FROM servicos_prestador sp
-           WHERE sp.prestador_id = prestadores.id AND sp.categoria = $${valores.length}
-         ))`,
+        comServicosExtras
+          ? `(segmento = $${valores.length} OR EXISTS (
+               SELECT 1 FROM servicos_prestador sp
+               WHERE sp.prestador_id = prestadores.id AND sp.categoria = $${valores.length}
+             ))`
+          : `segmento = $${valores.length}`,
       );
     }
     if (busca) {
       valores.push(`%${busca}%`);
       condicoes.push(
-        `(nome ILIKE $${valores.length} OR segmento ILIKE $${valores.length} OR EXISTS (
-           SELECT 1 FROM servicos_prestador sp
-           WHERE sp.prestador_id = prestadores.id AND sp.categoria ILIKE $${valores.length}
-         ))`,
+        comServicosExtras
+          ? `(nome ILIKE $${valores.length} OR segmento ILIKE $${valores.length} OR EXISTS (
+               SELECT 1 FROM servicos_prestador sp
+               WHERE sp.prestador_id = prestadores.id AND sp.categoria ILIKE $${valores.length}
+             ))`
+          : `(nome ILIKE $${valores.length} OR segmento ILIKE $${valores.length})`,
       );
     }
 
@@ -177,12 +188,15 @@ module.exports = {
     const idxLimit = valores.length - 1;
     const idxOffset = valores.length;
 
-    const { rows } = await pool.query(
-      `SELECT ${CAMPOS_PUBLICOS}, ${colunaDistancia},
-         COALESCE((
+    const colunaServicos = comServicosExtras
+      ? `COALESCE((
            SELECT json_agg(json_build_object('id', sp.id, 'categoria', sp.categoria, 'valor', sp.valor) ORDER BY sp.criado_em)
            FROM servicos_prestador sp WHERE sp.prestador_id = prestadores.id
-         ), '[]') AS servicos
+         ), '[]') AS servicos`
+      : `'[]'::json AS servicos`;
+
+    const { rows } = await pool.query(
+      `SELECT ${CAMPOS_PUBLICOS}, ${colunaDistancia}, ${colunaServicos}
        FROM prestadores
        WHERE ${condicoes.join(' AND ')}
        ${ordenacao}
