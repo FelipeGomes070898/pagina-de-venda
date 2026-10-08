@@ -20,18 +20,15 @@ function ocultarPii(prestador) {
 async function listar(req, res) {
   const { cidade, segmento, busca, lat, lng, page } = req.query;
 
-  // Endpoint público (sem exigir login), mas se vier um token de app
-  // válido (autenticarAppOpcional) e for um prestador, ele não aparece
-  // na própria lista — não faz sentido mostrar "Contato" pra si mesmo.
-  const excluirId = req.usuarioApp?.tipo === 'prestador' ? req.usuarioApp.id : undefined;
-
+  // Endpoint público (sem exigir login). Um prestador aparece na própria
+  // listagem também — ele quer ver como a publicação dele fica ao lado
+  // das outras, e conferir o que a concorrência está oferecendo.
   const prestadores = await Prestador.listarAtivos({
     cidade,
     segmento,
     busca,
     lat: lat ? Number(lat) : undefined,
     lng: lng ? Number(lng) : undefined,
-    excluirId,
     pagina: page ? Number(page) : 1,
   });
 
