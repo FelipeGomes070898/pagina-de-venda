@@ -21,12 +21,24 @@ export function Register() {
   const [email, setEmail] = useState(perfilGoogle?.email || '');
   const [telefone, setTelefone] = useState('');
   const [cpf, setCpf] = useState('');
-  const [endereco, setEndereco] = useState({ texto: '', cidade: '', estado: '', lat: null, lng: null });
+  const [endereco, setEndereco] = useState({
+    texto: '',
+    cidade: '',
+    estado: '',
+    lat: null,
+    lng: null,
+    cep: '',
+    rua: '',
+    numero: '',
+    bairro: '',
+  });
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [segmento, setSegmento] = useState(null);
   const [valorServico, setValorServico] = useState('');
   const [modeloCobranca, setModeloCobranca] = useState('percentual');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [rendaMensal, setRendaMensal] = useState('');
   const [aceiteTermos, setAceiteTermos] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -62,6 +74,16 @@ export function Register() {
         valorServico: tipo === 'prestador' && valorServico ? Number(valorServico.replace(',', '.')) : undefined,
         modeloCobranca: tipo === 'prestador' ? modeloCobranca : undefined,
         googleId: perfilGoogle?.googleId || undefined,
+        // Split de pagamento (carteira): abre a subconta Asaas do
+        // prestador quando esses dados vierem preenchidos — opcional,
+        // não bloqueia o cadastro se faltar algo.
+        dataNascimento: tipo === 'prestador' && dataNascimento ? dataNascimento : undefined,
+        rendaMensal:
+          tipo === 'prestador' && rendaMensal ? Number(rendaMensal.replace(',', '.')) : undefined,
+        cep: tipo === 'prestador' ? endereco.cep || undefined : undefined,
+        rua: tipo === 'prestador' ? endereco.rua || undefined : undefined,
+        numero: tipo === 'prestador' ? endereco.numero || undefined : undefined,
+        bairro: tipo === 'prestador' ? endereco.bairro || undefined : undefined,
       });
       navigate('/');
     } catch (erro) {
@@ -137,7 +159,17 @@ export function Register() {
         <CepAddressInput
           style={styles.input}
           onSelecionar={(dados) =>
-            setEndereco({ texto: dados.enderecoCompleto, cidade: dados.cidade, estado: dados.estado, lat: dados.lat, lng: dados.lng })
+            setEndereco({
+              texto: dados.enderecoCompleto,
+              cidade: dados.cidade,
+              estado: dados.estado,
+              lat: dados.lat,
+              lng: dados.lng,
+              cep: dados.cep,
+              rua: dados.rua,
+              numero: dados.numero,
+              bairro: dados.bairro,
+            })
           }
         />
         <PasswordInput
@@ -174,6 +206,25 @@ export function Register() {
               placeholder="Valor do seu serviço (R$)"
               value={valorServico}
               onChange={(e) => setValorServico(e.target.value)}
+            />
+
+            <p style={styles.rotulo}>Dados pra você poder receber (carteira)</p>
+            <p style={styles.explicacaoCobranca}>
+              Opcional por enquanto — sem isso você ainda consegue usar o app normal, só não libera
+              o recebimento automático dentro dele ainda.
+            </p>
+            <input
+              style={styles.input}
+              type="date"
+              placeholder="Data de nascimento"
+              value={dataNascimento}
+              onChange={(e) => setDataNascimento(e.target.value)}
+            />
+            <input
+              style={styles.input}
+              placeholder="Renda mensal estimada (R$)"
+              value={rendaMensal}
+              onChange={(e) => setRendaMensal(e.target.value)}
             />
 
             <p style={styles.rotulo}>Como prefere pagar a taxa da plataforma?</p>

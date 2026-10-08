@@ -23,7 +23,7 @@ import { useCategoryStore } from '@/store/categoryStore';
 import { TipoConta, ModeloCobranca, loginComGoogle } from '@/services/authService';
 import { EnderecoDetalhado } from '@/services/mapsService';
 import { validarCPF, validarEmail, validarTelefoneBR } from '@/utils/validators';
-import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '@/utils/masks';
+import { dataBrParaIso, mascararCPF, mascararDataBR, mascararTelefoneBR, somenteDigitos } from '@/utils/masks';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
@@ -38,7 +38,14 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [email, setEmail] = useState(perfilGoogle?.email || '');
   const [telefone, setTelefone] = useState('');
   const [cpf, setCpf] = useState('');
-  const [endereco, setEndereco] = useState<{ texto: string } & Partial<EnderecoDetalhado>>({
+  const [endereco, setEndereco] = useState<
+    { texto: string } & Partial<EnderecoDetalhado> & {
+        cep?: string;
+        rua?: string;
+        numero?: string;
+        bairro?: string;
+      }
+  >({
     texto: '',
   });
   const [senha, setSenha] = useState('');
@@ -46,6 +53,8 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [segmento, setSegmento] = useState<string | null>(null);
   const [valorServico, setValorServico] = useState('');
   const [modeloCobranca, setModeloCobranca] = useState<ModeloCobranca>('percentual');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [rendaMensal, setRendaMensal] = useState('');
   const [aceiteTermos, setAceiteTermos] = useState(false);
   const [docAberto, setDocAberto] = useState<'termos' | 'privacidade' | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -82,6 +91,17 @@ export function RegisterScreen({ navigation, route }: Props) {
           tipo === 'prestador' && valorServico ? Number(valorServico.replace(',', '.')) : undefined,
         modeloCobranca: tipo === 'prestador' ? modeloCobranca : undefined,
         googleId: perfilGoogle?.googleId,
+        // Split de pagamento (carteira): abre a subconta Asaas do
+        // prestador quando esses dados vierem preenchidos — opcional,
+        // não bloqueia o cadastro se faltar algo.
+        dataNascimento:
+          tipo === 'prestador' && dataNascimento ? dataBrParaIso(dataNascimento) ?? undefined : undefined,
+        rendaMensal:
+          tipo === 'prestador' && rendaMensal ? Number(rendaMensal.replace(',', '.')) : undefined,
+        cep: tipo === 'prestador' ? endereco.cep : undefined,
+        rua: tipo === 'prestador' ? endereco.rua : undefined,
+        numero: tipo === 'prestador' ? endereco.numero : undefined,
+        bairro: tipo === 'prestador' ? endereco.bairro : undefined,
       });
       // Sem navigation.replace aqui: o cadastro grava o token no
       // estado global, e é essa mudança que faz o AppNavigator trocar
@@ -213,6 +233,28 @@ export function RegisterScreen({ navigation, route }: Props) {
               placeholderTextColor={colors.muted}
               value={valorServico}
               onChangeText={setValorServico}
+              keyboardType="decimal-pad"
+            />
+
+            <Text style={styles.rotulo}>Dados pra você poder receber (carteira)</Text>
+            <Text style={styles.explicacaoCobranca}>
+              Opcional por enquanto — sem isso você ainda consegue usar o app normal, só não
+              libera o recebimento automático dentro dele ainda.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Data de nascimento (DD/MM/AAAA)"
+              placeholderTextColor={colors.muted}
+              value={dataNascimento}
+              onChangeText={(v) => setDataNascimento(mascararDataBR(v))}
+              keyboardType="number-pad"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Renda mensal estimada (R$)"
+              placeholderTextColor={colors.muted}
+              value={rendaMensal}
+              onChangeText={setRendaMensal}
               keyboardType="decimal-pad"
             />
 

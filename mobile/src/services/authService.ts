@@ -40,6 +40,14 @@ export interface CadastroPayload {
   segmento?: string;
   valorServico?: number;
   modeloCobranca?: ModeloCobranca;
+  // Split de pagamento (carteira) — opcionais, usados pra abrir a
+  // subconta Asaas do prestador quando disponíveis.
+  dataNascimento?: string;
+  rendaMensal?: number;
+  cep?: string;
+  rua?: string;
+  numero?: string;
+  bairro?: string;
 }
 
 export interface PerfilGoogle {

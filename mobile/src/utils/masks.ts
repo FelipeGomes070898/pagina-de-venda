@@ -19,3 +19,18 @@ export function mascararCPF(valor: string): string {
 export function somenteDigitos(valor: string): string {
   return valor.replace(/\D/g, '');
 }
+
+export function mascararDataBR(valor: string): string {
+  const d = valor.replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+// DD/MM/AAAA (como o campo mostra) → AAAA-MM-DD (o que o backend espera
+// numa coluna DATE). Retorna null se a data ainda estiver incompleta.
+export function dataBrParaIso(valor: string): string | null {
+  const d = valor.replace(/\D/g, '');
+  if (d.length !== 8) return null;
+  return `${d.slice(4)}-${d.slice(2, 4)}-${d.slice(0, 2)}`;
+}
