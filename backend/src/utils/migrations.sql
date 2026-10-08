@@ -323,6 +323,25 @@ ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS taxa_urgencia DECIMAL(10,2);
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cupom_codigo VARCHAR(30);
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS desconto_valor DECIMAL(10,2);
 
+-- Tickets de suporte abertos pelo app (cliente ou prestador) — fila
+-- real que a tela "Suporte" do painel admin passa a gerenciar, em vez
+-- de depender só do chat do pedido.
+CREATE TABLE IF NOT EXISTS tickets_suporte (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  usuario_id    UUID NOT NULL,
+  usuario_tipo  VARCHAR(12) NOT NULL, -- cliente | prestador
+  usuario_nome  VARCHAR(100) NOT NULL,
+  assunto       VARCHAR(100) NOT NULL,
+  mensagem      TEXT NOT NULL,
+  status        VARCHAR(20) DEFAULT 'aberto', -- aberto | em_atendimento | resolvido
+  resposta      TEXT,
+  atendido_por  UUID REFERENCES admins(id),
+  criado_em     TIMESTAMPTZ DEFAULT NOW(),
+  atualizado_em TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_tickets_suporte_status ON tickets_suporte(status);
+CREATE INDEX IF NOT EXISTS idx_tickets_suporte_usuario ON tickets_suporte(usuario_id);
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

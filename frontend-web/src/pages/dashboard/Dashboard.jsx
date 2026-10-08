@@ -62,6 +62,17 @@ export function Dashboard() {
             <div style={styles.cardLabel}>Banners ativos</div>
             <div style={styles.cardValor}>{resumo.bannersAtivos}</div>
           </div>
+          <div style={styles.card}>
+            <div style={styles.cardLabel}>Tickets de suporte abertos</div>
+            <div
+              style={{
+                ...styles.cardValor,
+                color: resumo.ticketsAbertos > 0 ? 'var(--konectaja-laranja-escuro)' : undefined,
+              }}
+            >
+              {resumo.ticketsAbertos}
+            </div>
+          </div>
         </div>
       )}
     </div>

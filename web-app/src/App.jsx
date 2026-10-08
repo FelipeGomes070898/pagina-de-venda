@@ -12,12 +12,14 @@ import { MeusChats } from './pages/chats/MeusChats';
 import { Chat } from './pages/chat/Chat';
 import { Review } from './pages/review/Review';
 import { ReviewCliente } from './pages/review/ReviewCliente';
+import { AjudaBar } from './components/AjudaBar';
 
 export default function App() {
   const usuario = useAuthStore((s) => s.usuario);
 
   return (
     <BrowserRouter>
+      <AjudaBar />
       <Routes>
         <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/cadastro" element={usuario ? <Navigate to="/" replace /> : <Register />} />

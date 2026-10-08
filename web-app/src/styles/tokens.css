@@ -47,3 +47,30 @@ textarea {
 button {
   cursor: pointer;
 }
+
+/* Acessibilidade — ver src/components/AjudaBar.jsx. `zoom` não é um
+   padrão CSS oficial, mas é suportado por Chrome/Android WebView (o
+   grosso do público deste app, um site majoritariamente acessado no
+   navegador do celular) e escala layout inteiro de forma consistente,
+   sem precisar reescrever todo o app pra usar `rem` em vez de `px`. */
+[data-tamanho-fonte='grande'] #root {
+  zoom: 1.15;
+}
+[data-tamanho-fonte='extra-grande'] #root {
+  zoom: 1.3;
+}
+
+/* Alto contraste: preto sobre branco, bordas mais fortes — sobrescreve
+   a paleta âmbar/off-white só enquanto estiver ativado. */
+[data-alto-contraste='true'] {
+  --konectaja-bg: #ffffff;
+  --konectaja-bg2: #ffffff;
+  --konectaja-bg3: #f0f0f0;
+  --konectaja-text: #000000;
+  --konectaja-text-forte: #000000;
+  --konectaja-muted: #1a1a1a;
+  --konectaja-border: #000000;
+}
+[data-alto-contraste='true'] body {
+  background-image: none;
+}

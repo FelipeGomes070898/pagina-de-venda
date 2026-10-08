@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { GoogleLoginButton } from '../../components/GoogleLoginButton';
-import { AddressAutocompleteInput } from '../../components/AddressAutocompleteInput';
+import { CepAddressInput } from '../../components/CepAddressInput';
 import { PasswordInput } from '../../components/PasswordInput';
 import { validarCPF, validarEmail, validarTelefoneBR } from '../../utils/validators';
 import { mascararCPF, mascararTelefoneBR, somenteDigitos } from '../../utils/masks';
@@ -129,11 +129,8 @@ export function Register() {
           value={cpf}
           onChange={(e) => setCpf(mascararCPF(e.target.value))}
         />
-        <AddressAutocompleteInput
+        <CepAddressInput
           style={styles.input}
-          placeholder="Cidade ou endereço"
-          value={endereco.texto}
-          onChange={(texto) => setEndereco((s) => ({ ...s, texto }))}
           onSelecionar={(dados) =>
             setEndereco({ texto: dados.enderecoCompleto, cidade: dados.cidade, estado: dados.estado, lat: dados.lat, lng: dados.lng })
           }

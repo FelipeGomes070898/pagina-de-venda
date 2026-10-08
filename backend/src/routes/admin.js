@@ -7,6 +7,7 @@ const financeiroController = require('../controllers/financeiroController');
 const dashboardController = require('../controllers/dashboardController');
 const cupomAdminController = require('../controllers/cupomAdminController');
 const bannerAdminController = require('../controllers/bannerAdminController');
+const ticketAdminController = require('../controllers/ticketAdminController');
 const {
   autenticarAdmin,
   permitir,
@@ -92,6 +93,11 @@ router.patch(
   bannerAdminController.atualizarStatus,
 );
 router.delete('/banners/:id', permitir('dono', 'rh', 'gerente'), bannerAdminController.remover);
+
+// Tickets de suporte — toda a equipe lê e responde (é literalmente o
+// trabalho do cargo "atendimento", mas dono/rh/gerente também podem).
+router.get('/tickets', permitir(...TODOS_OS_CARGOS), ticketAdminController.listar);
+router.patch('/tickets/:id', permitir(...TODOS_OS_CARGOS), ticketAdminController.responder);
 
 // Configurações: qualquer admin troca a própria senha
 router.patch('/me/senha', permitir(...TODOS_OS_CARGOS), adminController.alterarSenha);

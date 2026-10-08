@@ -14,7 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
-import { AddressAutocompleteInput } from '@/components/common/AddressAutocompleteInput';
+import { CepAddressInput } from '@/components/common/CepAddressInput';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
@@ -169,10 +169,7 @@ export function RegisterScreen({ navigation, route }: Props) {
           onChangeText={(v) => setCpf(mascararCPF(v))}
           keyboardType="number-pad"
         />
-        <AddressAutocompleteInput
-          placeholder={t('register.city_placeholder')}
-          value={endereco.texto}
-          onChangeText={(texto) => setEndereco({ texto })}
+        <CepAddressInput
           onSelecionar={(dados) => setEndereco({ texto: dados.enderecoCompleto, ...dados })}
         />
         <PasswordInput
