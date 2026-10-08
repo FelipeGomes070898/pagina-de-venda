@@ -53,6 +53,13 @@ module.exports = {
     await pool.query(`UPDATE clientes SET google_id = $2 WHERE id = $1`, [id, googleId]);
   },
 
+  async definirAsaasCustomerId(id, asaasCustomerId) {
+    await pool.query(`UPDATE clientes SET asaas_customer_id = $2 WHERE id = $1`, [
+      id,
+      asaasCustomerId,
+    ]);
+  },
+
   async buscarPorId(id) {
     const { rows } = await pool.query(
       `SELECT ${CAMPOS_PUBLICOS} FROM clientes WHERE id = $1`,

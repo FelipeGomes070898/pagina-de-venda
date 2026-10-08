@@ -6,6 +6,7 @@
 // fica pendente até a chave ser configurada.
 const asaas = require('../config/asaas');
 const Prestador = require('../models/Prestador');
+const Cliente = require('../models/Cliente');
 const Pagamento = require('../models/Pagamento');
 
 const TAXA_PERCENTUAL = 0.05; // 5% por serviço concluído
@@ -130,6 +131,83 @@ async function cobrarTaxaServico(prestador, pedido) {
   }
 }
 
+// Carteira: mesmo papel de garantirClienteAsaas, só que pro cliente —
+// precisa existir antes de qualquer cobrança de depósito.
+async function garantirClienteAsaasCliente(cliente) {
+  if (cliente.asaas_customer_id) return cliente.asaas_customer_id;
+  if (!asaasConfigurado()) {
+    console.warn(`[asaas] ASAAS_API_KEY não configurada — pulando criação de cliente (cliente ${cliente.id})`);
+    return null;
+  }
+
+  try {
+    const { data } = await asaas.post('/customers', {
+      name: cliente.nome,
+      email: cliente.email,
+      cpfCnpj: cliente.cpf,
+      mobilePhone: cliente.telefone,
+    });
+    await Cliente.definirAsaasCustomerId(cliente.id, data.id);
+    return data.id;
+  } catch (erro) {
+    console.error('[asaas] Falha ao criar cliente (cliente app):', erro.response?.data || erro.message);
+    return null;
+  }
+}
+
+// Carteira: cria a cobrança que o cliente paga (Pix/cartão/boleto, via
+// a página hospedada do Asaas — invoiceUrl) pra colocar dinheiro na
+// carteira. Quem chama já grava a transação 'pendente' antes
+// (CarteiraTransacao.registrarDeposito) — ela só vira 'concluido'
+// quando o webhook confirmar o pagamento.
+async function criarCobrancaDeposito(cliente, valor) {
+  if (!asaasConfigurado()) {
+    const erro = new Error('Depósito indisponível neste servidor no momento.');
+    erro.status = 503;
+    throw erro;
+  }
+
+  const customerId = await garantirClienteAsaasCliente(cliente);
+  if (!customerId) {
+    const erro = new Error('Não foi possível preparar o depósito — tente novamente em instantes.');
+    erro.status = 502;
+    throw erro;
+  }
+
+  const { data } = await asaas.post('/payments', {
+    customer: customerId,
+    billingType: 'PIX',
+    value: valor,
+    dueDate: daquiA(1),
+    description: 'Depósito na carteira Konecta Já',
+  });
+
+  return data; // { id, invoiceUrl, status, ... }
+}
+
+// Carteira: transfere o valor do saque direto pra chave Pix informada
+// pelo usuário (sem precisar coletar dados bancários completos no
+// cadastro). IMPORTANTE: não testado contra a API real do Asaas neste
+// ambiente (sandbox sem chave configurada aqui) — confirme o formato
+// exato do payload num teste de sandbox de verdade antes de confiar
+// nisso em produção.
+async function criarTransferenciaPix({ chavePix, tipoChavePix, valor, descricao }) {
+  if (!asaasConfigurado()) {
+    const erro = new Error('Saque indisponível neste servidor no momento.');
+    erro.status = 503;
+    throw erro;
+  }
+
+  const { data } = await asaas.post('/transfers', {
+    value: valor,
+    pixAddressKey: chavePix,
+    pixAddressKeyType: tipoChavePix, // CPF | EMAIL | PHONE | EVP
+    description: descricao || 'Saque Konecta Já',
+  });
+
+  return data; // { id, status, ... }
+}
+
 // Split de pagamento: abre uma subconta Asaas pro prestador (pessoa
 // física), pra ele poder receber o repasse automático quando o cliente
 // passar a pagar pelo app. Precisa de data de nascimento + endereço
@@ -188,4 +266,7 @@ module.exports = {
   criarAssinaturaMensal,
   cobrarTaxaServico,
   criarSubconta,
+  garantirClienteAsaasCliente,
+  criarCobrancaDeposito,
+  criarTransferenciaPix,
 };

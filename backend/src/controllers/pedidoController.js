@@ -2,6 +2,7 @@ const Pedido = require('../models/Pedido');
 const Prestador = require('../models/Prestador');
 const Cliente = require('../models/Cliente');
 const Cupom = require('../models/Cupom');
+const CarteiraTransacao = require('../models/CarteiraTransacao');
 const asaasService = require('../services/asaasService');
 const pushService = require('../services/pushService');
 
@@ -190,12 +191,15 @@ async function atualizarStatus(req, res) {
   // taxa agora. Best-effort: não falha a requisição se o Asaas cair.
   // `pedido.status !== 'concluido'` evita contar/cobrar duas vezes se
   // o mesmo pedido for marcado concluído mais de uma vez.
+  // `pago_via_carteira` pula essa cobrança — se o cliente já pagou
+  // pela carteira, a comissão já foi descontada na hora (ver
+  // CarteiraTransacao.pagarComSaldo), cobrar de novo aqui duplicaria.
   if (status === 'concluido' && pedido.status !== 'concluido' && atualizado.prestador_id) {
     await Prestador.incrementarServicos(atualizado.prestador_id);
     await Cliente.incrementarServicos(atualizado.cliente_id);
 
     const prestador = await Prestador.buscarCompletoPorId(atualizado.prestador_id);
-    if (prestador?.modelo_cobranca === 'percentual') {
+    if (prestador?.modelo_cobranca === 'percentual' && !atualizado.pago_via_carteira) {
       asaasService.cobrarTaxaServico(prestador, atualizado).catch(() => {});
     }
 
@@ -248,6 +252,72 @@ async function confirmarPagamento(req, res) {
   res.json(atualizado);
 }
 
+// Cliente paga o pedido com o saldo da carteira — diferente de
+// confirmarPagamento (autodeclaração, sem cobrança real por trás),
+// isso move dinheiro de verdade entre os saldos internos: debita o
+// cliente, credita o prestador já líquido (sem a comissão, retida na
+// hora pro Konecta Já). Ver CarteiraTransacao.pagarComSaldo.
+async function pagarComSaldo(req, res) {
+  const pedido = await Pedido.buscarPorId(req.params.id);
+  if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado' });
+  if (pedido.cliente_id !== req.usuarioApp.id) {
+    return res.status(403).json({ erro: 'Somente o cliente do pedido pode pagar' });
+  }
+  if (!pedido.prestador_id) {
+    return res.status(409).json({ erro: 'Este pedido ainda não tem um prestador definido' });
+  }
+  if (!pedido.valor || Number(pedido.valor) <= 0) {
+    return res.status(409).json({ erro: 'Este pedido ainda não tem um valor definido' });
+  }
+
+  // Reivindica o pagamento antes de mexer em qualquer saldo — garante
+  // que duas requisições simultâneas (duplo toque, retry de rede)
+  // nunca cobram o mesmo pedido duas vezes (ver
+  // Pedido.reivindicarPagamentoComSaldo).
+  const reivindicado = await Pedido.reivindicarPagamentoComSaldo(pedido.id);
+  if (!reivindicado) {
+    return res.status(409).json({
+      erro: 'Este pedido já foi pago, ou o pagamento pela carteira ainda não está disponível.',
+    });
+  }
+
+  const prestador = await Prestador.buscarPorId(pedido.prestador_id);
+  const valorTotal = Number(pedido.valor);
+  const comissao =
+    prestador?.modelo_cobranca === 'percentual'
+      ? Number((valorTotal * asaasService.TAXA_PERCENTUAL).toFixed(2))
+      : 0;
+
+  try {
+    // Lança 409 (capturado pelo middleware de erros) se o saldo não
+    // for suficiente — ver CarteiraTransacao.pagarComSaldo.
+    await CarteiraTransacao.pagarComSaldo({
+      pedidoId: pedido.id,
+      clienteId: pedido.cliente_id,
+      prestadorId: pedido.prestador_id,
+      valorTotal,
+      comissao,
+    });
+  } catch (erro) {
+    // O pagamento em si não aconteceu — libera o pedido pra uma nova
+    // tentativa em vez de deixá-lo travado como "já reivindicado".
+    await Pedido.desfazerReivindicacaoPagamento(pedido.id).catch(() => {});
+    throw erro;
+  }
+
+  const atualizado = await Pedido.confirmarPagamento(pedido.id, { quando: 'antecipado', forma: 'app' });
+
+  pushService
+    .enviarPush(atualizado.prestador_id, 'prestador', {
+      titulo: 'Pagamento recebido',
+      corpo: 'O cliente pagou pela carteira do Konecta Já.',
+      dados: { tipo: 'pagamento_confirmado', pedidoId: atualizado.id },
+    })
+    .catch(() => {});
+
+  res.json(atualizado);
+}
+
 // Endereço só é liberado depois que o pedido é fechado no chat.
 async function definirEndereco(req, res) {
   const { endereco, lat, lng } = req.body;
@@ -272,5 +342,6 @@ module.exports = {
   buscar,
   atualizarStatus,
   confirmarPagamento,
+  pagarComSaldo,
   definirEndereco,
 };

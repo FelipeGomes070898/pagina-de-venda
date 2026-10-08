@@ -1,5 +1,6 @@
 const Pagamento = require('../models/Pagamento');
 const Prestador = require('../models/Prestador');
+const CarteiraTransacao = require('../models/CarteiraTransacao');
 
 // Webhook do Asaas. Configurar no painel do Asaas apontando para
 // POST /api/pagamentos/webhook?token=SEU_ASAAS_WEBHOOK_TOKEN — o token
@@ -11,7 +12,43 @@ async function webhook(req, res) {
     return res.status(401).json({ erro: 'Token inválido' });
   }
 
-  const { event, payment } = req.body;
+  const { event, payment, transfer } = req.body;
+
+  // Depósito na carteira (cliente pagou a cobrança Pix/cartão) — ver
+  // carteiraController.criarDeposito.
+  if (payment?.id) {
+    const deposito = await CarteiraTransacao.buscarPorAsaasPaymentId(payment.id);
+    if (deposito) {
+      if (event === 'PAYMENT_CONFIRMED' || event === 'PAYMENT_RECEIVED') {
+        await CarteiraTransacao.concluirDeposito(payment.id);
+      }
+      return res.status(200).json({ ok: true });
+    }
+  }
+
+  // Saque da carteira (transferência Pix de saída) — o valor já foi
+  // debitado na hora do pedido (ver carteiraController.solicitarSaque);
+  // aqui só trata a falha tardia (transferência aceita mas rejeitada
+  // depois), devolvendo o valor.
+  if (transfer?.id) {
+    const saque = await CarteiraTransacao.buscarPorAsaasTransferId(transfer.id);
+    if (saque) {
+      // Idempotente: o Asaas pode reentregar o mesmo webhook mais de
+      // uma vez — sem essa checagem, cada reentrega devolveria o
+      // dinheiro de novo.
+      if (event === 'TRANSFER_FAILED' && !(await CarteiraTransacao.buscarEstornoPorAsaasTransferId(transfer.id))) {
+        await CarteiraTransacao.registrarEstorno({
+          usuarioId: saque.usuario_id,
+          usuarioTipo: saque.usuario_tipo,
+          valor: Math.abs(Number(saque.valor)),
+          asaasTransferId: transfer.id,
+          descricao: 'Estorno: transferência do saque falhou',
+        });
+      }
+      return res.status(200).json({ ok: true });
+    }
+  }
+
   if (!payment?.id) return res.status(200).json({ ok: true });
 
   const pagamento = await Pagamento.buscarPorAsaasId(payment.id);

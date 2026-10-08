@@ -18,9 +18,15 @@ async function temColunasUrgencia() {
   return colunaExiste('pedidos', 'urgente');
 }
 
+async function temPagoViaCarteira() {
+  return colunaExiste('pedidos', 'pago_via_carteira');
+}
+
 async function campos() {
-  if (!(await temColunasUrgencia())) return CAMPOS_BASE;
-  return `${CAMPOS_BASE}, urgente, taxa_urgencia, cupom_codigo, desconto_valor`;
+  const partes = [CAMPOS_BASE];
+  if (await temColunasUrgencia()) partes.push('urgente, taxa_urgencia, cupom_codigo, desconto_valor');
+  if (await temPagoViaCarteira()) partes.push('pago_via_carteira');
+  return partes.join(', ');
 }
 
 module.exports = {
@@ -233,6 +239,33 @@ module.exports = {
       [id, endereco, lat || null, lng || null],
     );
     return rows[0] || null;
+  },
+
+  // "Reivindica" o direito de pagar este pedido pela carteira, antes
+  // de mexer em qualquer saldo — o UPDATE condicional (só se ainda não
+  // tiver sido reivindicado nem pago) é atômico no Postgres, então
+  // dois cliques/duas requisições simultâneas pagando o mesmo pedido
+  // nunca passam os dois: só a primeira encontra uma linha pra
+  // atualizar, a segunda recebe null de volta. Retorna null também se
+  // a coluna ainda não existir (migração não rodada) — carteira fica
+  // indisponível até lá, não um comportamento incerto.
+  async reivindicarPagamentoComSaldo(id) {
+    if (!(await temPagoViaCarteira())) return null;
+    const { rows } = await pool.query(
+      `UPDATE pedidos SET pago_via_carteira = TRUE
+       WHERE id = $1 AND pago_via_carteira IS NOT TRUE AND pagamento_confirmado_em IS NULL
+       RETURNING ${await campos()}`,
+      [id],
+    );
+    return rows[0] || null;
+  },
+
+  // Desfaz a reivindicação acima quando o pagamento em si falha (ex.:
+  // saldo insuficiente, erro de banco) — sem isso o pedido ficaria
+  // marcado como "pago pela carteira" pra sempre, sem nunca ter sido
+  // cobrado, bloqueando qualquer tentativa futura de pagamento.
+  async desfazerReivindicacaoPagamento(id) {
+    await pool.query(`UPDATE pedidos SET pago_via_carteira = FALSE WHERE id = $1`, [id]);
   },
 
   // Contagem simples (sem valores) pro Dashboard geral — visível a toda

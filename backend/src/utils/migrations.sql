@@ -350,6 +350,11 @@ CREATE INDEX IF NOT EXISTS idx_tickets_suporte_usuario ON tickets_suporte(usuari
 -- authController.login).
 ALTER TABLE clientes ADD COLUMN IF NOT EXISTS termos_aceitos_em TIMESTAMPTZ;
 ALTER TABLE clientes ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ;
+
+-- Carteira: cliente também precisa de um cliente Asaas pra poder gerar
+-- a cobrança de depósito (Pix/cartão) — mesmo papel que
+-- prestadores.asaas_customer_id já tem pro prestador.
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS asaas_customer_id TEXT;
 ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS termos_aceitos_em TIMESTAMPTZ;
 ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ;
 
@@ -363,6 +368,61 @@ ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS data_nascimento DATE;
 ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS asaas_wallet_id TEXT;
 ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS asaas_account_status VARCHAR(20) DEFAULT 'pendente';
 -- asaas_account_status: pendente | aprovada | rejeitada
+
+-- Carteira interna (saldo em app) — cliente e prestador. O dinheiro de
+-- verdade fica pool ado na conta Asaas do Konecta Já (depósitos do
+-- cliente entram ali, saques saem de lá); esta tabela é o livro-razão
+-- de quem tem direito a quanto. Ledger "append-only": nunca faz UPDATE
+-- de valor numa linha existente (só muda `status`), o saldo de alguém
+-- é sempre a soma das linhas concluídas dele — isso facilita auditoria
+-- e evita que um bug de concorrência desalinhe um "saldo" guardado à
+-- parte.
+CREATE TABLE IF NOT EXISTS carteira_transacoes (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  usuario_id        UUID NOT NULL,
+  usuario_tipo      VARCHAR(12) NOT NULL, -- cliente | prestador
+  tipo              VARCHAR(20) NOT NULL,
+  -- tipo: deposito | pagamento_enviado | pagamento_recebido | saque | estorno
+  valor             DECIMAL(10,2) NOT NULL,
+  -- valor é SEMPRE relativo a usuario_id: positivo = crédito, negativo
+  -- = débito. Ex.: pagamento_enviado é negativo pro cliente,
+  -- pagamento_recebido é positivo (já líquido, sem a comissão) pro
+  -- prestador.
+  --
+  -- status só existe de verdade pro depósito (incerteza real: o
+  -- cliente ainda não pagou a cobrança Pix/cartão) — fica 'pendente'
+  -- até o webhook do Asaas confirmar, só aí conta pro saldo. Todo o
+  -- resto (pagamento entre saldos, saque) é gravado direto como
+  -- 'concluido': são operações só nossas, sem incerteza externa no
+  -- momento de gravar. Um saque que falhar no banco não "desfaz" a
+  -- linha original (ledger não tem UPDATE de valor) — gera uma linha
+  -- nova tipo 'estorno' devolvendo o valor.
+  status            VARCHAR(20) DEFAULT 'concluido',
+  -- status: pendente | concluido | falhou
+  pedido_id         UUID REFERENCES pedidos(id),
+  asaas_payment_id  TEXT,
+  -- preenchido em depósitos (cobrança Pix/cartão que o cliente paga)
+  asaas_transfer_id TEXT,
+  -- preenchido em saques (transferência pro banco) — usado pra casar
+  -- com o webhook TRANSFER_DONE/TRANSFER_FAILED do Asaas
+  descricao         TEXT,
+  criado_em         TIMESTAMPTZ DEFAULT NOW(),
+  atualizado_em     TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT chk_carteira_tipo
+    CHECK (tipo IN ('deposito', 'pagamento_enviado', 'pagamento_recebido', 'saque', 'estorno'))
+);
+CREATE INDEX IF NOT EXISTS idx_carteira_usuario ON carteira_transacoes(usuario_id, usuario_tipo);
+CREATE INDEX IF NOT EXISTS idx_carteira_asaas_payment ON carteira_transacoes(asaas_payment_id);
+CREATE INDEX IF NOT EXISTS idx_carteira_asaas_transfer ON carteira_transacoes(asaas_transfer_id);
+
+-- Marca quando um pedido foi pago de verdade pela carteira (split já
+-- descontado na hora, ver CarteiraTransacao.pagarComSaldo) — diferente
+-- de pagamento_forma='app', que é só a autodeclaração do cliente
+-- ("paguei pelo app") sem nenhuma cobrança real por trás. Evita cobrar
+-- a comissão duas vezes quando o pedido é concluído (ver
+-- pedidoController.atualizarStatus).
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pago_via_carteira BOOLEAN DEFAULT FALSE;
 
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
