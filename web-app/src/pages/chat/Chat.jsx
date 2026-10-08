@@ -9,6 +9,7 @@ import {
   enviarMensagem,
   enviarProposta,
   listarConversa,
+  pagarComSaldo,
   responderProposta,
 } from '../../services/chatService';
 import { mensagemErro } from '../../utils/erro';
@@ -65,6 +66,7 @@ export function Chat() {
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
+  const [pagandoComSaldo, setPagandoComSaldo] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState(null);
   const [cancelando, setCancelando] = useState(false);
 
@@ -168,6 +170,18 @@ export function Chat() {
     }
   }
 
+  async function aoPagarComSaldo() {
+    setPagandoComSaldo(true);
+    try {
+      await pagarComSaldo(pedidoId);
+      await carregar();
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível pagar com a carteira.'));
+    } finally {
+      setPagandoComSaldo(false);
+    }
+  }
+
   async function aoCancelarPedido() {
     if (!window.confirm('Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.')) {
       return;
@@ -251,19 +265,22 @@ export function Chat() {
         <div style={styles.pagamentoWrapper}>
           {conversa.pedido.pagamento_confirmado_em ? (
             <p style={styles.enderecoConfirmado}>
-              <IconeCheck /> Pagamento confirmado por você (
-              {conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'},{' '}
-              {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
+              <IconeCheck />{' '}
+              {conversa.pedido.pago_via_carteira
+                ? 'Pago com a Carteira do Konecta Já'
+                : `Pagamento confirmado por você (${
+                    conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'
+                  }, ${conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})`}
             </p>
           ) : !formaPagamento ? (
             <>
-              <p style={styles.enderecoRotulo}>Como você pagou (ou vai pagar) o prestador?</p>
+              <p style={styles.enderecoRotulo}>Como você vai pagar o prestador?</p>
               <div style={styles.linhaEnvio}>
+                <button style={styles.botaoPagamento} onClick={aoPagarComSaldo} disabled={pagandoComSaldo}>
+                  {pagandoComSaldo ? 'Pagando...' : 'Pagar com a Carteira'}
+                </button>
                 <button style={styles.botaoPagamento} onClick={() => setFormaPagamento('pix_direto')}>
                   Pix direto pro prestador
-                </button>
-                <button style={styles.botaoPagamento} onClick={() => setFormaPagamento('app')}>
-                  Pelo app
                 </button>
               </div>
             </>

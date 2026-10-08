@@ -24,6 +24,7 @@ import {
   enviarMensagem,
   enviarProposta,
   listarConversa,
+  pagarComSaldo,
   responderProposta,
 } from '@/services/chatService';
 import { atualizarStatusPedido } from '@/services/marketplaceService';
@@ -74,6 +75,7 @@ export function ChatScreen({ route, navigation }: Props) {
   });
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
+  const [pagandoComSaldo, setPagandoComSaldo] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<'app' | 'pix_direto' | null>(null);
   const [cancelando, setCancelando] = useState(false);
 
@@ -177,6 +179,18 @@ export function ChatScreen({ route, navigation }: Props) {
     }
   }
 
+  async function aoPagarComSaldo() {
+    setPagandoComSaldo(true);
+    try {
+      await pagarComSaldo(pedidoId);
+      await carregar();
+    } catch (erro: any) {
+      setErro(erro.response?.data?.erro || 'Não foi possível pagar com a carteira.');
+    } finally {
+      setPagandoComSaldo(false);
+    }
+  }
+
   function aoCancelarPedido() {
     Alert.alert('Cancelar pedido', 'Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.', [
       { text: 'Voltar', style: 'cancel' },
@@ -276,19 +290,27 @@ export function ChatScreen({ route, navigation }: Props) {
         <View style={styles.enderecoWrapper}>
           {conversa.pedido.pagamento_confirmado_em ? (
             <Text style={styles.enderecoConfirmado}>
-              Pagamento confirmado por você (
-              {conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'},{' '}
-              {conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})
+              {conversa.pedido.pago_via_carteira
+                ? 'Pago com a Carteira do Konecta Já'
+                : `Pagamento confirmado por você (${
+                    conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'
+                  }, ${conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})`}
             </Text>
           ) : !formaPagamento ? (
             <>
-              <Text style={styles.enderecoRotulo}>Como você pagou (ou vai pagar) o prestador?</Text>
+              <Text style={styles.enderecoRotulo}>Como você vai pagar o prestador?</Text>
               <View style={styles.linhaEnvio}>
+                <TouchableOpacity
+                  style={styles.botaoPagamento}
+                  onPress={aoPagarComSaldo}
+                  disabled={pagandoComSaldo}
+                >
+                  <Text style={styles.botaoPagamentoTexto}>
+                    {pagandoComSaldo ? 'Pagando...' : 'Pagar com a Carteira'}
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.botaoPagamento} onPress={() => setFormaPagamento('pix_direto')}>
                   <Text style={styles.botaoPagamentoTexto}>Pix direto</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.botaoPagamento} onPress={() => setFormaPagamento('app')}>
-                  <Text style={styles.botaoPagamentoTexto}>Pelo app</Text>
                 </TouchableOpacity>
               </View>
             </>

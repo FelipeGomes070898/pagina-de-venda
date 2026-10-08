@@ -37,3 +37,11 @@ export async function confirmarPagamento(pedidoId, { quando, forma }) {
   const { data } = await api.patch(`/api/pedidos/${pedidoId}/confirmar-pagamento`, { quando, forma });
   return data;
 }
+
+// Pagamento de verdade pela carteira — diferente de confirmarPagamento
+// (autodeclaração): move o saldo do cliente pro prestador na hora, com
+// a comissão já retida.
+export async function pagarComSaldo(pedidoId) {
+  const { data } = await api.post(`/api/pedidos/${pedidoId}/pagar-com-saldo`);
+  return data;
+}

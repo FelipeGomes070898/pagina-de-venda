@@ -46,6 +46,7 @@ export interface Pedido {
   pagamento_forma: 'app' | 'pix_direto' | null;
   urgente?: boolean;
   taxa_urgencia?: number | null;
+  pago_via_carteira?: boolean;
 }
 
 export interface Banner {
