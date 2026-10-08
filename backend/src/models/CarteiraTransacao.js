@@ -20,6 +20,26 @@ module.exports = {
     return Number(rows[0].saldo);
   },
 
+  // Dashboard financeiro (prestador): entrada e saída por mês, últimos
+  // 6 meses. Entrada = qualquer crédito (pagamento_recebido, estorno);
+  // saída = qualquer débito (saque) — não precisa listar tipo por
+  // tipo, só olhar o sinal do valor (ver convenção no topo do
+  // migrations.sql).
+  async dashboardMensal(usuarioId, usuarioTipo) {
+    const { rows } = await pool.query(
+      `SELECT TO_CHAR(criado_em, 'YYYY-MM') AS periodo,
+              COALESCE(SUM(valor) FILTER (WHERE valor > 0), 0) AS entrada,
+              COALESCE(SUM(ABS(valor)) FILTER (WHERE valor < 0), 0) AS saida
+       FROM carteira_transacoes
+       WHERE usuario_id = $1 AND usuario_tipo = $2 AND status = 'concluido'
+         AND criado_em >= NOW() - INTERVAL '6 months'
+       GROUP BY periodo
+       ORDER BY periodo`,
+      [usuarioId, usuarioTipo],
+    );
+    return rows;
+  },
+
   async extrato(usuarioId, usuarioTipo, { pagina = 1, porPagina = 30 } = {}) {
     const { rows } = await pool.query(
       `SELECT ${CAMPOS} FROM carteira_transacoes

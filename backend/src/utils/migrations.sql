@@ -416,6 +416,22 @@ CREATE INDEX IF NOT EXISTS idx_carteira_usuario ON carteira_transacoes(usuario_i
 CREATE INDEX IF NOT EXISTS idx_carteira_asaas_payment ON carteira_transacoes(asaas_payment_id);
 CREATE INDEX IF NOT EXISTS idx_carteira_asaas_transfer ON carteira_transacoes(asaas_transfer_id);
 
+-- Metas de serviço do prestador (ex.: "15 serviços por mês", "4 por
+-- semana") — uma meta por tipo, a mais recente substitui a anterior
+-- (UNIQUE + ON CONFLICT no model). O progresso não é guardado aqui,
+-- é calculado na hora contra `pedidos` (ver MetaPrestador.listarComProgresso).
+CREATE TABLE IF NOT EXISTS metas_prestador (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prestador_id  UUID REFERENCES prestadores(id) ON DELETE CASCADE,
+  tipo          VARCHAR(10) NOT NULL, -- semana | mes
+  quantidade    INT NOT NULL,
+  criado_em     TIMESTAMPTZ DEFAULT NOW(),
+  atualizado_em TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT chk_metas_prestador_tipo CHECK (tipo IN ('semana', 'mes')),
+  CONSTRAINT uq_metas_prestador_tipo UNIQUE (prestador_id, tipo)
+);
+
 -- Marca quando um pedido foi pago de verdade pela carteira (split já
 -- descontado na hora, ver CarteiraTransacao.pagarComSaldo) — diferente
 -- de pagamento_forma='app', que é só a autodeclaração do cliente

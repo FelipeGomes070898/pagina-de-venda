@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useAuthStore } from '../../store/authStore';
 import { BottomNav } from '../../components/BottomNav';
-import { meuSaldo, meuExtrato, depositar, sacar } from '../../services/carteiraService';
+import { meuSaldo, meuExtrato, meuDashboard, depositar, sacar } from '../../services/carteiraService';
+import { minhasMetas, definirMeta, removerMeta } from '../../services/metaService';
 import { mensagemErro } from '../../utils/erro';
 
 const ROTULOS_TIPO = {
@@ -25,8 +27,11 @@ function formatarValor(valor) {
 }
 
 export function Carteira() {
+  const souPrestador = useAuthStore((s) => s.usuario?.tipo === 'prestador');
+
   const [saldo, setSaldo] = useState(null);
   const [extrato, setExtrato] = useState([]);
+  const [porMes, setPorMes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
@@ -45,10 +50,15 @@ export function Carteira() {
   function carregar() {
     setCarregando(true);
     setErro(null);
-    Promise.all([meuSaldo(), meuExtrato()])
-      .then(([saldoResp, extratoResp]) => {
+    Promise.all([
+      meuSaldo(),
+      meuExtrato(),
+      souPrestador ? meuDashboard() : Promise.resolve({ porMes: [] }),
+    ])
+      .then(([saldoResp, extratoResp, dashboardResp]) => {
         setSaldo(saldoResp.saldo);
         setExtrato(extratoResp);
+        setPorMes(dashboardResp.porMes);
       })
       .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar sua carteira.')))
       .finally(() => setCarregando(false));
@@ -126,6 +136,18 @@ export function Carteira() {
             </button>
           </div>
         </div>
+
+        {souPrestador && !carregando && (
+          <>
+            <h2 style={styles.subtitulo}>Seu desempenho</h2>
+            <div style={styles.cardGrafico}>
+              <GraficoEntradaSaida dados={porMes} />
+            </div>
+
+            <h2 style={styles.subtitulo}>Metas de serviço</h2>
+            <SecaoMetas />
+          </>
+        )}
 
         <h2 style={styles.subtitulo}>Extrato</h2>
 
@@ -261,6 +283,183 @@ export function Carteira() {
   );
 }
 
+function rotuloMes(periodo) {
+  const [ano, mes] = periodo.split('-').map(Number);
+  const texto = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'short' });
+  return texto.replace('.', '');
+}
+
+// Barras agrupadas entrada/saída por mês — entrada em verde (cor já
+// usada pra "positivo" no resto do app), saída num neutro escuro (não
+// vermelho: sacar não é um problema, é o prestador usando o dinheiro
+// dele).
+function GraficoEntradaSaida({ dados }) {
+  if (!dados || dados.length === 0) {
+    return <p style={styles.info}>Ainda sem movimentações de serviço pra mostrar aqui.</p>;
+  }
+
+  const maximo = Math.max(1, ...dados.flatMap((d) => [Number(d.entrada), Number(d.saida)]));
+  const largura = 320;
+  const altura = 140;
+  const alturaBarras = 96;
+  const baseY = alturaBarras + 8;
+  const larguraGrupo = largura / dados.length;
+  const larguraBarra = Math.min(14, larguraGrupo / 3.2);
+
+  return (
+    <div>
+      <div style={styles.legenda}>
+        <span style={styles.legendaItem}>
+          <span style={{ ...styles.legendaCor, background: 'var(--konectaja-verde)' }} /> Entrada
+        </span>
+        <span style={styles.legendaItem}>
+          <span style={{ ...styles.legendaCor, background: 'var(--konectaja-text-forte)' }} /> Saída
+        </span>
+      </div>
+      <svg width="100%" viewBox={`0 0 ${largura} ${altura}`} role="img" aria-label="Entrada e saída por mês">
+        {dados.map((item, i) => {
+          const cx = i * larguraGrupo + larguraGrupo / 2;
+          const hEntrada = (Number(item.entrada) / maximo) * alturaBarras;
+          const hSaida = (Number(item.saida) / maximo) * alturaBarras;
+          return (
+            <g key={item.periodo}>
+              <rect
+                x={cx - larguraBarra - 2}
+                y={baseY - hEntrada}
+                width={larguraBarra}
+                height={Math.max(hEntrada, 1)}
+                rx={3}
+                fill="var(--konectaja-verde)"
+              />
+              <rect
+                x={cx + 2}
+                y={baseY - hSaida}
+                width={larguraBarra}
+                height={Math.max(hSaida, 1)}
+                rx={3}
+                fill="var(--konectaja-text-forte)"
+              />
+              <text x={cx} y={altura - 4} textAnchor="middle" fontSize="9" fill="var(--konectaja-muted)">
+                {rotuloMes(item.periodo)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+const ROTULOS_META = { semana: 'Por semana', mes: 'Por mês' };
+
+function SecaoMetas() {
+  const [metas, setMetas] = useState(null);
+  const [editando, setEditando] = useState(null); // 'semana' | 'mes' | null
+  const [valorMeta, setValorMeta] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [erroMeta, setErroMeta] = useState(null);
+
+  useEffect(() => {
+    carregarMetas();
+  }, []);
+
+  function carregarMetas() {
+    minhasMetas()
+      .then(setMetas)
+      .catch(() => setMetas([]));
+  }
+
+  function abrirEdicao(tipo, quantidadeAtual) {
+    setEditando(tipo);
+    setValorMeta(quantidadeAtual ? String(quantidadeAtual) : '');
+    setErroMeta(null);
+  }
+
+  async function salvar(tipo) {
+    const quantidade = Number(valorMeta);
+    if (!quantidade || quantidade <= 0) return setErroMeta('Informe um número válido');
+
+    setSalvando(true);
+    setErroMeta(null);
+    try {
+      await definirMeta({ tipo, quantidade });
+      setEditando(null);
+      carregarMetas();
+    } catch (erro) {
+      setErroMeta(mensagemErro(erro, 'Não foi possível salvar a meta.'));
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function remover(tipo) {
+    await removerMeta(tipo).catch(() => {});
+    carregarMetas();
+  }
+
+  if (metas === null) return <p style={styles.info}>Carregando...</p>;
+
+  return (
+    <div style={styles.listaMetas}>
+      {['semana', 'mes'].map((tipo) => {
+        const meta = metas.find((m) => m.tipo === tipo);
+        const progresso = meta ? Math.min(100, Math.round((meta.progresso / meta.quantidade) * 100)) : 0;
+
+        return (
+          <div key={tipo} style={styles.cardMeta}>
+            <div style={styles.cardMetaTopo}>
+              <span style={styles.cardMetaTitulo}>{ROTULOS_META[tipo]}</span>
+              {meta && editando !== tipo && (
+                <div style={styles.cardMetaAcoes}>
+                  <button style={styles.linkAcao} onClick={() => abrirEdicao(tipo, meta.quantidade)}>
+                    Editar
+                  </button>
+                  <button style={styles.linkAcao} onClick={() => remover(tipo)}>
+                    Remover
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {editando === tipo ? (
+              <div style={styles.formMeta}>
+                <input
+                  style={styles.inputMeta}
+                  placeholder="Quantos serviços?"
+                  value={valorMeta}
+                  onChange={(e) => setValorMeta(e.target.value)}
+                  inputMode="numeric"
+                  autoFocus
+                />
+                <button style={styles.botaoSalvarMeta} onClick={() => salvar(tipo)} disabled={salvando}>
+                  {salvando ? '...' : 'Salvar'}
+                </button>
+                <button style={styles.linkAcao} onClick={() => setEditando(null)}>
+                  Cancelar
+                </button>
+              </div>
+            ) : meta ? (
+              <>
+                <p style={styles.cardMetaTexto}>
+                  {meta.progresso} de {meta.quantidade} serviços concluídos
+                </p>
+                <div style={styles.barraProgresso}>
+                  <div style={{ ...styles.barraProgressoPreenchida, width: `${progresso}%` }} />
+                </div>
+              </>
+            ) : (
+              <button style={styles.linkAcaoDestaque} onClick={() => abrirEdicao(tipo, null)}>
+                + Definir meta
+              </button>
+            )}
+            {editando === tipo && erroMeta && <p style={styles.erroModal}>{erroMeta}</p>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const styles = {
   pagina: { minHeight: '100vh' },
   container: { maxWidth: 480, margin: '0 auto', padding: '24px 24px 104px' },
@@ -348,6 +547,84 @@ const styles = {
   },
   erroModal: { color: 'var(--konectaja-red)', fontSize: 13, margin: '0 0 10px' },
   modalBotoes: { display: 'flex', gap: 8, marginTop: 4 },
+  cardGrafico: {
+    background: 'var(--konectaja-bg2)',
+    border: '1px solid var(--konectaja-border)',
+    borderRadius: 16,
+    padding: '16px 18px',
+  },
+  legenda: { display: 'flex', gap: 16, marginBottom: 8 },
+  legendaItem: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    fontSize: 12,
+    color: 'var(--konectaja-muted)',
+  },
+  legendaCor: { width: 10, height: 10, borderRadius: 3, display: 'inline-block' },
+  listaMetas: { display: 'flex', flexDirection: 'column', gap: 10 },
+  cardMeta: {
+    background: 'var(--konectaja-bg2)',
+    border: '1px solid var(--konectaja-border)',
+    borderRadius: 14,
+    padding: '14px 16px',
+  },
+  cardMetaTopo: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  cardMetaTitulo: { color: 'var(--konectaja-text-forte)', fontWeight: 700, fontSize: 13.5 },
+  cardMetaAcoes: { display: 'flex', gap: 12 },
+  cardMetaTexto: { color: 'var(--konectaja-muted)', fontSize: 12.5, margin: '8px 0 6px' },
+  linkAcao: {
+    border: 'none',
+    background: 'none',
+    color: 'var(--konectaja-laranja-escuro)',
+    fontWeight: 600,
+    fontSize: 12.5,
+    padding: 0,
+    cursor: 'pointer',
+  },
+  linkAcaoDestaque: {
+    border: 'none',
+    background: 'none',
+    color: 'var(--konectaja-laranja-escuro)',
+    fontWeight: 700,
+    fontSize: 13,
+    padding: '8px 0 0',
+    cursor: 'pointer',
+  },
+  formMeta: { display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' },
+  inputMeta: {
+    flex: 1,
+    minWidth: 100,
+    height: 38,
+    borderRadius: 8,
+    border: '1px solid var(--konectaja-border)',
+    background: 'var(--konectaja-bg3)',
+    color: 'var(--konectaja-text-forte)',
+    padding: '0 10px',
+    fontSize: 13,
+    boxSizing: 'border-box',
+  },
+  botaoSalvarMeta: {
+    height: 38,
+    padding: '0 14px',
+    borderRadius: 8,
+    border: 'none',
+    background: 'var(--konectaja-laranja)',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 12.5,
+  },
+  barraProgresso: {
+    height: 8,
+    borderRadius: 4,
+    background: 'var(--konectaja-bg3)',
+    overflow: 'hidden',
+  },
+  barraProgressoPreenchida: {
+    height: '100%',
+    borderRadius: 4,
+    background: 'var(--konectaja-verde)',
+  },
   linkPagar: {
     display: 'block',
     textAlign: 'center',

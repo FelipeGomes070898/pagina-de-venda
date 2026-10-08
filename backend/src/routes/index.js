@@ -14,6 +14,7 @@ const cupons = require('./cupons');
 const banners = require('./banners');
 const tickets = require('./tickets');
 const carteira = require('./carteira');
+const metas = require('./metas');
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/cupons', cupons);
 router.use('/banners', banners);
 router.use('/tickets', tickets);
 router.use('/carteira', carteira);
+router.use('/metas', metas);
 
 module.exports = router;

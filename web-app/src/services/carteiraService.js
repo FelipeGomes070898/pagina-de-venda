@@ -10,6 +10,11 @@ export async function meuExtrato() {
   return data;
 }
 
+export async function meuDashboard() {
+  const { data } = await api.get('/api/carteira/dashboard');
+  return data;
+}
+
 export async function depositar(valor) {
   const { data } = await api.post('/api/carteira/depositar', { valor });
   return data;

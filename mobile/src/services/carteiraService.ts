@@ -22,6 +22,17 @@ export async function meuExtrato(): Promise<TransacaoCarteira[]> {
   return data;
 }
 
+export interface MesEntradaSaida {
+  periodo: string;
+  entrada: number;
+  saida: number;
+}
+
+export async function meuDashboard(): Promise<{ porMes: MesEntradaSaida[] }> {
+  const { data } = await api.get('/api/carteira/dashboard');
+  return data;
+}
+
 export async function depositar(valor: number): Promise<{ invoiceUrl: string; asaasPaymentId: string }> {
   const { data } = await api.post('/api/carteira/depositar', { valor });
   return data;

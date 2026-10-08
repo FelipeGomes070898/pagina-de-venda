@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,14 +13,18 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing } from '@/theme/tokens';
+import { useAuthStore } from '@/store/authStore';
 import {
   depositar,
+  meuDashboard,
   meuExtrato,
   meuSaldo,
+  MesEntradaSaida,
   sacar,
   TipoChavePix,
   TransacaoCarteira,
 } from '@/services/carteiraService';
+import { definirMeta, minhasMetas, MetaPrestador, removerMeta, TipoMeta } from '@/services/metaService';
 
 const ROTULOS_TIPO: Record<string, string> = {
   deposito: 'Depósito',
@@ -43,8 +47,11 @@ function formatarValor(valor: number): string {
 }
 
 export function CarteiraScreen() {
+  const souPrestador = useAuthStore((s) => s.usuario?.tipo === 'prestador');
+
   const [saldo, setSaldo] = useState<number | null>(null);
   const [extrato, setExtrato] = useState<TransacaoCarteira[]>([]);
+  const [porMes, setPorMes] = useState<MesEntradaSaida[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -60,9 +67,14 @@ export function CarteiraScreen() {
   async function carregar() {
     setErro(null);
     try {
-      const [saldoResp, extratoResp] = await Promise.all([meuSaldo(), meuExtrato()]);
+      const [saldoResp, extratoResp, dashboardResp] = await Promise.all([
+        meuSaldo(),
+        meuExtrato(),
+        souPrestador ? meuDashboard() : Promise.resolve({ porMes: [] }),
+      ]);
       setSaldo(saldoResp.saldo);
       setExtrato(extratoResp);
+      setPorMes(dashboardResp.porMes);
     } catch {
       setErro('Não foi possível carregar sua carteira.');
     } finally {
@@ -160,6 +172,18 @@ export function CarteiraScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+
+            {souPrestador && !carregando && (
+              <>
+                <Text style={styles.subtitulo}>Seu desempenho</Text>
+                <View style={styles.cardGrafico}>
+                  <GraficoEntradaSaida dados={porMes} />
+                </View>
+
+                <Text style={styles.subtitulo}>Metas de serviço</Text>
+                <SecaoMetas />
+              </>
+            )}
 
             <Text style={styles.subtitulo}>Extrato</Text>
             {carregando && <ActivityIndicator color={colors.laranja} style={{ marginTop: spacing.lg }} />}
@@ -322,6 +346,178 @@ export function CarteiraScreen() {
   );
 }
 
+function rotuloMes(periodo: string): string {
+  const [ano, mes] = periodo.split('-').map(Number);
+  const texto = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'short' });
+  return texto.replace('.', '');
+}
+
+// Barras agrupadas entrada/saída por mês, construídas só com Views
+// (sem lib de gráfico) — entrada em verde, saída num neutro escuro
+// (sacar não é um "problema", é o prestador usando o dinheiro dele).
+const ALTURA_BARRAS = 90;
+
+function GraficoEntradaSaida({ dados }: { dados: MesEntradaSaida[] }) {
+  if (!dados || dados.length === 0) {
+    return <Text style={styles.vazioGrafico}>Ainda sem movimentações de serviço pra mostrar aqui.</Text>;
+  }
+
+  const maximo = Math.max(1, ...dados.flatMap((d) => [Number(d.entrada), Number(d.saida)]));
+
+  return (
+    <View>
+      <View style={styles.legenda}>
+        <View style={styles.legendaItem}>
+          <View style={[styles.legendaCor, { backgroundColor: colors.green }]} />
+          <Text style={styles.legendaTexto}>Entrada</Text>
+        </View>
+        <View style={styles.legendaItem}>
+          <View style={[styles.legendaCor, { backgroundColor: colors.textForte }]} />
+          <Text style={styles.legendaTexto}>Saída</Text>
+        </View>
+      </View>
+      <View style={styles.grupoBarras}>
+        {dados.map((item) => (
+          <View key={item.periodo} style={styles.grupoBarra}>
+            <View style={styles.parBarras}>
+              <View
+                style={[
+                  styles.barra,
+                  { height: Math.max((Number(item.entrada) / maximo) * ALTURA_BARRAS, 2), backgroundColor: colors.green },
+                ]}
+              />
+              <View
+                style={[
+                  styles.barra,
+                  { height: Math.max((Number(item.saida) / maximo) * ALTURA_BARRAS, 2), backgroundColor: colors.textForte },
+                ]}
+              />
+            </View>
+            <Text style={styles.rotuloBarra}>{rotuloMes(item.periodo)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const ROTULOS_META: Record<TipoMeta, string> = { semana: 'Por semana', mes: 'Por mês' };
+
+function SecaoMetas() {
+  const [metas, setMetas] = useState<MetaPrestador[] | null>(null);
+  const [editando, setEditando] = useState<TipoMeta | null>(null);
+  const [valorMeta, setValorMeta] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [erroMeta, setErroMeta] = useState<string | null>(null);
+
+  useEffect(() => {
+    carregarMetas();
+  }, []);
+
+  function carregarMetas() {
+    minhasMetas()
+      .then(setMetas)
+      .catch(() => setMetas([]));
+  }
+
+  function abrirEdicao(tipo: TipoMeta, quantidadeAtual: number | null) {
+    setEditando(tipo);
+    setValorMeta(quantidadeAtual ? String(quantidadeAtual) : '');
+    setErroMeta(null);
+  }
+
+  async function salvar(tipo: TipoMeta) {
+    const quantidade = Number(valorMeta);
+    if (!quantidade || quantidade <= 0) return setErroMeta('Informe um número válido');
+
+    setSalvando(true);
+    setErroMeta(null);
+    try {
+      await definirMeta({ tipo, quantidade });
+      setEditando(null);
+      carregarMetas();
+    } catch (erro: any) {
+      setErroMeta(erro.response?.data?.erro || 'Não foi possível salvar a meta.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function remover(tipo: TipoMeta) {
+    await removerMeta(tipo).catch(() => {});
+    carregarMetas();
+  }
+
+  if (metas === null) return <ActivityIndicator color={colors.laranja} style={{ marginTop: spacing.md }} />;
+
+  return (
+    <View style={{ gap: spacing.sm }}>
+      {(['semana', 'mes'] as TipoMeta[]).map((tipo) => {
+        const meta = metas.find((m) => m.tipo === tipo) || null;
+        const progresso = meta ? Math.min(100, Math.round((meta.progresso / meta.quantidade) * 100)) : 0;
+
+        return (
+          <View key={tipo} style={styles.cardMeta}>
+            <View style={styles.cardMetaTopo}>
+              <Text style={styles.cardMetaTitulo}>{ROTULOS_META[tipo]}</Text>
+              {meta && editando !== tipo && (
+                <View style={styles.cardMetaAcoes}>
+                  <TouchableOpacity onPress={() => abrirEdicao(tipo, meta.quantidade)}>
+                    <Text style={styles.linkAcao}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => remover(tipo)}>
+                    <Text style={styles.linkAcao}>Remover</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {editando === tipo ? (
+              <View style={styles.formMeta}>
+                <TextInput
+                  style={styles.inputMeta}
+                  placeholder="Quantos serviços?"
+                  placeholderTextColor={colors.muted}
+                  value={valorMeta}
+                  onChangeText={setValorMeta}
+                  keyboardType="numeric"
+                  autoFocus
+                />
+                <View style={styles.formMetaBotoes}>
+                  <TouchableOpacity
+                    style={styles.botaoSalvarMeta}
+                    onPress={() => salvar(tipo)}
+                    disabled={salvando}
+                  >
+                    <Text style={styles.botaoSalvarMetaTexto}>{salvando ? '...' : 'Salvar'}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setEditando(null)}>
+                    <Text style={styles.linkAcao}>Cancelar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : meta ? (
+              <>
+                <Text style={styles.cardMetaTexto}>
+                  {meta.progresso} de {meta.quantidade} serviços concluídos
+                </Text>
+                <View style={styles.barraProgresso}>
+                  <View style={[styles.barraProgressoPreenchida, { width: `${progresso}%` }]} />
+                </View>
+              </>
+            ) : (
+              <TouchableOpacity onPress={() => abrirEdicao(tipo, null)}>
+                <Text style={styles.linkAcaoDestaque}>+ Definir meta</Text>
+              </TouchableOpacity>
+            )}
+            {editando === tipo && erroMeta && <Text style={styles.erroModal}>{erroMeta}</Text>}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   lista: { padding: spacing.lg, paddingBottom: spacing.xxl },
@@ -432,4 +628,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   botaoSecundarioModalTexto: { color: colors.textForte, fontWeight: '700', fontSize: 14 },
+  cardGrafico: {
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  vazioGrafico: { color: colors.muted, fontSize: 13, textAlign: 'center', paddingVertical: spacing.md },
+  legenda: { flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.sm },
+  legendaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendaCor: { width: 10, height: 10, borderRadius: 3 },
+  legendaTexto: { color: colors.muted, fontSize: 12 },
+  grupoBarras: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
+  grupoBarra: { alignItems: 'center', gap: 6, flex: 1 },
+  parBarras: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: ALTURA_BARRAS },
+  barra: { width: 10, borderRadius: 3 },
+  rotuloBarra: { color: colors.muted, fontSize: 9, textTransform: 'capitalize' },
+  cardMeta: {
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  cardMetaTopo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardMetaTitulo: { color: colors.textForte, fontWeight: '700', fontSize: 13.5 },
+  cardMetaAcoes: { flexDirection: 'row', gap: spacing.md },
+  cardMetaTexto: { color: colors.muted, fontSize: 12.5, marginTop: spacing.sm, marginBottom: 6 },
+  linkAcao: { color: colors.laranjaEscuro, fontWeight: '600', fontSize: 12.5 },
+  linkAcaoDestaque: { color: colors.laranjaEscuro, fontWeight: '700', fontSize: 13, marginTop: spacing.sm },
+  formMeta: { marginTop: spacing.sm, gap: spacing.sm },
+  formMetaBotoes: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  inputMeta: {
+    height: 38,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg3,
+    color: colors.textForte,
+    paddingHorizontal: 10,
+    fontSize: 13,
+  },
+  botaoSalvarMeta: {
+    height: 36,
+    paddingHorizontal: 14,
+    borderRadius: radius.sm,
+    backgroundColor: colors.laranja,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  botaoSalvarMetaTexto: { color: '#fff', fontWeight: '700', fontSize: 12.5 },
+  barraProgresso: { height: 8, borderRadius: 4, backgroundColor: colors.bg3, overflow: 'hidden' },
+  barraProgressoPreenchida: { height: '100%', borderRadius: 4, backgroundColor: colors.green },
 });

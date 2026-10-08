@@ -12,6 +12,18 @@ async function meuSaldo(req, res) {
   res.json({ saldo });
 }
 
+// Dashboard de entrada/saída por mês — só faz sentido pro prestador
+// (é quem recebe por serviço e saca; o cliente só deposita/gasta, sem
+// o mesmo padrão de "renda").
+async function meuDashboard(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Dashboard disponível só pra prestadores' });
+  }
+  const { id, tipo } = req.usuarioApp;
+  const porMes = await CarteiraTransacao.dashboardMensal(id, tipo);
+  res.json({ porMes });
+}
+
 async function meuExtrato(req, res) {
   const { id, tipo } = req.usuarioApp;
   const pagina = req.query.page ? Number(req.query.page) : 1;
@@ -97,4 +109,4 @@ async function solicitarSaque(req, res) {
   res.status(201).json(transacao);
 }
 
-module.exports = { meuSaldo, meuExtrato, criarDeposito, solicitarSaque };
+module.exports = { meuSaldo, meuExtrato, meuDashboard, criarDeposito, solicitarSaque };
