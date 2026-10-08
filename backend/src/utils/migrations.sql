@@ -353,6 +353,17 @@ ALTER TABLE clientes ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ;
 ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS termos_aceitos_em TIMESTAMPTZ;
 ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ;
 
+-- Split de pagamento (Asaas): o prestador vira uma subconta Asaas
+-- própria pra poder receber o repasse automático quando o cliente paga
+-- pelo app (em vez do Pix direto de hoje) — ver asaasService.criarSubconta.
+-- data_nascimento é exigida pela Receita pra abrir a subconta; a renda
+-- mensal informada no cadastro só é enviada ao Asaas nesse momento, não
+-- fica guardada aqui (dado sensível sem necessidade de reter).
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS data_nascimento DATE;
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS asaas_wallet_id TEXT;
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS asaas_account_status VARCHAR(20) DEFAULT 'pendente';
+-- asaas_account_status: pendente | aprovada | rejeitada
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

@@ -130,10 +130,62 @@ async function cobrarTaxaServico(prestador, pedido) {
   }
 }
 
+// Split de pagamento: abre uma subconta Asaas pro prestador (pessoa
+// física), pra ele poder receber o repasse automático quando o cliente
+// passar a pagar pelo app. Precisa de data de nascimento + endereço
+// estruturado (exigências da Receita pra abrir a subconta) — sem isso,
+// não tenta e fica pendente (o prestador pode completar depois, não
+// bloqueia o cadastro). `rendaMensal` só é enviada aqui, nunca
+// guardada no nosso banco.
+//
+// IMPORTANTE: contas novas na API do Asaas entram num período de
+// avaliação regulatória — limite de 10 subcontas de titulares
+// diferentes e R$2.000 em cobranças por subconta, por até 60 dias a
+// partir da primeira subconta criada. Rodar isso com todo mundo de uma
+// vez no início não é possível; o lançamento precisa ser gradual.
+async function criarSubconta(prestador, { rendaMensal, endereco } = {}) {
+  if (prestador.asaas_wallet_id) return prestador.asaas_wallet_id;
+  if (!asaasConfigurado()) {
+    console.warn(`[asaas] ASAAS_API_KEY não configurada — subconta não criada (prestador ${prestador.id})`);
+    return null;
+  }
+  if (!prestador.data_nascimento || !endereco?.cep || !endereco?.rua || !endereco?.numero) {
+    console.warn(
+      `[asaas] Dados insuficientes pra abrir subconta (prestador ${prestador.id}) — faltam data de nascimento ou endereço completo.`,
+    );
+    return null;
+  }
+
+  try {
+    const { data } = await asaas.post('/accounts', {
+      name: prestador.nome,
+      email: prestador.email,
+      cpfCnpj: prestador.cpf,
+      birthDate: prestador.data_nascimento,
+      mobilePhone: prestador.telefone,
+      address: endereco.rua,
+      addressNumber: endereco.numero,
+      province: endereco.bairro || undefined,
+      postalCode: endereco.cep,
+      incomeValue: rendaMensal || undefined,
+    });
+
+    await Prestador.definirAsaasSubconta(prestador.id, {
+      walletId: data.walletId,
+      status: 'aprovada',
+    });
+    return data.walletId;
+  } catch (erro) {
+    console.error('[asaas] Falha ao criar subconta:', erro.response?.data || erro.message);
+    return null;
+  }
+}
+
 module.exports = {
   TAXA_PERCENTUAL,
   VALOR_ASSINATURA_MENSAL,
   garantirClienteAsaas,
   criarAssinaturaMensal,
   cobrarTaxaServico,
+  criarSubconta,
 };

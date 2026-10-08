@@ -22,6 +22,13 @@ export function CepAddressInput({ onSelecionar, style }) {
       estado: dados.estado,
       lat: null,
       lng: null,
+      // Campos separados — usados hoje só na abertura da subconta Asaas
+      // do prestador (split de pagamento), que exige endereço
+      // estruturado, não a string combinada.
+      cep: cep.replace(/\D/g, ''),
+      rua: dados.rua,
+      numero: numeroAtual,
+      bairro: dados.bairro,
     });
   }
 

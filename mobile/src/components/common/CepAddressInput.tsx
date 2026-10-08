@@ -7,6 +7,12 @@ interface DadosEndereco {
   enderecoCompleto: string;
   cidade: string;
   estado: string;
+  // Usados hoje só na abertura da subconta Asaas do prestador (split de
+  // pagamento), que exige endereço estruturado, não a string combinada.
+  cep?: string;
+  rua?: string;
+  numero?: string;
+  bairro?: string;
 }
 
 interface Props {
@@ -32,6 +38,10 @@ export function CepAddressInput({ onSelecionar }: Props) {
       enderecoCompleto: partes.join(', '),
       cidade: dados.cidade || '',
       estado: dados.estado || '',
+      cep: cep.replace(/\D/g, ''),
+      rua: dados.rua,
+      numero: numeroAtual,
+      bairro: dados.bairro,
     });
   }
 

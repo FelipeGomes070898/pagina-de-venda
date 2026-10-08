@@ -120,6 +120,7 @@ async function cadastro(req, res) {
     modeloCobranca: req.body.modeloCobranca,
     googleId,
     whatsapp: req.body.whatsapp,
+    dataNascimento: req.body.dataNascimento,
   });
   await Prestador.marcarTermosAceitos(prestador.id);
 
@@ -130,6 +131,25 @@ async function cadastro(req, res) {
   } else {
     asaasService.garantirClienteAsaas(prestador).catch(() => {});
   }
+
+  // Split de pagamento: abre a subconta Asaas dele, se já tiver os
+  // dados necessários (data de nascimento + endereço completo). Se não
+  // tiver, fica pendente — ver Prestador.definirAsaasSubconta, dá pra
+  // completar depois.
+  asaasService
+    .criarSubconta(
+      { ...prestador, data_nascimento: req.body.dataNascimento },
+      {
+        rendaMensal: req.body.rendaMensal,
+        endereco: {
+          cep: req.body.cep,
+          rua: req.body.rua,
+          numero: req.body.numero,
+          bairro: req.body.bairro,
+        },
+      },
+    )
+    .catch(() => {});
 
   const token = gerarToken({ id: prestador.id, tipo: 'prestador' });
   return res.status(201).json({ token, usuario: { ...prestador, tipo: 'prestador' } });

@@ -32,8 +32,45 @@ module.exports = {
     modeloCobranca,
     googleId,
     whatsapp,
+    dataNascimento,
   }) {
     const senhaHash = await bcrypt.hash(senha, 10);
+    // a maioria dos prestadores usa o próprio celular no WhatsApp — só
+    // grava um número diferente se ele informar um explicitamente.
+    const whatsappFinal = whatsapp || telefone;
+    const modeloCobrancaFinal = modeloCobranca === 'fixo_mensal' ? 'fixo_mensal' : 'percentual';
+
+    // data_nascimento só existe em bancos que já rodaram a migração mais
+    // recente (split de pagamento/subconta Asaas) — sem essa checagem, o
+    // cadastro inteiro quebraria em produção até lá (ver utils/schema.js).
+    if (dataNascimento && (await colunaExiste('prestadores', 'data_nascimento'))) {
+      const { rows } = await pool.query(
+        `INSERT INTO prestadores
+           (nome, email, telefone, cpf, senha_hash, segmento, valor_servico,
+            cidade, estado, lat, lng, modelo_cobranca, google_id, whatsapp, data_nascimento)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+         RETURNING ${CAMPOS_PUBLICOS}`,
+        [
+          nome,
+          email,
+          telefone,
+          cpf,
+          senhaHash,
+          segmento || null,
+          valorServico || null,
+          cidade || null,
+          estado || null,
+          lat || null,
+          lng || null,
+          modeloCobrancaFinal,
+          googleId || null,
+          whatsappFinal,
+          dataNascimento,
+        ],
+      );
+      return rows[0];
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO prestadores
          (nome, email, telefone, cpf, senha_hash, segmento, valor_servico,
@@ -52,14 +89,24 @@ module.exports = {
         estado || null,
         lat || null,
         lng || null,
-        modeloCobranca === 'fixo_mensal' ? 'fixo_mensal' : 'percentual',
+        modeloCobrancaFinal,
         googleId || null,
-        // a maioria dos prestadores usa o próprio celular no WhatsApp —
-        // só grava um número diferente se ele informar um explicitamente.
-        whatsapp || telefone,
+        whatsappFinal,
       ],
     );
     return rows[0];
+  },
+
+  // Split de pagamento (Asaas): registra a subconta criada pro prestador
+  // (walletId) e o status de aprovação dela. Colunas novas — se ainda
+  // não existirem (migração não rodada), a chamada é best-effort e quem
+  // chama (asaasService) já engole o erro, então não precisa de guarda
+  // extra aqui.
+  async definirAsaasSubconta(id, { walletId, status }) {
+    await pool.query(
+      `UPDATE prestadores SET asaas_wallet_id = $2, asaas_account_status = $3 WHERE id = $1`,
+      [id, walletId, status],
+    );
   },
 
   async buscarPorGoogleIdOuEmail(googleId, email) {
