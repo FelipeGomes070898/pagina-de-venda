@@ -11,6 +11,8 @@ router.post('/google', authController.loginGoogle);
 router.post('/recuperar-senha', authController.recuperarSenha);
 router.get('/me', autenticarApp, authController.meuPerfil);
 router.patch('/me/foto', autenticarApp, authController.atualizarFotoPerfil);
+router.get('/me/exportar', autenticarApp, authController.exportarDados);
+router.delete('/me', autenticarApp, authController.excluirConta);
 
 // Painel administrativo (equipe interna)
 router.post('/admin/login', authController.loginAdmin);

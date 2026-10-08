@@ -45,6 +45,15 @@ export function BaixarApp() {
             Entrar
           </Link>
         </p>
+        <p style={styles.rodapeLegal}>
+          <Link style={styles.link} to="/legal/termos">
+            Termos de Uso
+          </Link>
+          {' · '}
+          <Link style={styles.link} to="/legal/privacidade">
+            Privacidade
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -135,5 +144,6 @@ const styles = {
     marginTop: 24,
   },
   rodape: { textAlign: 'center', fontSize: 16, color: 'var(--konectaja-muted)', marginTop: 32 },
+  rodapeLegal: { textAlign: 'center', fontSize: 13, color: 'var(--konectaja-muted)', marginTop: 12 },
   link: { color: 'var(--konectaja-azul)', fontWeight: 700, textDecoration: 'none' },
 };

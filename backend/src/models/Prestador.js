@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const pool = require('../config/database');
-const { tabelaExiste } = require('../utils/schema');
+const { tabelaExiste, colunaExiste } = require('../utils/schema');
 
 const CAMPOS_PUBLICOS = `
   id, nome, email, telefone, cpf, whatsapp, segmento, valor_servico,
@@ -224,6 +225,52 @@ module.exports = {
   async atualizarSenha(id, senha) {
     const senhaHash = await bcrypt.hash(senha, 10);
     await pool.query(`UPDATE prestadores SET senha_hash = $2 WHERE id = $1`, [id, senhaHash]);
+  },
+
+  // LGPD: registra quando o titular aceitou os Termos de Uso/Política de
+  // Privacidade no cadastro. Coluna só existe em bancos que já rodaram a
+  // migração mais recente — sem a checagem, cadastro quebraria em
+  // produção até lá (ver utils/schema.js).
+  async marcarTermosAceitos(id) {
+    if (!(await colunaExiste('prestadores', 'termos_aceitos_em'))) return;
+    await pool.query(`UPDATE prestadores SET termos_aceitos_em = NOW() WHERE id = $1`, [id]);
+  },
+
+  // LGPD "direito ao esquecimento". Não apaga a linha (pedidos/chat/
+  // avaliações da outra parte continuariam referenciando um prestador
+  // inexistente) — anonimiza os dados pessoais, troca a senha por um
+  // hash aleatório (bloqueia o login sozinho) e marca status='inativo'
+  // pra sair do marketplace, reaproveitando o filtro que listarAtivos
+  // já usa.
+  async excluirConta(id) {
+    const senhaInvalida = await bcrypt.hash(crypto.randomUUID(), 10);
+    const temExcluidoEm = await colunaExiste('prestadores', 'excluido_em');
+
+    await pool.query(
+      `UPDATE prestadores SET
+         nome = 'Usuário removido',
+         email = 'removido-' || replace(id::text, '-', '') || '@konectaja.invalid',
+         telefone = 'x' || left(replace(id::text, '-', ''), 18),
+         cpf = left(replace(id::text, '-', ''), 14),
+         whatsapp = NULL,
+         senha_hash = $2,
+         foto_url = NULL,
+         google_id = NULL,
+         status = 'inativo'
+         ${temExcluidoEm ? ', excluido_em = NOW()' : ''}
+       WHERE id = $1`,
+      [id, senhaInvalida],
+    );
+  },
+
+  // LGPD "portabilidade": mesmo recorte de dados que a tela "Meu perfil"
+  // já exibe, só que empacotado pra download.
+  async exportarDados(id) {
+    const { rows } = await pool.query(
+      `SELECT ${CAMPOS_PUBLICOS} FROM prestadores WHERE id = $1`,
+      [id],
+    );
+    return rows[0] || null;
   },
 
   async atualizarStatus(id, status) {

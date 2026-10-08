@@ -25,3 +25,15 @@ export async function atualizarFotoPerfil(url) {
   const { data } = await api.patch('/api/auth/me/foto', { url });
   return data;
 }
+
+// LGPD "portabilidade" — baixa os dados cadastrais do usuário logado.
+export async function exportarDados() {
+  const { data } = await api.get('/api/auth/me/exportar');
+  return data;
+}
+
+// LGPD "direito ao esquecimento" — exige a senha atual pra confirmar.
+export async function excluirConta(senha) {
+  const { data } = await api.delete('/api/auth/me', { data: { senha } });
+  return data;
+}

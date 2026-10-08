@@ -27,6 +27,7 @@ export function Register() {
   const [segmento, setSegmento] = useState(null);
   const [valorServico, setValorServico] = useState('');
   const [modeloCobranca, setModeloCobranca] = useState('percentual');
+  const [aceiteTermos, setAceiteTermos] = useState(false);
   const [erro, setErro] = useState(null);
 
   async function aoSubmeter(e) {
@@ -40,10 +41,14 @@ export function Register() {
     if (senha.length < 6) return setErro('A senha deve ter pelo menos 6 caracteres');
     if (senha !== confirmarSenha) return setErro('As senhas não coincidem');
     if (tipo === 'prestador' && !segmento) return setErro('Escolha o serviço que você oferece');
+    if (!aceiteTermos) {
+      return setErro('É necessário aceitar os Termos de Uso e a Política de Privacidade');
+    }
 
     try {
       await cadastrar({
         tipo,
+        aceiteTermos,
         nome: nome.trim(),
         email: email.trim(),
         telefone: somenteDigitos(telefone),
@@ -196,6 +201,29 @@ export function Register() {
           </>
         )}
 
+        <label style={styles.aceite}>
+          <input
+            type="checkbox"
+            checked={aceiteTermos}
+            onChange={(e) => setAceiteTermos(e.target.checked)}
+          />
+          <span>
+            Li e aceito os{' '}
+            <Link style={styles.link} to="/legal/termos" target="_blank" rel="noopener noreferrer">
+              Termos de Uso
+            </Link>{' '}
+            e a{' '}
+            <Link
+              style={styles.link}
+              to="/legal/privacidade"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Política de Privacidade
+            </Link>
+          </span>
+        </label>
+
         {erro && <p style={styles.erro}>{erro}</p>}
 
         <PrimaryButton label="Criar conta" type="submit" loading={carregando} />
@@ -276,6 +304,15 @@ const styles = {
     background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
     borderColor: 'var(--konectaja-laranja)',
     color: '#fff',
+  },
+  aceite: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 8,
+    fontSize: 12.5,
+    color: 'var(--konectaja-text)',
+    lineHeight: 1.5,
+    marginTop: 4,
   },
   erro: { color: 'var(--konectaja-red)', fontSize: 13, margin: 0 },
   rodape: { textAlign: 'center', fontSize: 13, color: 'var(--konectaja-muted)', marginTop: 8 },

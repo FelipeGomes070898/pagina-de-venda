@@ -71,13 +71,20 @@ async function login(req, res) {
 // (POST /auth/google) e está completando o cadastro nacional (telefone,
 // CPF, senha) que o Google sozinho não fornece.
 async function cadastro(req, res) {
-  const { tipo, nome, email, telefone, cpf, senha, lat, lng, googleId } = req.body;
+  const { tipo, nome, email, telefone, cpf, senha, lat, lng, googleId, aceiteTermos } = req.body;
 
   if (!['cliente', 'prestador'].includes(tipo)) {
     return res.status(400).json({ erro: 'tipo deve ser "cliente" ou "prestador"' });
   }
   if (!nome || !email || !telefone || !cpf || !senha) {
     return res.status(400).json({ erro: 'Nome, e-mail, telefone, CPF e senha são obrigatórios' });
+  }
+  // Consentimento exigido tanto no front (checkbox) quanto aqui — LGPD
+  // exige que o aceite seja registrado, não só mostrado na tela.
+  if (aceiteTermos !== true) {
+    return res.status(400).json({
+      erro: 'É necessário aceitar os Termos de Uso e a Política de Privacidade para criar a conta',
+    });
   }
 
   if (tipo === 'cliente') {
@@ -93,6 +100,7 @@ async function cadastro(req, res) {
       lng,
       googleId,
     });
+    await Cliente.marcarTermosAceitos(cliente.id);
     const token = gerarToken({ id: cliente.id, tipo: 'cliente' });
     return res.status(201).json({ token, usuario: { ...cliente, tipo: 'cliente' } });
   }
@@ -113,6 +121,7 @@ async function cadastro(req, res) {
     googleId,
     whatsapp: req.body.whatsapp,
   });
+  await Prestador.marcarTermosAceitos(prestador.id);
 
   // Best-effort: não bloqueia o cadastro se o Asaas falhar ou não
   // estiver configurado ainda (fica pendente até o dono configurar).
@@ -293,6 +302,39 @@ async function atualizarFotoPerfil(req, res) {
   res.json({ ...atualizado, tipo });
 }
 
+// LGPD "portabilidade" — exporta os dados cadastrais do próprio usuário
+// logado em formato bruto, pra download (ver rota GET /auth/me/exportar).
+async function exportarDados(req, res) {
+  const { id, tipo } = req.usuarioApp;
+
+  const dados =
+    tipo === 'cliente' ? await Cliente.exportarDados(id) : await Prestador.exportarDados(id);
+  if (!dados) return res.status(404).json({ erro: 'Conta não encontrada' });
+
+  res.json({ tipo, exportadoEm: new Date().toISOString(), dados });
+}
+
+// LGPD "direito ao esquecimento" — exige a senha atual (reautenticação)
+// antes de anonimizar a conta, pra evitar que alguém com a sessão
+// aberta num aparelho emprestado apague a conta de outra pessoa sem
+// saber a senha.
+async function excluirConta(req, res) {
+  const { senha } = req.body;
+  if (!senha) return res.status(400).json({ erro: 'Informe sua senha para confirmar' });
+
+  const { id, tipo } = req.usuarioApp;
+  const Modelo = tipo === 'cliente' ? Cliente : Prestador;
+
+  const usuario = await Modelo.buscarCompletoPorId(id);
+  if (!usuario) return res.status(404).json({ erro: 'Conta não encontrada' });
+
+  const senhaValida = await Modelo.verificarSenha(senha, usuario.senha_hash);
+  if (!senhaValida) return res.status(401).json({ erro: 'Senha incorreta' });
+
+  await Modelo.excluirConta(id);
+  res.json({ ok: true });
+}
+
 module.exports = {
   login,
   cadastro,
@@ -301,4 +343,6 @@ module.exports = {
   recuperarSenha,
   meuPerfil,
   atualizarFotoPerfil,
+  exportarDados,
+  excluirConta,
 };

@@ -35,6 +35,7 @@ export interface CadastroPayload {
   lat?: number;
   lng?: number;
   googleId?: string;
+  aceiteTermos: boolean;
   // Somente para prestador:
   segmento?: string;
   valorServico?: number;
@@ -112,5 +113,17 @@ export interface MeuPerfil {
 
 export async function meuPerfil(): Promise<MeuPerfil> {
   const { data } = await api.get<MeuPerfil>('/api/auth/me');
+  return data;
+}
+
+// LGPD "portabilidade" — dados cadastrais do usuário logado.
+export async function exportarDados(): Promise<{ tipo: string; exportadoEm: string; dados: unknown }> {
+  const { data } = await api.get('/api/auth/me/exportar');
+  return data;
+}
+
+// LGPD "direito ao esquecimento" — exige a senha atual pra confirmar.
+export async function excluirConta(senha: string): Promise<{ ok: true }> {
+  const { data } = await api.delete<{ ok: true }>('/api/auth/me', { data: { senha } });
   return data;
 }

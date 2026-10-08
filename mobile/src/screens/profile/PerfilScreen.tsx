@@ -3,7 +3,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -14,9 +16,10 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
-import { meuPerfil, MeuPerfil } from '@/services/authService';
+import { meuPerfil, exportarDados, excluirConta, MeuPerfil } from '@/services/authService';
 import { adicionarServico, removerServico } from '@/services/servicoPrestadorService';
 import { mascararCPF, mascararTelefoneBR } from '@/utils/masks';
+import { DocumentoLegalModal } from '@/components/common/DocumentoLegalModal';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'PerfilTab'>;
 
@@ -39,6 +42,11 @@ export function PerfilScreen(_props: Props) {
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novoValor, setNovoValor] = useState('');
   const [adicionandoServico, setAdicionandoServico] = useState(false);
+  const [docAberto, setDocAberto] = useState<'termos' | 'privacidade' | null>(null);
+  const [mostrarExcluir, setMostrarExcluir] = useState(false);
+  const [senhaExcluir, setSenhaExcluir] = useState('');
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
 
   useEffect(() => {
     meuPerfil()
@@ -78,6 +86,36 @@ export function PerfilScreen(_props: Props) {
       setPerfil((p) => (p ? { ...p, servicos: p.servicos?.filter((s) => s.id !== servicoId) } : p));
     } catch {
       Alert.alert('Erro', 'Não foi possível remover esse serviço.');
+    }
+  }
+
+  // LGPD "portabilidade" — compartilha os dados cadastrais (sem salvar
+  // arquivo em disco, pra não depender de nenhuma lib nova).
+  async function aoBaixarDados() {
+    try {
+      const resultado = await exportarDados();
+      await Share.share({
+        title: 'Meus dados — Konecta Já',
+        message: JSON.stringify(resultado, null, 2),
+      });
+    } catch {
+      Alert.alert('Erro', 'Não foi possível preparar seus dados.');
+    }
+  }
+
+  // LGPD "direito ao esquecimento" — exige a senha atual.
+  async function aoConfirmarExclusao() {
+    if (!senhaExcluir) return;
+    setExcluindo(true);
+    setErroExcluir(null);
+    try {
+      await excluirConta(senhaExcluir);
+      setMostrarExcluir(false);
+      logout();
+    } catch (erro: any) {
+      setErroExcluir(erro.response?.data?.erro || 'Não foi possível excluir sua conta.');
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -220,9 +258,76 @@ export function PerfilScreen(_props: Props) {
         )
       )}
 
+      <View style={styles.secao}>
+        <Text style={styles.secaoTitulo}>Privacidade e dados (LGPD)</Text>
+        <TouchableOpacity onPress={() => setDocAberto('privacidade')}>
+          <Text style={styles.linkPrivacidade}>Ver Política de Privacidade</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setDocAberto('termos')}>
+          <Text style={styles.linkPrivacidade}>Ver Termos de Uso</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.botaoSecundario} onPress={aoBaixarDados}>
+          <Text style={styles.botaoSecundarioTexto}>Baixar meus dados</Text>
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity style={styles.opcao} onPress={aoSair}>
         <Text style={styles.opcaoTextoSair}>Sair da conta</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.opcaoExcluir} onPress={() => setMostrarExcluir(true)}>
+        <Text style={styles.opcaoTextoExcluir}>Excluir minha conta</Text>
+      </TouchableOpacity>
+
+      <DocumentoLegalModal
+        visivel={docAberto !== null}
+        docInicial={docAberto ?? 'termos'}
+        onFechar={() => setDocAberto(null)}
+      />
+
+      <Modal visible={mostrarExcluir} transparent animationType="fade">
+        <View style={styles.modalFundo}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitulo}>Excluir sua conta</Text>
+            <Text style={styles.modalTexto}>
+              Isso remove seus dados pessoais (nome, e-mail, telefone, CPF, foto) do Konecta Já e
+              bloqueia o acesso à conta imediatamente. Pedidos já feitos continuam existindo pra
+              outra parte envolvida, mas sem te identificar. Essa ação não pode ser desfeita.
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirme sua senha"
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              value={senhaExcluir}
+              onChangeText={setSenhaExcluir}
+            />
+            {erroExcluir && <Text style={styles.erroExcluir}>{erroExcluir}</Text>}
+            <View style={styles.modalBotoes}>
+              <TouchableOpacity
+                style={styles.botaoSecundario}
+                onPress={() => {
+                  setMostrarExcluir(false);
+                  setSenhaExcluir('');
+                  setErroExcluir(null);
+                }}
+                disabled={excluindo}
+              >
+                <Text style={styles.botaoSecundarioTexto}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.botaoExcluirConfirmar}
+                onPress={aoConfirmarExclusao}
+                disabled={excluindo}
+              >
+                <Text style={styles.botaoExcluirConfirmarTexto}>
+                  {excluindo ? 'Excluindo...' : 'Excluir conta'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -334,9 +439,66 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg2,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.red,
+    borderColor: colors.border,
     padding: spacing.md,
     alignItems: 'center',
   },
-  opcaoTextoSair: { color: colors.red, fontWeight: '700', fontSize: 14 },
+  opcaoTextoSair: { color: colors.textForte, fontWeight: '700', fontSize: 14 },
+  opcaoExcluir: { padding: spacing.md, alignItems: 'center', marginTop: spacing.sm },
+  opcaoTextoExcluir: { color: colors.red, fontWeight: '600', fontSize: 13 },
+  linkPrivacidade: {
+    color: colors.azul,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  botaoSecundario: {
+    height: 40,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  botaoSecundarioTexto: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
+  modalFundo: {
+    flex: 1,
+    backgroundColor: 'rgba(28, 25, 23, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: colors.bg2,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    gap: 12,
+  },
+  modalTitulo: { color: colors.textForte, fontSize: 18, fontWeight: '800' },
+  modalTexto: { color: colors.muted, fontSize: 13, lineHeight: 19 },
+  modalInput: {
+    height: 46,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg3,
+    color: colors.textForte,
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  erroExcluir: { color: colors.red, fontSize: 13 },
+  modalBotoes: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4 },
+  botaoExcluirConfirmar: {
+    height: 40,
+    borderRadius: radius.sm,
+    backgroundColor: colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  botaoExcluirConfirmarTexto: { color: '#fff', fontWeight: '700', fontSize: 13 },
 });

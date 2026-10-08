@@ -342,6 +342,17 @@ CREATE TABLE IF NOT EXISTS tickets_suporte (
 CREATE INDEX IF NOT EXISTS idx_tickets_suporte_status ON tickets_suporte(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_suporte_usuario ON tickets_suporte(usuario_id);
 
+-- LGPD: registro do aceite dos Termos de Uso/Política de Privacidade no
+-- cadastro, e marca de quando o titular pediu a exclusão da conta. A
+-- conta "excluída" não é apagada de verdade (quebraria o histórico de
+-- pedidos/chat da outra parte) — os dados pessoais são anonimizados e
+-- o login passa a ser recusado (ver Cliente/Prestador.excluirConta e
+-- authController.login).
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS termos_aceitos_em TIMESTAMPTZ;
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ;
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS termos_aceitos_em TIMESTAMPTZ;
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ;
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);

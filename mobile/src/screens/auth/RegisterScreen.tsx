@@ -16,6 +16,7 @@ import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
 import { CepAddressInput } from '@/components/common/CepAddressInput';
 import { PasswordInput } from '@/components/common/PasswordInput';
+import { DocumentoLegalModal } from '@/components/common/DocumentoLegalModal';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { useCategoryStore } from '@/store/categoryStore';
@@ -45,6 +46,8 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [segmento, setSegmento] = useState<string | null>(null);
   const [valorServico, setValorServico] = useState('');
   const [modeloCobranca, setModeloCobranca] = useState<ModeloCobranca>('percentual');
+  const [aceiteTermos, setAceiteTermos] = useState(false);
+  const [docAberto, setDocAberto] = useState<'termos' | 'privacidade' | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   async function aoSubmeter() {
@@ -57,6 +60,9 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (senha.length < 6) return setErro(t('register.error_password_short'));
     if (senha !== confirmarSenha) return setErro(t('register.error_password_mismatch'));
     if (tipo === 'prestador' && !segmento) return setErro(t('register.error_segment_required'));
+    if (!aceiteTermos) {
+      return setErro('É necessário aceitar os Termos de Uso e a Política de Privacidade');
+    }
 
     try {
       await cadastrar({
@@ -66,6 +72,7 @@ export function RegisterScreen({ navigation, route }: Props) {
         telefone: somenteDigitos(telefone),
         cpf: somenteDigitos(cpf),
         senha,
+        aceiteTermos,
         cidade: endereco.cidade || endereco.texto.trim() || undefined,
         estado: endereco.estado || undefined,
         lat: endereco.lat,
@@ -246,6 +253,26 @@ export function RegisterScreen({ navigation, route }: Props) {
           </>
         )}
 
+        <TouchableOpacity
+          style={styles.aceiteWrapper}
+          onPress={() => setAceiteTermos((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, aceiteTermos && styles.checkboxMarcado]}>
+            {aceiteTermos && <Text style={styles.checkboxTick}>✓</Text>}
+          </View>
+          <Text style={styles.aceiteTexto}>
+            Li e aceito os{' '}
+            <Text style={styles.link} onPress={() => setDocAberto('termos')}>
+              Termos de Uso
+            </Text>{' '}
+            e a{' '}
+            <Text style={styles.link} onPress={() => setDocAberto('privacidade')}>
+              Política de Privacidade
+            </Text>
+          </Text>
+        </TouchableOpacity>
+
         {erro && <Text style={styles.erro}>{erro}</Text>}
 
         <PrimaryButton label={t('register.submit')} onPress={aoSubmeter} loading={carregando} />
@@ -259,6 +286,12 @@ export function RegisterScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <DocumentoLegalModal
+        visivel={docAberto !== null}
+        docInicial={docAberto ?? 'termos'}
+        onFechar={() => setDocAberto(null)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -313,6 +346,21 @@ const styles = StyleSheet.create({
   },
   chipAtivo: { backgroundColor: colors.laranja, borderColor: colors.laranja },
   chipTexto: { color: colors.text, fontSize: 12 },
+  aceiteWrapper: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: spacing.md },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.bg2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxMarcado: { backgroundColor: colors.laranja, borderColor: colors.laranja },
+  checkboxTick: { color: '#fff', fontSize: 12, fontWeight: '900' },
+  aceiteTexto: { flex: 1, color: colors.text, fontSize: 12.5, lineHeight: 18 },
   erro: { color: colors.red, fontSize: 13, marginBottom: spacing.sm },
   rodape: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.lg },
   rodapeTexto: { color: colors.muted, fontSize: 13 },
