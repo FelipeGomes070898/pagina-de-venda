@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { criarTicket } from '../services/ticketService';
+import { mensagemErro } from '../utils/erro';
 
 const ASSUNTOS = [
   'Problema com pagamento',
@@ -115,8 +116,8 @@ export function AjudaBar() {
       await criarTicket({ assunto, mensagem: mensagem.trim() });
       setEnviado(true);
       setMensagem('');
-    } catch {
-      setErro('Não foi possível enviar sua mensagem agora. Tente novamente.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível enviar sua mensagem agora. Tente novamente.'));
     } finally {
       setEnviando(false);
     }

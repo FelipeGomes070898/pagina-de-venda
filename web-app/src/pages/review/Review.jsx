@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { avaliarPrestador, TAGS_AVALIACAO } from '../../services/reviewService';
+import { mensagemErro } from '../../utils/erro';
 
 const ESTRELAS = [1, 2, 3, 4, 5];
 
@@ -28,8 +29,8 @@ export function Review() {
     try {
       await avaliarPrestador({ pedidoId, nota, comentario: comentario.trim() || undefined, tags: tagsSelecionadas });
       navigate('/');
-    } catch {
-      setErro('Não foi possível enviar sua avaliação. Tente novamente.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível enviar sua avaliação. Tente novamente.'));
     } finally {
       setEnviando(false);
     }

@@ -7,6 +7,7 @@ import { adicionarServico, removerServico } from '../../services/servicoPrestado
 import { enviarImagem } from '../../services/uploadService';
 import { mascararCPF, mascararTelefoneBR } from '../../utils/masks';
 import { CATEGORIAS } from '../../constants/categorias';
+import { mensagemErro } from '../../utils/erro';
 
 const ROTULOS_TIPO = { cliente: 'Cliente', prestador: 'Prestador de serviço' };
 const ROTULOS_COBRANCA = {
@@ -37,7 +38,7 @@ export function MeuPerfil() {
     setCarregando(true);
     meuPerfil()
       .then(setPerfil)
-      .catch(() => setErro('Não foi possível carregar seus dados.'))
+      .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar seus dados.')))
       .finally(() => setCarregando(false));
   }
 
@@ -81,8 +82,8 @@ export function MeuPerfil() {
     try {
       await removerFotoTrabalho(fotoId);
       setPerfil((p) => ({ ...p, fotos: p.fotos.filter((f) => f.id !== fotoId) }));
-    } catch {
-      setErro('Não foi possível remover a foto.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível remover a foto.'));
     }
   }
 
@@ -100,8 +101,8 @@ export function MeuPerfil() {
       setPerfil((p) => ({ ...p, servicos: [...(p.servicos ?? []), servico] }));
       setNovaCategoria('');
       setNovoValor('');
-    } catch {
-      setErro('Não foi possível adicionar esse serviço.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível adicionar esse serviço.'));
     } finally {
       setAdicionandoServico(false);
     }
@@ -111,8 +112,8 @@ export function MeuPerfil() {
     try {
       await removerServico(servicoId);
       setPerfil((p) => ({ ...p, servicos: p.servicos.filter((s) => s.id !== servicoId) }));
-    } catch {
-      setErro('Não foi possível remover esse serviço.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível remover esse serviço.'));
     }
   }
 

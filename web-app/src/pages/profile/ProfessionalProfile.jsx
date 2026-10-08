@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { buscarPrestador, contatarPrestador } from '../../services/marketplaceService';
 import { obterLocalizacaoAtual } from '../../services/locationService';
 import { formatarDistancia } from '../../utils/distancia';
+import { mensagemErro } from '../../utils/erro';
 
 const IconeEstrela = ({ size = 13 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline', verticalAlign: '-2px' }}>
@@ -38,7 +39,7 @@ export function ProfessionalProfile() {
     obterLocalizacaoAtual()
       .then((coordenadas) => buscarPrestador(prestadorId, coordenadas || {}))
       .then(setPrestador)
-      .catch(() => setErro('Não foi possível carregar este perfil.'))
+      .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar este perfil.')))
       .finally(() => setCarregando(false));
   }, [prestadorId]);
 
@@ -47,8 +48,8 @@ export function ProfessionalProfile() {
     try {
       const pedido = await contatarPrestador(prestadorId);
       navigate(`/chat/${pedido.id}`, { state: { prestadorNome: prestador.nome } });
-    } catch {
-      setErro('Não foi possível entrar em contato agora.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível entrar em contato agora.'));
     } finally {
       setContatando(false);
     }

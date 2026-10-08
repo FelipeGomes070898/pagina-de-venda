@@ -10,6 +10,7 @@ import {
   listarPrestadores,
   responderPedidoAberto,
 } from '../../services/marketplaceService';
+import { mensagemErro } from '../../utils/erro';
 
 const IconeEstrela = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline', verticalAlign: '-2px', marginRight: 2 }}>
@@ -57,8 +58,8 @@ export function PrestadorHome() {
         ]);
         setOutrosPrestadores(listaPrestadores);
       }
-    } catch {
-      setErro('Não foi possível carregar. Tente novamente.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível carregar. Tente novamente.'));
     } finally {
       setCarregando(false);
     }
@@ -76,8 +77,13 @@ export function PrestadorHome() {
     try {
       await responderPedidoAberto(pedido.id);
       navigate(`/chat/${pedido.id}`, { state: { prestadorNome: '' } });
-    } catch {
-      setErro('Esse pedido já não está mais disponível — outro prestador deve ter respondido primeiro.');
+    } catch (erro) {
+      setErro(
+        mensagemErro(
+          erro,
+          'Esse pedido já não está mais disponível — outro prestador deve ter respondido primeiro.',
+        ),
+      );
       setPedidos((atual) => atual.filter((p) => p.id !== pedido.id));
     } finally {
       setRespondendoId(null);

@@ -11,6 +11,7 @@ import {
   listarConversa,
   responderProposta,
 } from '../../services/chatService';
+import { mensagemErro } from '../../utils/erro';
 
 const INTERVALO_ATUALIZACAO_MS = 5000;
 
@@ -73,8 +74,8 @@ export function Chat() {
     try {
       const dados = await listarConversa(pedidoId);
       setConversa(dados);
-    } catch {
-      setErro('Não foi possível carregar a conversa.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível carregar a conversa.'));
     } finally {
       setCarregando(false);
     }
@@ -98,8 +99,8 @@ export function Chat() {
       await enviarMensagem(pedidoId, texto.trim());
       setTexto('');
       await carregar();
-    } catch {
-      setErro('Não foi possível enviar a mensagem.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível enviar a mensagem.'));
     } finally {
       setEnviando(false);
     }
@@ -114,8 +115,8 @@ export function Chat() {
       setValorProposta('');
       setMostrarFormProposta(false);
       await carregar();
-    } catch {
-      setErro('Não foi possível enviar a proposta.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível enviar a proposta.'));
     } finally {
       setEnviando(false);
     }
@@ -125,8 +126,8 @@ export function Chat() {
     try {
       await responderProposta(pedidoId, proposta.id, acao);
       await carregar();
-    } catch {
-      setErro('Não foi possível responder a proposta.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível responder a proposta.'));
     }
   }
 
@@ -136,8 +137,8 @@ export function Chat() {
     try {
       await enviarEndereco(pedidoId, { endereco: endereco.texto.trim(), lat: endereco.lat, lng: endereco.lng });
       await carregar();
-    } catch {
-      setErro('Não foi possível enviar o endereço.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível enviar o endereço.'));
     } finally {
       setEnviandoEndereco(false);
     }
@@ -148,8 +149,8 @@ export function Chat() {
     try {
       await atualizarStatusPedido(pedidoId, 'concluido');
       await carregar();
-    } catch {
-      setErro('Não foi possível marcar o serviço como concluído.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível marcar o serviço como concluído.'));
     } finally {
       setFinalizando(false);
     }
@@ -160,8 +161,8 @@ export function Chat() {
     try {
       await confirmarPagamento(pedidoId, { quando, forma: formaPagamento });
       await carregar();
-    } catch {
-      setErro('Não foi possível confirmar o pagamento.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível confirmar o pagamento.'));
     } finally {
       setConfirmandoPagamento(false);
     }
@@ -175,8 +176,8 @@ export function Chat() {
     try {
       await atualizarStatusPedido(pedidoId, 'cancelado');
       await carregar();
-    } catch {
-      setErro('Não foi possível cancelar o pedido.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível cancelar o pedido.'));
     } finally {
       setCancelando(false);
     }

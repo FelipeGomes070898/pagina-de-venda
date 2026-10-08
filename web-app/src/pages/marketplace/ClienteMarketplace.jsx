@@ -13,6 +13,7 @@ import {
   publicarPedidoAberto,
   validarCupom,
 } from '../../services/marketplaceService';
+import { mensagemErro } from '../../utils/erro';
 
 export function ClienteMarketplace() {
   const cidadeUsuario = useAuthStore((s) => s.usuario?.cidade);
@@ -59,9 +60,9 @@ export function ClienteMarketplace() {
     try {
       const resultado = await validarCupom(cupomTexto.trim(), Number(valorPedido.replace(',', '.')) || 0);
       setCupomAplicado(resultado);
-    } catch {
+    } catch (erro) {
       setCupomAplicado(null);
-      setCupomErro('Cupom inválido ou expirado');
+      setCupomErro(mensagemErro(erro, 'Cupom inválido ou expirado'));
     } finally {
       setValidandoCupom(false);
     }
@@ -83,8 +84,8 @@ export function ClienteMarketplace() {
         const lista = await listarPedidosAbertos();
         setPedidosAbertos(lista);
       }
-    } catch {
-      setErro('Não foi possível carregar. Tente novamente.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível carregar. Tente novamente.'));
     } finally {
       setCarregando(false);
     }
@@ -107,8 +108,8 @@ export function ClienteMarketplace() {
     try {
       const pedido = await contatarPrestador(prestador.id);
       navigate(`/chat/${pedido.id}`, { state: { prestadorNome: prestador.nome } });
-    } catch {
-      setErro('Não foi possível entrar em contato agora.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível entrar em contato agora.'));
     } finally {
       setContatandoId(null);
     }
@@ -132,8 +133,8 @@ export function ClienteMarketplace() {
       setCupomAplicado(null);
       setMostrarFormPedido(false);
       carregar();
-    } catch {
-      setErro('Não foi possível publicar seu pedido.');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível publicar seu pedido.'));
     } finally {
       setPublicando(false);
     }

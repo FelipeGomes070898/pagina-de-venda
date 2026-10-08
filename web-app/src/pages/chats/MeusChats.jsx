@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../../components/BottomNav';
 import { listarMinhasConversas } from '../../services/marketplaceService';
+import { mensagemErro } from '../../utils/erro';
 
 const ROTULO_STATUS = {
   pendente: 'Aguardando resposta',
@@ -25,7 +26,7 @@ export function MeusChats() {
   useEffect(() => {
     listarMinhasConversas()
       .then(setConversas)
-      .catch(() => setErro('Não foi possível carregar suas conversas.'))
+      .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar suas conversas.')))
       .finally(() => setCarregando(false));
   }, []);
 
