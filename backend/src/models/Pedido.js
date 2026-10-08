@@ -1,10 +1,27 @@
 const pool = require('../config/database');
+const { colunaExiste } = require('../utils/schema');
 
-const CAMPOS = `
+const CAMPOS_BASE = `
   id, cliente_id, prestador_id, descricao, endereco, lat, lng, valor,
   status, agendado_para, criado_em, pagamento_confirmado_em, pagamento_quando,
-  pagamento_forma, urgente, taxa_urgencia, cupom_codigo, desconto_valor
+  pagamento_forma
 `;
+
+// urgente/taxa_urgencia/cupom_codigo/desconto_valor vieram numa migração
+// mais recente (cupons/banners/taxa de urgência) — em bancos que ainda
+// não rodaram essa migração, essas colunas não existem. Sem essa
+// checagem, qualquer leitura/escrita de pedido derruba a tela inteira
+// (marketplace, chat, meus pedidos) por causa de 4 colunas opcionais.
+// Cacheado (ver utils/schema.js), então só consulta o catálogo do
+// Postgres uma vez por processo.
+async function temColunasUrgencia() {
+  return colunaExiste('pedidos', 'urgente');
+}
+
+async function campos() {
+  if (!(await temColunasUrgencia())) return CAMPOS_BASE;
+  return `${CAMPOS_BASE}, urgente, taxa_urgencia, cupom_codigo, desconto_valor`;
+}
 
 module.exports = {
   // Cliente entra em contato com um prestador específico (fecha o valor
@@ -19,21 +36,33 @@ module.exports = {
     cupomCodigo,
     descontoValor,
   }) {
+    const camposSelect = await campos();
+
+    if (await temColunasUrgencia()) {
+      const { rows } = await pool.query(
+        `INSERT INTO pedidos
+           (cliente_id, prestador_id, descricao, valor, status, urgente, taxa_urgencia, cupom_codigo, desconto_valor)
+         VALUES ($1, $2, $3, $4, 'pendente', $5, $6, $7, $8)
+         RETURNING ${camposSelect}`,
+        [
+          clienteId,
+          prestadorId,
+          descricao || null,
+          valor || null,
+          Boolean(urgente),
+          taxaUrgencia || null,
+          cupomCodigo || null,
+          descontoValor || null,
+        ],
+      );
+      return rows[0];
+    }
+
     const { rows } = await pool.query(
-      `INSERT INTO pedidos
-         (cliente_id, prestador_id, descricao, valor, status, urgente, taxa_urgencia, cupom_codigo, desconto_valor)
-       VALUES ($1, $2, $3, $4, 'pendente', $5, $6, $7, $8)
-       RETURNING ${CAMPOS}`,
-      [
-        clienteId,
-        prestadorId,
-        descricao || null,
-        valor || null,
-        Boolean(urgente),
-        taxaUrgencia || null,
-        cupomCodigo || null,
-        descontoValor || null,
-      ],
+      `INSERT INTO pedidos (cliente_id, prestador_id, descricao, valor, status)
+       VALUES ($1, $2, $3, $4, 'pendente')
+       RETURNING ${camposSelect}`,
+      [clienteId, prestadorId, descricao || null, valor || null],
     );
     return rows[0];
   },
@@ -50,20 +79,33 @@ module.exports = {
     cupomCodigo,
     descontoValor,
   }) {
+    const camposSelect = await campos();
+    const descricaoFinal = segmento ? `[${segmento}] ${descricao || ''}`.trim() : descricao;
+
+    if (await temColunasUrgencia()) {
+      const { rows } = await pool.query(
+        `INSERT INTO pedidos
+           (cliente_id, descricao, valor, status, urgente, taxa_urgencia, cupom_codigo, desconto_valor)
+         VALUES ($1, $2, $3, 'pendente', $4, $5, $6, $7)
+         RETURNING ${camposSelect}`,
+        [
+          clienteId,
+          descricaoFinal,
+          valorSugerido || null,
+          Boolean(urgente),
+          taxaUrgencia || null,
+          cupomCodigo || null,
+          descontoValor || null,
+        ],
+      );
+      return rows[0];
+    }
+
     const { rows } = await pool.query(
-      `INSERT INTO pedidos
-         (cliente_id, descricao, valor, status, urgente, taxa_urgencia, cupom_codigo, desconto_valor)
-       VALUES ($1, $2, $3, 'pendente', $4, $5, $6, $7)
-       RETURNING ${CAMPOS}`,
-      [
-        clienteId,
-        segmento ? `[${segmento}] ${descricao || ''}`.trim() : descricao,
-        valorSugerido || null,
-        Boolean(urgente),
-        taxaUrgencia || null,
-        cupomCodigo || null,
-        descontoValor || null,
-      ],
+      `INSERT INTO pedidos (cliente_id, descricao, valor, status)
+       VALUES ($1, $2, $3, 'pendente')
+       RETURNING ${camposSelect}`,
+      [clienteId, descricaoFinal, valorSugerido || null],
     );
     return rows[0];
   },
@@ -85,13 +127,17 @@ module.exports = {
       condicoes.push(`p.descricao ILIKE $${valores.length}`);
     }
 
+    const comUrgencia = await temColunasUrgencia();
+    const colunasUrgencia = comUrgencia ? ', p.urgente, p.taxa_urgencia' : '';
+    const ordenacao = comUrgencia ? 'ORDER BY p.urgente DESC, p.criado_em DESC' : 'ORDER BY p.criado_em DESC';
+
     const { rows } = await pool.query(
       `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
-              p.valor, p.status, p.agendado_para, p.criado_em, p.urgente, p.taxa_urgencia
+              p.valor, p.status, p.agendado_para, p.criado_em${colunasUrgencia}
        FROM pedidos p
        JOIN clientes c ON c.id = p.cliente_id
        WHERE ${condicoes.join(' AND ')}
-       ORDER BY p.urgente DESC, p.criado_em DESC`,
+       ${ordenacao}`,
       valores,
     );
     return rows;
@@ -107,16 +153,19 @@ module.exports = {
     const { rows } = await pool.query(
       `UPDATE pedidos SET prestador_id = $2
        WHERE id = $1 AND prestador_id IS NULL AND status = 'pendente'
-       RETURNING ${CAMPOS}`,
+       RETURNING ${await campos()}`,
       [id, prestadorId],
     );
     return rows[0] || null;
   },
 
   async listarDoCliente(clienteId) {
+    const comUrgencia = await temColunasUrgencia();
+    const colunasUrgencia = comUrgencia ? ', p.urgente, p.taxa_urgencia' : '';
+
     const { rows } = await pool.query(
       `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
-              p.valor, p.status, p.agendado_para, p.criado_em, p.urgente, p.taxa_urgencia,
+              p.valor, p.status, p.agendado_para, p.criado_em${colunasUrgencia},
               pr.nome AS contraparte_nome
        FROM pedidos p
        LEFT JOIN prestadores pr ON pr.id = p.prestador_id
@@ -128,9 +177,12 @@ module.exports = {
   },
 
   async listarDoPrestador(prestadorId) {
+    const comUrgencia = await temColunasUrgencia();
+    const colunasUrgencia = comUrgencia ? ', p.urgente, p.taxa_urgencia' : '';
+
     const { rows } = await pool.query(
       `SELECT p.id, p.cliente_id, p.prestador_id, p.descricao, p.endereco, p.lat, p.lng,
-              p.valor, p.status, p.agendado_para, p.criado_em, p.urgente, p.taxa_urgencia,
+              p.valor, p.status, p.agendado_para, p.criado_em${colunasUrgencia},
               c.nome AS contraparte_nome
        FROM pedidos p
        LEFT JOIN clientes c ON c.id = p.cliente_id
@@ -142,13 +194,13 @@ module.exports = {
   },
 
   async buscarPorId(id) {
-    const { rows } = await pool.query(`SELECT ${CAMPOS} FROM pedidos WHERE id = $1`, [id]);
+    const { rows } = await pool.query(`SELECT ${await campos()} FROM pedidos WHERE id = $1`, [id]);
     return rows[0] || null;
   },
 
   async atualizarStatus(id, status) {
     const { rows } = await pool.query(
-      `UPDATE pedidos SET status = $2 WHERE id = $1 RETURNING ${CAMPOS}`,
+      `UPDATE pedidos SET status = $2 WHERE id = $1 RETURNING ${await campos()}`,
       [id, status],
     );
     return rows[0] || null;
@@ -157,7 +209,7 @@ module.exports = {
   // Fecha o pedido com o valor combinado na negociação (proposta aceita).
   async fecharComValor(id, valor) {
     const { rows } = await pool.query(
-      `UPDATE pedidos SET status = 'andamento', valor = $2 WHERE id = $1 RETURNING ${CAMPOS}`,
+      `UPDATE pedidos SET status = 'andamento', valor = $2 WHERE id = $1 RETURNING ${await campos()}`,
       [id, valor],
     );
     return rows[0] || null;
@@ -168,7 +220,7 @@ module.exports = {
   async confirmarPagamento(id, { quando, forma }) {
     const { rows } = await pool.query(
       `UPDATE pedidos SET pagamento_confirmado_em = NOW(), pagamento_quando = $2, pagamento_forma = $3
-       WHERE id = $1 RETURNING ${CAMPOS}`,
+       WHERE id = $1 RETURNING ${await campos()}`,
       [id, quando, forma || null],
     );
     return rows[0] || null;
@@ -177,7 +229,7 @@ module.exports = {
   // Endereço só é gravado quando o pedido é fechado (aceito) no chat.
   async definirEndereco(id, { endereco, lat, lng }) {
     const { rows } = await pool.query(
-      `UPDATE pedidos SET endereco = $2, lat = $3, lng = $4 WHERE id = $1 RETURNING ${CAMPOS}`,
+      `UPDATE pedidos SET endereco = $2, lat = $3, lng = $4 WHERE id = $1 RETURNING ${await campos()}`,
       [id, endereco, lat || null, lng || null],
     );
     return rows[0] || null;
@@ -196,13 +248,18 @@ module.exports = {
   // circulou), separado da receita de taxa de urgência e do desconto
   // total concedido em cupons.
   async metricasNegocio() {
+    const comUrgencia = await temColunasUrgencia();
+    const colunasExtras = comUrgencia
+      ? `,
+         COALESCE(SUM(taxa_urgencia) FILTER (WHERE status = 'concluido' AND urgente), 0) AS receita_urgencia,
+         COALESCE(SUM(desconto_valor) FILTER (WHERE status = 'concluido'), 0) AS desconto_cupons`
+      : `, 0 AS receita_urgencia, 0 AS desconto_cupons`;
+
     const { rows } = await pool.query(
       `SELECT
          COUNT(*) FILTER (WHERE status = 'concluido') AS total_concluidos,
          COALESCE(SUM(valor) FILTER (WHERE status = 'concluido'), 0) AS gmv,
-         COALESCE(AVG(valor) FILTER (WHERE status = 'concluido'), 0) AS ticket_medio,
-         COALESCE(SUM(taxa_urgencia) FILTER (WHERE status = 'concluido' AND urgente), 0) AS receita_urgencia,
-         COALESCE(SUM(desconto_valor) FILTER (WHERE status = 'concluido'), 0) AS desconto_cupons
+         COALESCE(AVG(valor) FILTER (WHERE status = 'concluido'), 0) AS ticket_medio${colunasExtras}
        FROM pedidos`,
     );
     return rows[0];

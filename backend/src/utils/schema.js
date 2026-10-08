@@ -19,4 +19,22 @@ async function tabelaExiste(nome) {
   return existe;
 }
 
-module.exports = { tabelaExiste };
+const cacheColunas = new Map();
+
+async function colunaExiste(tabela, coluna) {
+  const chave = `${tabela}.${coluna}`;
+  if (cacheColunas.has(chave)) return cacheColunas.get(chave);
+
+  const { rows } = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_name = $1 AND column_name = $2
+     ) AS existe`,
+    [tabela, coluna],
+  );
+  const existe = rows[0].existe;
+  cacheColunas.set(chave, existe);
+  return existe;
+}
+
+module.exports = { tabelaExiste, colunaExiste };
