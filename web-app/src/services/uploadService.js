@@ -50,16 +50,27 @@ export async function enviarImagem(arquivo, pathname) {
     corpo = arquivo;
   }
 
-  const resultado = await comTimeout(
-    upload(pathname, corpo, {
-      access: 'public',
-      contentType: 'image/jpeg',
-      handleUploadUrl: `${API_URL}/api/uploads/handle-blob`,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    }),
-    30000,
-    'Tempo esgotado enviando a foto. Verifique sua internet e tente de novo.',
-  );
-
-  return resultado.url;
+  try {
+    const resultado = await comTimeout(
+      upload(pathname, corpo, {
+        access: 'public',
+        contentType: 'image/jpeg',
+        handleUploadUrl: `${API_URL}/api/uploads/handle-blob`,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }),
+      30000,
+      // O SDK do Vercel Blob tenta de novo sozinho (até 10x, com espera
+      // crescente) quando o servidor devolve um erro que ele não
+      // reconhece — então um backend sem BLOB_READ_WRITE_TOKEN
+      // configurado (ver backend/src/config/blob.js) também aparece
+      // como "demorou demais", não como o erro real. Por isso a
+      // mensagem já aponta as duas causas prováveis, em vez de só
+      // sugerir "internet ruim".
+      'Tempo esgotado enviando a foto. Pode ser sua internet, ou o armazenamento de imagens ainda não estar configurado no servidor — avise o suporte se continuar em toda tentativa.',
+    );
+    return resultado.url;
+  } catch (erro) {
+    if (erro?.message?.includes('esgotado')) throw erro;
+    throw new Error('Não foi possível enviar a foto agora. Tente novamente em instantes.');
+  }
 }
