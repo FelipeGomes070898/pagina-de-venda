@@ -13,6 +13,8 @@ import { ProProfileScreen } from '@/screens/profile/ProProfileScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { ReviewScreen } from '@/screens/orders/ReviewScreen';
 import { ReviewClienteScreen } from '@/screens/orders/ReviewClienteScreen';
+import { TornarPrestadorScreen } from '@/screens/profile/TornarPrestadorScreen';
+import { MapaTrabalhadoresScreen } from '@/screens/marketplace/MapaTrabalhadoresScreen';
 import { useAuthStore } from '@/store/authStore';
 import { configurarAberturaPorNotificacao } from '@/services/notificationService';
 
@@ -77,6 +79,8 @@ export function AppNavigator() {
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="Review" component={ReviewScreen} />
             <Stack.Screen name="ReviewCliente" component={ReviewClienteScreen} />
+            <Stack.Screen name="TornarPrestador" component={TornarPrestadorScreen} />
+            <Stack.Screen name="MapaTrabalhadores" component={MapaTrabalhadoresScreen} />
           </>
         )}
 

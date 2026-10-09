@@ -17,4 +17,6 @@ export type RootStackParamList = {
   Chat: { pedidoId: string; prestadorNome: string };
   Review: { pedidoId: string; prestadorNome: string };
   ReviewCliente: { pedidoId: string; clienteNome: string };
+  TornarPrestador: undefined;
+  MapaTrabalhadores: undefined;
 };

@@ -93,6 +93,32 @@ export async function buscarPrestador(
   return data;
 }
 
+export interface PrestadorMapa {
+  id: string;
+  nome: string;
+  segmento: string | null;
+  fotoUrl: string | null;
+  avatarGenero: 'masculino' | 'feminino' | 'neutro';
+  distanciaKm: number | null;
+}
+
+// Mapa de trabalhadores disponíveis (tela inicial) — o backend nunca
+// devolve coordenada nenhuma aqui, só a distância até quem pediu (ver
+// Prestador.listarParaMapa no backend).
+export async function listarMapaPrestadores(filtros: {
+  cidade?: string;
+  lat?: number;
+  lng?: number;
+} = {}): Promise<PrestadorMapa[]> {
+  const { data } = await api.get<PrestadorMapa[]>('/api/prestadores/mapa', { params: filtros });
+  return data;
+}
+
+export async function definirAvatarPrestador(avatarGenero: 'masculino' | 'feminino'): Promise<Prestador> {
+  const { data } = await api.put<Prestador>('/api/prestadores/me/avatar', { avatarGenero });
+  return data;
+}
+
 export async function contatarPrestador(prestadorId: string, descricao?: string): Promise<Pedido> {
   const { data } = await api.post<Pedido>('/api/pedidos', { prestadorId, descricao });
   return data;

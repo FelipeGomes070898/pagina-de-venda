@@ -13,17 +13,23 @@ import {
   View,
 } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '@/navigation/types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import { MainTabParamList, RootStackParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
-import { meuPerfil, exportarDados, excluirConta, MeuPerfil } from '@/services/authService';
+import { meuPerfil, exportarDados, excluirConta, trocarPapel, MeuPerfil } from '@/services/authService';
 import { adicionarServico, removerServico } from '@/services/servicoPrestadorService';
-import { listarMinhasConversas } from '@/services/marketplaceService';
+import { listarMinhasConversas, definirAvatarPrestador } from '@/services/marketplaceService';
 import { mascararCPF, mascararTelefoneBR } from '@/utils/masks';
 import { DocumentoLegalModal } from '@/components/common/DocumentoLegalModal';
 import { MapaTrabalhos } from '@/components/common/MapaTrabalhos';
+import { Boneco, OPCOES_BONECO } from '@/utils/bonecos';
 
-type Props = BottomTabScreenProps<MainTabParamList, 'PerfilTab'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'PerfilTab'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 const ROTULO_TIPO: Record<string, string> = {
   cliente: 'Cliente',
@@ -35,11 +41,14 @@ const ROTULO_COBRANCA: Record<string, string> = {
   fixo_mensal: 'R$ 25,00 fixo por mês',
 };
 
-export function PerfilScreen(_props: Props) {
+export function PerfilScreen({ navigation }: Props) {
   const usuario = useAuthStore((s) => s.usuario);
   const logout = useAuthStore((s) => s.logout);
+  const definirSessao = useAuthStore((s) => s.definirSessao);
 
   const [perfil, setPerfil] = useState<MeuPerfil | null>(null);
+  const [trocandoPapel, setTrocandoPapel] = useState(false);
+  const [salvandoAvatar, setSalvandoAvatar] = useState(false);
   const [locaisTrabalho, setLocaisTrabalho] = useState<
     { id: string; lat: number; lng: number; endereco: string | null; criado_em: string }[]
   >([]);
@@ -72,6 +81,38 @@ export function PerfilScreen(_props: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Troca de "modo" (cliente ⇄ prestador) sem deslogar — a conta já
+  // tem os dois papéis vinculados (ver tornar-se-prestador abaixo).
+  async function aoTrocarPapel() {
+    setTrocandoPapel(true);
+    try {
+      const { token, usuario: novoUsuario } = await trocarPapel();
+      definirSessao({ token, usuario: novoUsuario });
+      // O perfil local (temPapelPrestador/temPapelCliente, dados de
+      // prestador etc.) ainda descreve o papel antigo — recarrega pra
+      // refletir o papel novo sem precisar sair da tela.
+      const novoPerfil = await meuPerfil();
+      setPerfil(novoPerfil);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível trocar de modo agora.');
+    } finally {
+      setTrocandoPapel(false);
+    }
+  }
+
+  async function aoEscolherBoneco(valor: 'masculino' | 'feminino') {
+    if (salvandoAvatar || perfil?.avatarGenero === valor) return;
+    setSalvandoAvatar(true);
+    try {
+      await definirAvatarPrestador(valor);
+      setPerfil((p) => (p ? { ...p, avatarGenero: valor } : p));
+    } catch {
+      Alert.alert('Erro', 'Não foi possível salvar seu boneco agora.');
+    } finally {
+      setSalvandoAvatar(false);
+    }
+  }
 
   function aoSair() {
     Alert.alert('Sair', 'Tem certeza que deseja sair da sua conta?', [
@@ -153,6 +194,26 @@ export function PerfilScreen(_props: Props) {
         )}
         <Text style={styles.nome}>{usuario?.nome || 'Usuário'}</Text>
         <Text style={styles.tipo}>{ROTULO_TIPO[usuario?.tipo || ''] || usuario?.tipo}</Text>
+
+        {usuario?.tipo === 'cliente' && !perfil?.temPapelPrestador && (
+          <TouchableOpacity
+            style={styles.botaoPapel}
+            onPress={() => navigation.navigate('TornarPrestador')}
+          >
+            <Text style={styles.botaoPapelTexto}>+ Quero também trabalhar</Text>
+          </TouchableOpacity>
+        )}
+
+        {((usuario?.tipo === 'cliente' && perfil?.temPapelPrestador) ||
+          (usuario?.tipo === 'prestador' && perfil?.temPapelCliente)) && (
+          <TouchableOpacity style={styles.botaoPapel} onPress={aoTrocarPapel} disabled={trocandoPapel}>
+            <Text style={styles.botaoPapelTexto}>
+              {trocandoPapel
+                ? 'Trocando...'
+                : `Mudar para modo ${usuario?.tipo === 'cliente' ? 'prestador' : 'cliente'}`}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {carregando ? (
@@ -201,6 +262,31 @@ export function PerfilScreen(_props: Props) {
                   valor={`★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
                 />
                 <Campo label="Serviços concluídos" valor={String(perfil.total_servicos ?? 0)} />
+              </View>
+            )}
+
+            {perfil.tipo === 'prestador' && (
+              <View style={styles.secao}>
+                <Text style={styles.secaoTitulo}>Seu boneco no mapa</Text>
+                <Text style={styles.albumAjuda}>
+                  Esse é o ícone que aparece representando você no mapa de trabalhadores.
+                </Text>
+                <View style={styles.listaBonecos}>
+                  {OPCOES_BONECO.map((opcao) => {
+                    const ativo = (perfil.avatarGenero || 'neutro') === opcao.valor;
+                    return (
+                      <TouchableOpacity
+                        key={opcao.valor}
+                        style={[styles.bonecoOpcao, ativo && styles.bonecoOpcaoAtiva]}
+                        onPress={() => aoEscolherBoneco(opcao.valor)}
+                        disabled={salvandoAvatar}
+                      >
+                        <Boneco genero={opcao.valor} tamanho={44} />
+                        <Text style={styles.bonecoRotulo}>{opcao.rotulo}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
             )}
 
@@ -395,6 +481,30 @@ const styles = StyleSheet.create({
   avatarFoto: { width: 72, height: 72, borderRadius: 36, marginBottom: spacing.md },
   nome: { color: colors.textForte, fontWeight: '800', fontSize: 18 },
   tipo: { color: colors.muted, fontSize: 13, marginTop: 2 },
+  botaoPapel: {
+    marginTop: spacing.md,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.laranja,
+    backgroundColor: colors.bg,
+  },
+  botaoPapelTexto: { color: colors.laranjaEscuro, fontWeight: '700', fontSize: 12.5 },
+  listaBonecos: { flexDirection: 'row', gap: 10, marginTop: spacing.sm },
+  bonecoOpcao: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.bg3,
+  },
+  bonecoOpcaoAtiva: { borderColor: colors.laranja, backgroundColor: colors.laranjaSoft },
+  bonecoRotulo: { color: colors.textForte, fontSize: 11.5, fontWeight: '600' },
   secao: {
     backgroundColor: colors.bg2,
     borderRadius: radius.lg,

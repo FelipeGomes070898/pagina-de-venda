@@ -87,6 +87,28 @@ export async function loginComGoogle(idToken: string): Promise<LoginGoogleRespon
   return data;
 }
 
+export interface TornarPrestadorPayload {
+  segmento: string;
+  valorServico?: number;
+  modeloCobranca: ModeloCobranca;
+}
+
+// Cliente que também quer trabalhar — cria o perfil de prestador
+// vinculado à mesma conta (reaproveita nome/e-mail/telefone/CPF/senha),
+// sem gerar um segundo login. A resposta já vem pronta pra entrar
+// direto no "modo prestador" via authStore.definirSessao.
+export async function tornarPrestador(payload: TornarPrestadorPayload): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>('/api/auth/me/tornar-prestador', payload);
+  return data;
+}
+
+// Troca de "modo" (cliente ⇄ prestador) sem deslogar — emite um token
+// novo pro papel vinculado na mesma conta.
+export async function trocarPapel(): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>('/api/auth/me/trocar-papel');
+  return data;
+}
+
 export interface FotoTrabalho {
   id: string;
   url: string;
@@ -117,6 +139,9 @@ export interface MeuPerfil {
   status?: 'ativo' | 'inadimplente' | 'bloqueado';
   fotos?: FotoTrabalho[];
   servicos?: { id: string; categoria: string; valor: number | null; descricao?: string | null }[];
+  avatarGenero?: 'masculino' | 'feminino' | 'neutro' | null;
+  temPapelPrestador?: boolean;
+  temPapelCliente?: boolean;
 }
 
 export async function meuPerfil(): Promise<MeuPerfil> {

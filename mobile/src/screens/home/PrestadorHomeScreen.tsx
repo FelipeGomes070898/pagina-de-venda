@@ -118,7 +118,12 @@ export function PrestadorHomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.titulo}>Olá, {perfil?.nome?.split(' ')[0] || ''}</Text>
+        <View style={styles.tituloLinha}>
+          <Text style={styles.titulo}>Olá, {perfil?.nome?.split(' ')[0] || ''}</Text>
+          <TouchableOpacity style={styles.botaoMapa} onPress={() => navigation.navigate('MapaTrabalhadores')}>
+            <Text style={styles.botaoMapaTexto}>🗺️ Mapa</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
@@ -237,7 +242,17 @@ export function PrestadorHomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte, marginBottom: spacing.md },
+  tituloLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+  titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte },
+  botaoMapa: {
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg2,
+  },
+  botaoMapaTexto: { color: colors.text, fontSize: 12.5, fontWeight: '700' },
   statsCard: {
     flexDirection: 'row',
     backgroundColor: colors.bg2,
