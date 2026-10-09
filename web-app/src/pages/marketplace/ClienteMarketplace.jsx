@@ -13,7 +13,10 @@ import {
   publicarPedidoAberto,
   validarCupom,
 } from '../../services/marketplaceService';
+import { meuPerfil } from '../../services/authService';
 import { mensagemErro } from '../../utils/erro';
+
+const CHAVE_OFERTA_FECHADA = 'konectaja:ofertaServicoFechada';
 
 export function ClienteMarketplace() {
   const cidadeUsuario = useAuthStore((s) => s.usuario?.cidade);
@@ -44,12 +47,39 @@ export function ClienteMarketplace() {
 
   const [banners, setBanners] = useState([]);
 
+  // Convite pra virar prestador também: qualquer cliente pode ter uma
+  // habilidade/ofício próprio (marcenaria, costura, qualquer coisa) e
+  // não necessariamente vai pensar nisso sozinho — por isso o convite
+  // fica bem visível aqui na Home, não escondido dentro do Perfil.
+  // Guardado no localStorage pra não insistir depois que a pessoa já
+  // dispensou (mesmo padrão das preferências da AjudaBar).
+  const [temPapelPrestador, setTemPapelPrestador] = useState(null);
+  const [ofertaFechada, setOfertaFechada] = useState(() => {
+    try {
+      return localStorage.getItem(CHAVE_OFERTA_FECHADA) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  function fecharOferta() {
+    setOfertaFechada(true);
+    try {
+      localStorage.setItem(CHAVE_OFERTA_FECHADA, 'true');
+    } catch {
+      // localStorage pode estar bloqueado (modo anônimo) — não é crítico
+    }
+  }
+
   useEffect(() => {
     obterLocalizacaoAtual()
       .then(setCoordenadas)
       .finally(() => setBuscandoLocalizacao(false));
     listarBannersAtivos()
       .then(setBanners)
+      .catch(() => {});
+    meuPerfil()
+      .then((p) => setTemPapelPrestador(Boolean(p.temPapelPrestador)))
       .catch(() => {});
   }, []);
 
@@ -160,6 +190,22 @@ export function ClienteMarketplace() {
         )}
 
         <h1 style={styles.titulo}>Marketplace</h1>
+
+        {temPapelPrestador === false && !ofertaFechada && (
+          <div style={styles.ofertaCard}>
+            <button style={styles.ofertaFechar} onClick={fecharOferta} aria-label="Dispensar">
+              ✕
+            </button>
+            <p style={styles.ofertaTitulo}>💡 Você também sabe fazer algo?</p>
+            <p style={styles.ofertaTexto}>
+              Marcenaria, pintura, costura, aulas, jardinagem... qualquer serviço que você souber fazer pode
+              virar uma renda extra. Oferecer é rápido e não precisa criar outra conta.
+            </p>
+            <button style={styles.ofertaBotao} onClick={() => navigate('/perfil/tornar-prestador')}>
+              Oferecer meu serviço
+            </button>
+          </div>
+        )}
 
         <button style={styles.botaoMapa} onClick={() => navigate('/mapa-trabalhadores')}>
           🗺️ Ver mapa de trabalhadores
@@ -330,6 +376,40 @@ const styles = {
   pagina: { minHeight: '100vh' },
   container: { maxWidth: 640, margin: '0 auto', padding: '24px 24px 104px' },
   titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 12px' },
+  ofertaCard: {
+    position: 'relative',
+    background: 'linear-gradient(135deg, var(--konectaja-laranja-soft), var(--konectaja-bg2))',
+    border: '1px solid var(--konectaja-laranja)',
+    borderRadius: 16,
+    padding: '18px 20px',
+    marginBottom: 16,
+  },
+  ofertaFechar: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    border: 'none',
+    background: 'rgba(0,0,0,0.06)',
+    color: 'var(--konectaja-muted)',
+    fontSize: 12,
+    lineHeight: '26px',
+    padding: 0,
+  },
+  ofertaTitulo: { color: 'var(--konectaja-text-forte)', fontWeight: 800, fontSize: 15, margin: '0 28px 6px 0' },
+  ofertaTexto: { color: 'var(--konectaja-text)', fontSize: 13, lineHeight: 1.5, margin: '0 0 14px' },
+  ofertaBotao: {
+    height: 42,
+    padding: '0 18px',
+    borderRadius: 12,
+    border: 'none',
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 13.5,
+  },
   botaoMapa: {
     display: 'block',
     height: 36,

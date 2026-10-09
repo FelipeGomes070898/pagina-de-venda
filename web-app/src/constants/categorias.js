@@ -12,4 +12,5 @@ export const CATEGORIAS = [
   'Cuidador de idosos',
   'Motorista particular',
   'Montador de móveis',
+  'Marceneiro',
 ];

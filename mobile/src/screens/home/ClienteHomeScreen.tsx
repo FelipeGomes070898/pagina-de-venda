@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -34,7 +35,10 @@ import {
   validarCupom,
 } from '@/services/marketplaceService';
 import { Coordenadas, obterLocalizacaoComPermissao } from '@/services/locationService';
+import { meuPerfil } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
+
+const CHAVE_OFERTA_FECHADA = '@konectaja/oferta_servico_fechada';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'MarketplaceTab'>,
@@ -73,12 +77,35 @@ export function ClienteHomeScreen({ navigation }: Props) {
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null);
   const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(true);
 
+  // Convite pra virar prestador também: qualquer cliente pode ter uma
+  // habilidade/ofício próprio (marcenaria, costura, qualquer coisa) —
+  // fica visível aqui na Home, não escondido dentro do Perfil. Some
+  // sozinho depois que a pessoa já tem papel de prestador, e fica
+  // dispensado (AsyncStorage) depois que ela fecha o card uma vez.
+  const [temPapelPrestador, setTemPapelPrestador] = useState<boolean | null>(null);
+  const [ofertaFechada, setOfertaFechada] = useState(false);
+
+  async function fecharOferta() {
+    setOfertaFechada(true);
+    try {
+      await AsyncStorage.setItem(CHAVE_OFERTA_FECHADA, 'true');
+    } catch {
+      // AsyncStorage indisponível — não é crítico
+    }
+  }
+
   useEffect(() => {
     obterLocalizacaoComPermissao()
       .then(setCoordenadas)
       .finally(() => setBuscandoLocalizacao(false));
     listarBannersAtivos()
       .then(setBanners)
+      .catch(() => {});
+    meuPerfil()
+      .then((p) => setTemPapelPrestador(Boolean(p.temPapelPrestador)))
+      .catch(() => {});
+    AsyncStorage.getItem(CHAVE_OFERTA_FECHADA)
+      .then((valor) => setOfertaFechada(valor === 'true'))
       .catch(() => {});
   }, []);
 
@@ -199,6 +226,23 @@ export function ClienteHomeScreen({ navigation }: Props) {
             <Text style={styles.botaoMapaTexto}>🗺️ Mapa</Text>
           </TouchableOpacity>
         </View>
+
+        {temPapelPrestador === false && !ofertaFechada && (
+          <View style={styles.ofertaCard}>
+            <TouchableOpacity style={styles.ofertaFechar} onPress={fecharOferta} hitSlop={8}>
+              <Text style={styles.ofertaFecharTexto}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.ofertaTitulo}>💡 Você também sabe fazer algo?</Text>
+            <Text style={styles.ofertaTexto}>
+              Marcenaria, pintura, costura, aulas, jardinagem... qualquer serviço que você souber fazer pode
+              virar uma renda extra. Oferecer é rápido e não precisa criar outra conta.
+            </Text>
+            <TouchableOpacity style={styles.ofertaBotao} onPress={() => navigation.navigate('TornarPrestador')}>
+              <Text style={styles.ofertaBotaoTexto}>Oferecer meu serviço</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {aba === 'prestadores' && (
           <TextInput
             style={styles.buscaInput}
@@ -401,6 +445,28 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
   tituloLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
   titulo: { fontSize: 22, fontWeight: '800', color: colors.textForte },
+  ofertaCard: {
+    backgroundColor: colors.laranjaSoft,
+    borderWidth: 1,
+    borderColor: colors.laranja,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  ofertaFechar: { position: 'absolute', top: 8, right: 8, width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
+  ofertaFecharTexto: { color: colors.muted, fontSize: 13 },
+  ofertaTitulo: { color: colors.textForte, fontWeight: '800', fontSize: 14.5, marginRight: 28, marginBottom: 4 },
+  ofertaTexto: { color: colors.text, fontSize: 12.5, lineHeight: 18, marginBottom: 12 },
+  ofertaBotao: {
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.laranjaEscuro,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+  },
+  ofertaBotaoTexto: { color: '#fff', fontWeight: '700', fontSize: 13 },
   botaoMapa: {
     paddingVertical: 7,
     paddingHorizontal: 12,

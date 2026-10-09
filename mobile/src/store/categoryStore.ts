@@ -20,6 +20,7 @@ const CATEGORIAS_FIXAS: Categoria[] = [
   { id: 'cuidador', nome: 'Cuidador de idosos', icone: '🤝' },
   { id: 'motorista', nome: 'Motorista particular', icone: '🚗' },
   { id: 'montador', nome: 'Montador de móveis', icone: '🪛' },
+  { id: 'marceneiro', nome: 'Marceneiro', icone: '🪵' },
 ];
 
 interface CategoryState {
