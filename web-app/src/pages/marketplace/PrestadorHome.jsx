@@ -97,12 +97,7 @@ export function PrestadorHome() {
       <BottomNav />
 
       <main style={styles.container}>
-        <div style={styles.cabecalhoLinha}>
-          <h1 style={styles.titulo}>Olá, {perfil?.nome?.split(' ')[0] || ''}</h1>
-          <button style={styles.botaoMapa} onClick={() => navigate('/mapa-trabalhadores')}>
-            🗺️ Mapa
-          </button>
-        </div>
+        <h1 style={styles.titulo}>Olá, {perfil?.nome?.split(' ')[0] || ''}</h1>
 
         <div style={styles.statsCard}>
           <div style={styles.statItem}>
@@ -116,12 +111,17 @@ export function PrestadorHome() {
           </div>
         </div>
 
-        {status && (
-          <div style={{ ...styles.statusChip, borderColor: status.cor }}>
-            <span style={{ ...styles.statusBolinha, background: status.cor }} />
-            <span style={{ color: status.cor, fontWeight: 700, fontSize: 12 }}>{status.texto}</span>
-          </div>
-        )}
+        <div style={styles.linhaStatusMapa}>
+          {status && (
+            <div style={{ ...styles.statusChip, borderColor: status.cor }}>
+              <span style={{ ...styles.statusBolinha, background: status.cor }} />
+              <span style={{ color: status.cor, fontWeight: 700, fontSize: 12 }}>{status.texto}</span>
+            </div>
+          )}
+          <button style={styles.botaoMapa} onClick={() => navigate('/mapa-trabalhadores')}>
+            🗺️ Ver mapa de trabalhadores
+          </button>
+        </div>
 
         <div style={styles.abas}>
           <button
@@ -204,8 +204,8 @@ export function PrestadorHome() {
 const styles = {
   pagina: { minHeight: '100vh' },
   container: { maxWidth: 640, margin: '0 auto', padding: '24px 24px 104px' },
-  titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: 0 },
-  cabecalhoLinha: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 16px' },
+  linhaStatusMapa: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   botaoMapa: {
     height: 36,
     padding: '0 14px',
