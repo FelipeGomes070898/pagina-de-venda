@@ -113,7 +113,12 @@ async function removerServico(req, res) {
 // cliente e prestador (ver Prestador.listarParaMapa — nunca devolve
 // coordenada exata).
 async function mapaPrestadores(req, res) {
-  const prestadores = await Prestador.listarParaMapa({ cidade: req.query.cidade });
+  const { cidade, lat, lng } = req.query;
+  const prestadores = await Prestador.listarParaMapa({
+    cidade,
+    lat: lat ? Number(lat) : undefined,
+    lng: lng ? Number(lng) : undefined,
+  });
   res.json(prestadores);
 }
 

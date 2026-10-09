@@ -500,58 +500,52 @@ module.exports = {
     return rows[0];
   },
 
-  // Mapa de trabalhadores disponíveis (tela inicial): nunca devolve a
-  // coordenada exata de ninguém — soma um deslocamento pseudo-aleatório
-  // (mas estável, sempre o mesmo pro mesmo prestador) de até ~400m,
-  // pro pino dar uma ideia de "tem gente por aqui" sem expor onde o
-  // prestador mora de verdade. Mesmo cuidado que ocultarPii já tinha
-  // com /prestadores e /prestadores/:id (ver prestadorController.js).
-  async listarParaMapa({ cidade } = {}) {
+  // Mapa de trabalhadores disponíveis (tela inicial): NUNCA devolve
+  // nenhuma coordenada — nem exata, nem aproximada. Só a distância até
+  // quem está olhando (Haversine, mesma fórmula de listarAtivos), pra
+  // dar uma ideia de "tem gente a X km" sem revelar onde o prestador
+  // está ou mora. Mesmo cuidado que ocultarPii já tinha com
+  // /prestadores e /prestadores/:id (ver prestadorController.js).
+  async listarParaMapa({ cidade, lat, lng } = {}) {
     const temAvatar = await colunaExiste('prestadores', 'avatar_genero');
     const camposExtra = temAvatar ? ', avatar_genero' : '';
 
-    const condicoes = [`status = 'ativo'`, 'lat IS NOT NULL', 'lng IS NOT NULL'];
+    const usarDistancia = lat != null && lng != null;
+    let colunaDistancia = 'NULL AS distancia_km';
     const valores = [];
+    if (usarDistancia) {
+      valores.push(lat, lng);
+      colunaDistancia = `
+        ROUND((6371 * acos(
+          LEAST(1, GREATEST(-1,
+            cos(radians($1)) * cos(radians(lat)) *
+            cos(radians(lng) - radians($2)) +
+            sin(radians($1)) * sin(radians(lat))
+          ))
+        ))::numeric, 1) AS distancia_km
+      `;
+    }
+
+    const condicoes = [`status = 'ativo'`, 'lat IS NOT NULL', 'lng IS NOT NULL'];
     if (cidade) {
       valores.push(cidade);
       condicoes.push(`cidade = $${valores.length}`);
     }
 
     const { rows } = await pool.query(
-      `SELECT id, nome, segmento, lat, lng, foto_url${camposExtra}
-       FROM prestadores WHERE ${condicoes.join(' AND ')}`,
+      `SELECT id, nome, segmento, foto_url, ${colunaDistancia}${camposExtra}
+       FROM prestadores WHERE ${condicoes.join(' AND ')}
+       ORDER BY ${usarDistancia ? 'distancia_km ASC' : 'criado_em DESC'}`,
       valores,
     );
 
-    return rows.map((p) => {
-      const { dLat, dLng } = deslocamentoEstavel(p.id);
-      return {
-        id: p.id,
-        nome: p.nome,
-        segmento: p.segmento,
-        fotoUrl: p.foto_url,
-        avatarGenero: temAvatar ? p.avatar_genero || 'neutro' : 'neutro',
-        lat: Number(p.lat) + dLat,
-        lng: Number(p.lng) + dLng,
-      };
-    });
+    return rows.map((p) => ({
+      id: p.id,
+      nome: p.nome,
+      segmento: p.segmento,
+      fotoUrl: p.foto_url,
+      avatarGenero: temAvatar ? p.avatar_genero || 'neutro' : 'neutro',
+      distanciaKm: p.distancia_km != null ? Number(p.distancia_km) : null,
+    }));
   },
 };
-
-// Desloca um ponto em até ~400m numa direção/distância derivada do id
-// do prestador (sempre o mesmo resultado pro mesmo id, então o pino
-// não "pula" a cada recarregamento) — só pra não devolver a coordenada
-// exata de ninguém num mapa que qualquer cliente ou prestador vê.
-function deslocamentoEstavel(id) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  const anguloRand = (hash % 3600) / 3600; // 0..1
-  const distRand = ((hash >>> 4) % 1000) / 1000; // 0..1
-  const raioGraus = 0.0036; // ~400m em latitudes do Brasil
-
-  const angulo = anguloRand * 2 * Math.PI;
-  const distancia = Math.sqrt(distRand) * raioGraus; // uniforme no disco
-  return { dLat: Math.cos(angulo) * distancia, dLng: Math.sin(angulo) * distancia };
-}
