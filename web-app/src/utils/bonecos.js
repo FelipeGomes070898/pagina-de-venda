@@ -1,17 +1,20 @@
-// "Boneco" do trabalhador — usado como pino no mapa e como ícone de
-// avatar quando o prestador ainda não tem foto de perfil própria.
-// Cada opção tem cor E silhueta diferentes (nunca só a cor), pra
-// continuar distinguível pra quem tem daltonismo. Tudo fica dentro de
-// um círculo (clip-path), então não tem risco de "vazar" nada feio
-// fora do badge por causa de coordenadas aproximadas.
+// "Boneco" do trabalhador — escolhido uma vez no cadastro do
+// prestador, usado depois como pino no mapa (sem nenhuma legenda
+// pública dizendo qual é qual — isso é só um detalhe de cadastro, não
+// uma informação que o público precisa ver). Cada opção tem cor E
+// silhueta diferentes (nunca só a cor), pra continuar distinguível pra
+// quem tem daltonismo. Tudo fica dentro de um círculo (clip-path),
+// então não tem risco de "vazar" nada feio fora do badge por causa de
+// coordenadas aproximadas.
 export const BONECOS = [
   { valor: 'masculino', rotulo: 'Masculino', cor: '#2563eb' },
   { valor: 'feminino', rotulo: 'Feminino', cor: '#db2777' },
-  { valor: 'neutro', rotulo: 'Neutro', cor: '#d97706' },
 ];
 
+const COR_PADRAO = '#d97706';
+
 function corPorGenero(genero) {
-  return BONECOS.find((b) => b.valor === genero)?.cor || BONECOS[2].cor;
+  return BONECOS.find((b) => b.valor === genero)?.cor || COR_PADRAO;
 }
 
 // Silhueta branca (cabeça + ombros), clipada dentro do círculo —

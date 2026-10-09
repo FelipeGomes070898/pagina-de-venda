@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { SubPaginaHeader } from '../../components/SubPaginaHeader';
 import { carregarGoogleMaps } from '../../services/mapsService';
 import { listarMapaPrestadores } from '../../services/marketplaceService';
-import { dataUriBoneco, BONECOS } from '../../utils/bonecos';
+import { dataUriBoneco } from '../../utils/bonecos';
 import { obterLocalizacaoAtual } from '../../services/locationService';
 import { useAuthStore } from '../../store/authStore';
 
@@ -80,15 +80,6 @@ export function MapaTrabalhadores() {
           de ninguém.
         </p>
 
-        <div style={styles.legenda}>
-          {BONECOS.map((b) => (
-            <span key={b.valor} style={styles.legendaItem}>
-              <img src={dataUriBoneco(b.valor, { tamanho: 20 })} alt="" style={styles.legendaIcone} />
-              {b.rotulo}
-            </span>
-          ))}
-        </div>
-
         {erro && <p style={styles.erro}>{erro}</p>}
 
         {prestadores === null ? (
@@ -109,9 +100,6 @@ const styles = {
   pagina: { minHeight: '100vh' },
   container: { maxWidth: 640, margin: '0 auto', padding: '20px 24px 48px' },
   ajuda: { color: 'var(--konectaja-muted)', fontSize: 12.5, marginTop: 0, marginBottom: 12, lineHeight: 1.5 },
-  legenda: { display: 'flex', gap: 14, marginBottom: 14, flexWrap: 'wrap' },
-  legendaItem: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--konectaja-text)' },
-  legendaIcone: { width: 20, height: 20 },
   erro: { color: 'var(--konectaja-red)', fontSize: 13, marginBottom: 10 },
   info: { color: 'var(--konectaja-muted)', fontSize: 13, textAlign: 'center', marginTop: 24 },
   mapa: { width: '100%', height: 420, borderRadius: 14, overflow: 'hidden' },

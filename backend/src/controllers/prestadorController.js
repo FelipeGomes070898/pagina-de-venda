@@ -117,7 +117,7 @@ async function mapaPrestadores(req, res) {
   res.json(prestadores);
 }
 
-const AVATARES_VALIDOS = ['masculino', 'feminino', 'neutro'];
+const AVATARES_VALIDOS = ['masculino', 'feminino'];
 
 async function definirAvatar(req, res) {
   if (req.usuarioApp.tipo !== 'prestador') {
