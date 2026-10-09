@@ -174,7 +174,11 @@ export function ProfessionalProfile() {
 const styles = {
   pagina: { minHeight: '100vh' },
   centro: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--konectaja-muted)' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  // Os ícones de Ajuda e Perfil ficam fixos no canto superior direito da
+  // tela inteira (ver AjudaBar/PerfilBar) — por isso os dois botões deste
+  // cabeçalho ficam agrupados à esquerda, em vez de "space-between", pra
+  // nunca disputar espaço com eles.
+  header: { display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
   voltar: {
     background: 'transparent',
     border: 'none',
