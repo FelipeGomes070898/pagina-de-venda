@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../../components/BottomNav';
 import { listarMinhasConversas } from '../../services/marketplaceService';
 import { mensagemErro } from '../../utils/erro';
+
+const INTERVALO_ATUALIZACAO_MS = 5000;
 
 const ROTULO_STATUS = {
   pendente: 'Aguardando resposta',
@@ -23,12 +25,22 @@ export function MeusChats() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
-  useEffect(() => {
+  // Igual ao chat em si (ver Chat.jsx): sem websocket no projeto, a
+  // única forma de ver uma conversa nova ou uma prévia atualizada sem
+  // precisar sair e voltar pra essa tela é reconsultar de tempos em
+  // tempos enquanto ela estiver aberta.
+  const carregar = useCallback(() => {
     listarMinhasConversas()
       .then(setConversas)
       .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar suas conversas.')))
       .finally(() => setCarregando(false));
   }, []);
+
+  useEffect(() => {
+    carregar();
+    const intervalo = setInterval(carregar, INTERVALO_ATUALIZACAO_MS);
+    return () => clearInterval(intervalo);
+  }, [carregar]);
 
   return (
     <div style={styles.pagina}>

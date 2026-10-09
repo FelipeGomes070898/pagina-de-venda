@@ -13,6 +13,8 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
+const INTERVALO_ATUALIZACAO_MS = 5000;
+
 const ROTULO_STATUS: Record<string, string> = {
   pendente: 'Aguardando resposta',
   andamento: 'Em andamento',
@@ -40,9 +42,14 @@ export function ChatsListScreen({ navigation }: Props) {
     }
   }
 
+  // Igual ao ChatScreen (não tem websocket no projeto): enquanto essa
+  // tela está em foco, reconsulta de tempos em tempos pra pegar
+  // conversa nova ou prévia atualizada sem precisar sair e voltar.
   useFocusEffect(
     useCallback(() => {
       carregar();
+      const intervalo = setInterval(carregar, INTERVALO_ATUALIZACAO_MS);
+      return () => clearInterval(intervalo);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
