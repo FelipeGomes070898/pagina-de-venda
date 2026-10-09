@@ -249,7 +249,7 @@ const estilos = {
   botaoFlutuante: {
     position: 'fixed',
     top: 16,
-    left: 16,
+    right: 70,
     zIndex: 60,
     width: 44,
     height: 44,
