@@ -18,7 +18,13 @@ function abrirNoGoogleMaps(ponto: LocalTrabalho) {
 
 export function MapaTrabalhos({ pontos }: { pontos: LocalTrabalho[] }) {
   if (pontos.length === 0) {
-    return <Text style={styles.vazio}>Ainda sem serviços concluídos com localização registrada.</Text>;
+    return (
+      <View style={styles.vazioBox}>
+        <Text style={styles.vazioTexto}>
+          Assim que você concluir um serviço com endereço registrado, ele aparece aqui.
+        </Text>
+      </View>
+    );
   }
 
   const urlMapa = urlMapaEstatico(pontos.map((p) => ({ lat: p.lat, lng: p.lng })));
@@ -28,7 +34,9 @@ export function MapaTrabalhos({ pontos }: { pontos: LocalTrabalho[] }) {
       {urlMapa ? (
         <Image source={{ uri: urlMapa }} style={styles.mapa} resizeMode="cover" />
       ) : (
-        <Text style={styles.vazio}>Mapa indisponível no momento.</Text>
+        <View style={styles.vazioBox}>
+          <Text style={styles.vazioTexto}>Mapa indisponível no momento.</Text>
+        </View>
       )}
       <View style={styles.lista}>
         {pontos.map((ponto) => (
@@ -46,7 +54,18 @@ export function MapaTrabalhos({ pontos }: { pontos: LocalTrabalho[] }) {
 
 const styles = StyleSheet.create({
   mapa: { width: '100%', height: 180, borderRadius: radius.md, marginBottom: spacing.sm },
-  vazio: { color: colors.muted, fontSize: 12.5 },
+  vazioBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 130,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.border,
+    backgroundColor: colors.bg3,
+    paddingHorizontal: spacing.lg,
+  },
+  vazioTexto: { color: colors.muted, fontSize: 12.5, textAlign: 'center', lineHeight: 18 },
   lista: { gap: 6 },
   item: {
     flexDirection: 'row',

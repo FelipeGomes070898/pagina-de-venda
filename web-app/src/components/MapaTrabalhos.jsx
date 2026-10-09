@@ -59,15 +59,49 @@ export function MapaTrabalhos({ pedidos }) {
   }, [apiDisponivel, pedidos]);
 
   if (pedidos.length === 0) {
-    return <p style={styles.vazio}>Ainda sem serviços concluídos com localização registrada.</p>;
+    return (
+      <div style={styles.vazioBox}>
+        <IconePino />
+        <p style={styles.vazioTexto}>
+          Assim que você concluir um serviço com endereço registrado, ele aparece aqui.
+        </p>
+      </div>
+    );
   }
   if (apiDisponivel === false) {
-    return <p style={styles.vazio}>Mapa indisponível no momento.</p>;
+    return (
+      <div style={styles.vazioBox}>
+        <IconePino />
+        <p style={styles.vazioTexto}>Mapa indisponível no momento.</p>
+      </div>
+    );
   }
   return <div ref={mapaRef} style={styles.mapa} />;
 }
 
+function IconePino() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--konectaja-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z" />
+      <circle cx="12" cy="9.5" r="2.4" />
+    </svg>
+  );
+}
+
 const styles = {
   mapa: { width: '100%', height: 220, borderRadius: 12, overflow: 'hidden' },
-  vazio: { color: 'var(--konectaja-muted)', fontSize: 12.5, margin: 0 },
+  vazioBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 150,
+    borderRadius: 12,
+    border: '1px dashed var(--konectaja-border)',
+    background: 'var(--konectaja-bg3)',
+    padding: '0 24px',
+    textAlign: 'center',
+  },
+  vazioTexto: { color: 'var(--konectaja-muted)', fontSize: 12.5, margin: 0, lineHeight: 1.5 },
 };
