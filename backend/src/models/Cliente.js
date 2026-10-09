@@ -196,4 +196,23 @@ module.exports = {
     const { rows } = await pool.query(`SELECT COUNT(*) FROM clientes ${onde}`, valores);
     return Number(rows[0].count);
   },
+
+  // Papel duplo (ver authController.tornarPrestador/trocarPapel) —
+  // guardado atrás de colunaExiste porque prestador_vinculado_id só
+  // existe em bancos que já rodaram a migração mais recente.
+  async buscarPrestadorVinculadoId(id) {
+    if (!(await colunaExiste('clientes', 'prestador_vinculado_id'))) return null;
+    const { rows } = await pool.query(
+      `SELECT prestador_vinculado_id FROM clientes WHERE id = $1`,
+      [id],
+    );
+    return rows[0]?.prestador_vinculado_id || null;
+  },
+
+  async definirPrestadorVinculado(id, prestadorId) {
+    await pool.query(`UPDATE clientes SET prestador_vinculado_id = $2 WHERE id = $1`, [
+      id,
+      prestadorId,
+    ]);
+  },
 };

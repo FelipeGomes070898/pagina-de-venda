@@ -9,6 +9,7 @@ import { RecuperarSenha } from './pages/auth/RecuperarSenha';
 import { BaixarApp } from './pages/BaixarApp';
 import { Legal } from './pages/legal/Legal';
 import { Marketplace } from './pages/marketplace/Marketplace';
+import { MapaTrabalhadores } from './pages/marketplace/MapaTrabalhadores';
 import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
 import { MeuPerfil } from './pages/profile/MeuPerfil';
 import { DadosPessoais } from './pages/profile/DadosPessoais';
@@ -18,6 +19,7 @@ import { MapaTrabalhosPagina } from './pages/profile/MapaTrabalhosPagina';
 import { AreaServico } from './pages/profile/AreaServico';
 import { AlbumTrabalhos } from './pages/profile/AlbumTrabalhos';
 import { PrivacidadeDados } from './pages/profile/PrivacidadeDados';
+import { TornarPrestador } from './pages/profile/TornarPrestador';
 import { MeusChats } from './pages/chats/MeusChats';
 import { Carteira } from './pages/carteira/Carteira';
 import { Chat } from './pages/chat/Chat';
@@ -54,6 +56,14 @@ export default function App() {
           element={
             <RotaProtegida>
               <Marketplace />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/mapa-trabalhadores"
+          element={
+            <RotaProtegida>
+              <MapaTrabalhadores />
             </RotaProtegida>
           }
         />
@@ -118,6 +128,14 @@ export default function App() {
           element={
             <RotaProtegida>
               <AlbumTrabalhos />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/tornar-prestador"
+          element={
+            <RotaProtegida>
+              <TornarPrestador />
             </RotaProtegida>
           }
         />

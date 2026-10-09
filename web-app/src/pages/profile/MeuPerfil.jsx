@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { BottomNav } from '../../components/BottomNav';
-import { meuPerfil, atualizarFotoPerfil } from '../../services/authService';
+import { meuPerfil, atualizarFotoPerfil, trocarPapel } from '../../services/authService';
 import { enviarImagem } from '../../services/uploadService';
 import { mensagemErro } from '../../utils/erro';
 
@@ -15,11 +15,14 @@ const ROTULOS_TIPO = { cliente: 'Cliente', prestador: 'Prestador de serviço' };
 export function MeuPerfil() {
   const usuario = useAuthStore((s) => s.usuario);
   const logout = useAuthStore((s) => s.logout);
+  const definirSessao = useAuthStore((s) => s.definirSessao);
+  const navigate = useNavigate();
 
   const [perfil, setPerfil] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [trocandoPapel, setTrocandoPapel] = useState(false);
   const inputFotoPerfil = useRef(null);
 
   useEffect(() => {
@@ -44,6 +47,19 @@ export function MeuPerfil() {
       setErro(erro.message || 'Não foi possível enviar a foto. Verifique sua internet e tente de novo.');
     } finally {
       setEnviandoFoto(false);
+    }
+  }
+
+  async function aoTrocarPapel() {
+    setTrocandoPapel(true);
+    setErro(null);
+    try {
+      const { token, usuario: novoUsuario } = await trocarPapel();
+      definirSessao({ token, usuario: novoUsuario });
+      navigate('/');
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível trocar de modo agora.'));
+      setTrocandoPapel(false);
     }
   }
 
@@ -121,6 +137,22 @@ export function MeuPerfil() {
 
           <ItemMenu to="/perfil/privacidade" icone={<IconeEscudo />} titulo="Privacidade e dados" descricao="LGPD, baixar dados, excluir conta" />
         </div>
+
+        {!souPrestador && !perfil.temPapelPrestador && (
+          <Link to="/perfil/tornar-prestador" style={styles.botaoTornarPrestador}>
+            + Quero também trabalhar
+          </Link>
+        )}
+
+        {((souPrestador && perfil.temPapelCliente) || (!souPrestador && perfil.temPapelPrestador)) && (
+          <button style={styles.botaoTrocarPapel} onClick={aoTrocarPapel} disabled={trocandoPapel}>
+            {trocandoPapel
+              ? 'Trocando...'
+              : souPrestador
+                ? '⇄ Mudar para modo cliente'
+                : '⇄ Mudar para modo prestador'}
+          </button>
+        )}
 
         <button style={styles.botaoSair} onClick={logout}>
           Sair da conta
@@ -278,6 +310,33 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  botaoTornarPrestador: {
+    display: 'block',
+    textAlign: 'center',
+    width: '100%',
+    height: 48,
+    lineHeight: '48px',
+    borderRadius: 12,
+    border: 'none',
+    background: 'linear-gradient(180deg, var(--konectaja-laranja), var(--konectaja-laranja-escuro))',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 14,
+    marginTop: 24,
+    textDecoration: 'none',
+    boxSizing: 'border-box',
+  },
+  botaoTrocarPapel: {
+    width: '100%',
+    height: 48,
+    borderRadius: 12,
+    border: '1px solid var(--konectaja-laranja)',
+    background: 'var(--konectaja-laranja-soft)',
+    color: 'var(--konectaja-laranja-escuro)',
+    fontWeight: 700,
+    fontSize: 14,
+    marginTop: 24,
   },
   botaoSair: {
     width: '100%',

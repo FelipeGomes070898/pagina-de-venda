@@ -12,6 +12,18 @@ export async function buscarPrestador(id, coordenadas = {}) {
   return data;
 }
 
+// Mapa de trabalhadores disponíveis (tela inicial) — as coordenadas já
+// vêm levemente embaralhadas pelo backend, nunca a posição exata.
+export async function listarMapaPrestadores(filtros = {}) {
+  const { data } = await api.get('/api/prestadores/mapa', { params: filtros });
+  return data;
+}
+
+export async function definirAvatarPrestador(avatarGenero) {
+  const { data } = await api.put('/api/prestadores/me/avatar', { avatarGenero });
+  return data;
+}
+
 export async function contatarPrestador(prestadorId, descricao) {
   const { data } = await api.post('/api/pedidos', { prestadorId, descricao });
   return data;

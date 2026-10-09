@@ -20,6 +20,20 @@ export async function meuPerfil() {
   return data;
 }
 
+// Cliente que também quer trabalhar — cria o perfil de prestador
+// vinculado à mesma conta, sem gerar um segundo login.
+export async function tornarPrestador(payload) {
+  const { data } = await api.post('/api/auth/me/tornar-prestador', payload);
+  return data;
+}
+
+// Troca de "modo" (cliente ⇄ prestador) sem deslogar — emite um token
+// novo pro papel vinculado na mesma conta.
+export async function trocarPapel() {
+  const { data } = await api.post('/api/auth/me/trocar-papel');
+  return data;
+}
+
 // Chamado depois que a foto já subiu pro Vercel Blob (ver uploadService.js).
 export async function atualizarFotoPerfil(url) {
   const { data } = await api.patch('/api/auth/me/foto', { url });

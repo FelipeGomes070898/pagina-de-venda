@@ -420,4 +420,138 @@ module.exports = {
     const { rows } = await pool.query(`SELECT * FROM prestadores WHERE id = $1`, [id]);
     return rows[0] || null;
   },
+
+  // Papel duplo (ver authController.tornarPrestador/trocarPapel) —
+  // guardado atrás de colunaExiste porque cliente_vinculado_id só
+  // existe em bancos que já rodaram a migração mais recente.
+  async buscarClienteVinculadoId(id) {
+    if (!(await colunaExiste('prestadores', 'cliente_vinculado_id'))) return null;
+    const { rows } = await pool.query(
+      `SELECT cliente_vinculado_id FROM prestadores WHERE id = $1`,
+      [id],
+    );
+    return rows[0]?.cliente_vinculado_id || null;
+  },
+
+  async definirClienteVinculado(id, clienteId) {
+    await pool.query(`UPDATE prestadores SET cliente_vinculado_id = $2 WHERE id = $1`, [
+      id,
+      clienteId,
+    ]);
+  },
+
+  // "Tornar-se prestador": cria o perfil de prestador reaproveitando a
+  // MESMA senha (já com hash — nunca pede senha de novo) de quem já é
+  // cliente, e vincula os dois registros. Não gera uma segunda conta:
+  // o login continua sendo um só, a troca de "modo" acontece dentro do
+  // app (ver authController.trocarPapel).
+  async criarVinculado({
+    clienteId,
+    nome,
+    email,
+    telefone,
+    cpf,
+    senhaHash,
+    segmento,
+    valorServico,
+    cidade,
+    estado,
+    lat,
+    lng,
+    modeloCobranca,
+  }) {
+    const modeloCobrancaFinal = modeloCobranca === 'fixo_mensal' ? 'fixo_mensal' : 'percentual';
+    const { rows } = await pool.query(
+      `INSERT INTO prestadores
+         (nome, email, telefone, cpf, senha_hash, segmento, valor_servico,
+          cidade, estado, lat, lng, modelo_cobranca, whatsapp, cliente_vinculado_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $3, $13)
+       RETURNING ${CAMPOS_PUBLICOS}`,
+      [
+        nome,
+        email,
+        telefone,
+        cpf,
+        senhaHash,
+        segmento || null,
+        valorServico || null,
+        cidade || null,
+        estado || null,
+        lat || null,
+        lng || null,
+        modeloCobrancaFinal,
+        clienteId,
+      ],
+    );
+    return rows[0];
+  },
+
+  async buscarAvatarGenero(id) {
+    if (!(await colunaExiste('prestadores', 'avatar_genero'))) return 'neutro';
+    const { rows } = await pool.query(`SELECT avatar_genero FROM prestadores WHERE id = $1`, [id]);
+    return rows[0]?.avatar_genero || 'neutro';
+  },
+
+  async definirAvatarGenero(id, avatarGenero) {
+    const { rows } = await pool.query(
+      `UPDATE prestadores SET avatar_genero = $2 WHERE id = $1 RETURNING ${CAMPOS_PUBLICOS}, avatar_genero`,
+      [id, avatarGenero],
+    );
+    return rows[0];
+  },
+
+  // Mapa de trabalhadores disponíveis (tela inicial): nunca devolve a
+  // coordenada exata de ninguém — soma um deslocamento pseudo-aleatório
+  // (mas estável, sempre o mesmo pro mesmo prestador) de até ~400m,
+  // pro pino dar uma ideia de "tem gente por aqui" sem expor onde o
+  // prestador mora de verdade. Mesmo cuidado que ocultarPii já tinha
+  // com /prestadores e /prestadores/:id (ver prestadorController.js).
+  async listarParaMapa({ cidade } = {}) {
+    const temAvatar = await colunaExiste('prestadores', 'avatar_genero');
+    const camposExtra = temAvatar ? ', avatar_genero' : '';
+
+    const condicoes = [`status = 'ativo'`, 'lat IS NOT NULL', 'lng IS NOT NULL'];
+    const valores = [];
+    if (cidade) {
+      valores.push(cidade);
+      condicoes.push(`cidade = $${valores.length}`);
+    }
+
+    const { rows } = await pool.query(
+      `SELECT id, nome, segmento, lat, lng, foto_url${camposExtra}
+       FROM prestadores WHERE ${condicoes.join(' AND ')}`,
+      valores,
+    );
+
+    return rows.map((p) => {
+      const { dLat, dLng } = deslocamentoEstavel(p.id);
+      return {
+        id: p.id,
+        nome: p.nome,
+        segmento: p.segmento,
+        fotoUrl: p.foto_url,
+        avatarGenero: temAvatar ? p.avatar_genero || 'neutro' : 'neutro',
+        lat: Number(p.lat) + dLat,
+        lng: Number(p.lng) + dLng,
+      };
+    });
+  },
 };
+
+// Desloca um ponto em até ~400m numa direção/distância derivada do id
+// do prestador (sempre o mesmo resultado pro mesmo id, então o pino
+// não "pula" a cada recarregamento) — só pra não devolver a coordenada
+// exata de ninguém num mapa que qualquer cliente ou prestador vê.
+function deslocamentoEstavel(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  const anguloRand = (hash % 3600) / 3600; // 0..1
+  const distRand = ((hash >>> 4) % 1000) / 1000; // 0..1
+  const raioGraus = 0.0036; // ~400m em latitudes do Brasil
+
+  const angulo = anguloRand * 2 * Math.PI;
+  const distancia = Math.sqrt(distRand) * raioGraus; // uniforme no disco
+  return { dLat: Math.cos(angulo) * distancia, dLng: Math.sin(angulo) * distancia };
+}

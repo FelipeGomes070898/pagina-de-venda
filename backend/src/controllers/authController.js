@@ -6,6 +6,7 @@ const Prestador = require('../models/Prestador');
 const FotoTrabalho = require('../models/FotoTrabalho');
 const ServicoPrestador = require('../models/ServicoPrestador');
 const asaasService = require('../services/asaasService');
+const { colunaExiste } = require('../utils/schema');
 
 const googleClient = process.env.GOOGLE_CLIENT_ID ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID) : null;
 
@@ -297,16 +298,111 @@ async function meuPerfil(req, res) {
   if (tipo === 'cliente') {
     const cliente = await Cliente.buscarPorId(id);
     if (!cliente) return res.status(404).json({ erro: 'Conta não encontrada' });
-    return res.json({ ...cliente, tipo: 'cliente' });
+    const prestadorVinculadoId = await Cliente.buscarPrestadorVinculadoId(id);
+    return res.json({ ...cliente, tipo: 'cliente', temPapelPrestador: Boolean(prestadorVinculadoId) });
   }
 
   const prestador = await Prestador.buscarPorId(id);
   if (!prestador) return res.status(404).json({ erro: 'Conta não encontrada' });
-  const [fotos, servicos] = await Promise.all([
+  const [fotos, servicos, clienteVinculadoId, avatarGenero] = await Promise.all([
     FotoTrabalho.listarPorPrestador(id),
     ServicoPrestador.listarPorPrestador(id),
+    Prestador.buscarClienteVinculadoId(id),
+    Prestador.buscarAvatarGenero(id),
   ]);
-  return res.json({ ...prestador, tipo: 'prestador', fotos, servicos });
+  return res.json({
+    ...prestador,
+    tipo: 'prestador',
+    fotos,
+    servicos,
+    temPapelCliente: Boolean(clienteVinculadoId),
+    avatarGenero,
+  });
+}
+
+// Cliente que também quer trabalhar: cria o perfil de prestador
+// reaproveitando nome/e-mail/telefone/CPF e a MESMA senha (hash
+// copiado, nunca pedida de novo) de quem já é cliente, e vincula os
+// dois registros. Não gera uma segunda conta — o login continua sendo
+// um só; a troca de "modo" acontece dentro do app (ver trocarPapel).
+async function tornarPrestador(req, res) {
+  if (req.usuarioApp.tipo !== 'cliente') {
+    return res.status(403).json({ erro: 'Essa conta já é de prestador' });
+  }
+  if (!(await colunaExiste('prestadores', 'cliente_vinculado_id'))) {
+    return res.status(503).json({ erro: 'Recurso ainda não disponível neste servidor.' });
+  }
+
+  const jaVinculado = await Cliente.buscarPrestadorVinculadoId(req.usuarioApp.id);
+  if (jaVinculado) {
+    return res.status(409).json({ erro: 'Você já tem um perfil de prestador vinculado a esta conta' });
+  }
+
+  const { segmento, valorServico, modeloCobranca } = req.body;
+  if (!segmento || !segmento.trim()) {
+    return res.status(400).json({ erro: 'Informe o serviço que você vai oferecer' });
+  }
+
+  const cliente = await Cliente.buscarCompletoPorId(req.usuarioApp.id);
+  if (!cliente) return res.status(404).json({ erro: 'Conta não encontrada' });
+
+  const prestador = await Prestador.criarVinculado({
+    clienteId: cliente.id,
+    nome: cliente.nome,
+    email: cliente.email,
+    telefone: cliente.telefone,
+    cpf: cliente.cpf,
+    senhaHash: cliente.senha_hash,
+    segmento: segmento.trim(),
+    valorServico,
+    cidade: cliente.cidade,
+    estado: cliente.estado,
+    lat: cliente.lat,
+    lng: cliente.lng,
+    modeloCobranca,
+  });
+  await Cliente.definirPrestadorVinculado(cliente.id, prestador.id);
+  // Já aceitou os Termos/Privacidade como cliente — não precisa aceitar
+  // de novo pra virar prestador também, mas marca mesmo assim (a tela
+  // de perfil confere isso por tipo).
+  await Prestador.marcarTermosAceitos(prestador.id);
+
+  // Best-effort, mesmo padrão do cadastro normal de prestador.
+  if (prestador.modelo_cobranca === 'fixo_mensal') {
+    asaasService.criarAssinaturaMensal(prestador).catch(() => {});
+  } else {
+    asaasService.garantirClienteAsaas(prestador).catch(() => {});
+  }
+
+  const token = gerarToken({ id: prestador.id, tipo: 'prestador' });
+  res.status(201).json({ token, usuario: { ...prestador, tipo: 'prestador' } });
+}
+
+// Troca de "modo" sem deslogar: a partir do token atual (cliente ou
+// prestador), emite um token novo pro papel vinculado na MESMA conta.
+// Nunca pede senha de novo nem passa pela tela de login.
+async function trocarPapel(req, res) {
+  const { id, tipo } = req.usuarioApp;
+
+  if (tipo === 'cliente') {
+    const prestadorId = await Cliente.buscarPrestadorVinculadoId(id);
+    if (!prestadorId) {
+      return res.status(404).json({ erro: 'Você ainda não tem um perfil de prestador' });
+    }
+    const prestador = await Prestador.buscarPorId(prestadorId);
+    if (!prestador) return res.status(404).json({ erro: 'Perfil de prestador não encontrado' });
+    const token = gerarToken({ id: prestador.id, tipo: 'prestador' });
+    return res.json({ token, usuario: { ...prestador, tipo: 'prestador' } });
+  }
+
+  const clienteId = await Prestador.buscarClienteVinculadoId(id);
+  if (!clienteId) {
+    return res.status(404).json({ erro: 'Essa conta não tem um perfil de cliente vinculado' });
+  }
+  const cliente = await Cliente.buscarPorId(clienteId);
+  if (!cliente) return res.status(404).json({ erro: 'Perfil de cliente não encontrado' });
+  const token = gerarToken({ id: cliente.id, tipo: 'cliente' });
+  res.json({ token, usuario: { ...cliente, tipo: 'cliente' } });
 }
 
 // Chamado depois que o app/site já subiu a imagem direto pro Vercel Blob
@@ -362,6 +458,8 @@ module.exports = {
   loginAdmin,
   recuperarSenha,
   meuPerfil,
+  tornarPrestador,
+  trocarPapel,
   atualizarFotoPerfil,
   exportarDados,
   excluirConta,

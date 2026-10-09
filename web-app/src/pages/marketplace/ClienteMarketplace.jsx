@@ -159,7 +159,12 @@ export function ClienteMarketplace() {
           </div>
         )}
 
-        <h1 style={styles.titulo}>Marketplace</h1>
+        <div style={styles.cabecalhoLinha}>
+          <h1 style={styles.titulo}>Marketplace</h1>
+          <button style={styles.botaoMapa} onClick={() => navigate('/mapa-trabalhadores')}>
+            🗺️ Mapa
+          </button>
+        </div>
         {aba === 'prestadores' && (
           <input
             style={styles.buscaInput}
@@ -324,7 +329,18 @@ export function ClienteMarketplace() {
 const styles = {
   pagina: { minHeight: '100vh' },
   container: { maxWidth: 640, margin: '0 auto', padding: '24px 24px 104px' },
-  titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: '0 0 12px' },
+  titulo: { color: 'var(--konectaja-text-forte)', fontSize: 22, margin: 0 },
+  cabecalhoLinha: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  botaoMapa: {
+    height: 36,
+    padding: '0 14px',
+    borderRadius: 999,
+    border: '1px solid var(--konectaja-border)',
+    background: 'var(--konectaja-bg2)',
+    color: 'var(--konectaja-text-forte)',
+    fontWeight: 700,
+    fontSize: 12.5,
+  },
   buscaInput: {
     width: '100%',
     height: 44,

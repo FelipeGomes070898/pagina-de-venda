@@ -10,6 +10,8 @@ router.post('/cadastro', authController.cadastro);
 router.post('/google', authController.loginGoogle);
 router.post('/recuperar-senha', authController.recuperarSenha);
 router.get('/me', autenticarApp, authController.meuPerfil);
+router.post('/me/tornar-prestador', autenticarApp, authController.tornarPrestador);
+router.post('/me/trocar-papel', autenticarApp, authController.trocarPapel);
 router.patch('/me/foto', autenticarApp, authController.atualizarFotoPerfil);
 router.get('/me/exportar', autenticarApp, authController.exportarDados);
 router.delete('/me', autenticarApp, authController.excluirConta);

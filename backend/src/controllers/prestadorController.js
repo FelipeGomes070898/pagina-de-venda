@@ -3,6 +3,7 @@ const FotoTrabalho = require('../models/FotoTrabalho');
 const Avaliacao = require('../models/Avaliacao');
 const ServicoPrestador = require('../models/ServicoPrestador');
 const { removerImagem } = require('../config/blob');
+const { colunaExiste } = require('../utils/schema');
 
 // email/cpf/telefone vêm de CAMPOS_PUBLICOS (compartilhado com o retorno do
 // próprio cadastro do prestador, que precisa desses campos) mas não podem
@@ -108,6 +109,32 @@ async function removerServico(req, res) {
   res.status(204).end();
 }
 
+// Mapa dos trabalhadores disponíveis, mostrado na tela inicial pra
+// cliente e prestador (ver Prestador.listarParaMapa — nunca devolve
+// coordenada exata).
+async function mapaPrestadores(req, res) {
+  const prestadores = await Prestador.listarParaMapa({ cidade: req.query.cidade });
+  res.json(prestadores);
+}
+
+const AVATARES_VALIDOS = ['masculino', 'feminino', 'neutro'];
+
+async function definirAvatar(req, res) {
+  if (req.usuarioApp.tipo !== 'prestador') {
+    return res.status(403).json({ erro: 'Somente prestadores têm avatar de trabalhador' });
+  }
+  const { avatarGenero } = req.body;
+  if (!AVATARES_VALIDOS.includes(avatarGenero)) {
+    return res.status(400).json({ erro: `avatarGenero deve ser um de: ${AVATARES_VALIDOS.join(', ')}` });
+  }
+  if (!(await colunaExiste('prestadores', 'avatar_genero'))) {
+    return res.status(503).json({ erro: 'Recurso ainda não disponível neste servidor.' });
+  }
+
+  const prestador = await Prestador.definirAvatarGenero(req.usuarioApp.id, avatarGenero);
+  res.json(prestador);
+}
+
 module.exports = {
   listar,
   buscar,
@@ -115,4 +142,6 @@ module.exports = {
   removerFotoTrabalho,
   adicionarServico,
   removerServico,
+  mapaPrestadores,
+  definirAvatar,
 };

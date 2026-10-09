@@ -440,6 +440,19 @@ CREATE TABLE IF NOT EXISTS metas_prestador (
 -- pedidoController.atualizarStatus).
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pago_via_carteira BOOLEAN DEFAULT FALSE;
 
+-- Papel duplo cliente+prestador na MESMA conta (mesmo login/senha) —
+-- um cliente pode "também virar trabalhador" sem criar uma segunda
+-- conta. O app troca de "modo" emitindo um token novo pro papel
+-- vinculado (ver authController.tornarPrestador/trocarPapel), nunca
+-- pedindo login de novo.
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS prestador_vinculado_id UUID REFERENCES prestadores(id);
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS cliente_vinculado_id UUID REFERENCES clientes(id);
+
+-- "Boneco" do prestador — ícone usado como pino no mapa e como avatar
+-- de fallback quando ele não tem foto de perfil própria.
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS avatar_genero VARCHAR(12) DEFAULT 'neutro';
+-- avatar_genero: masculino | feminino | neutro
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_prestadores_cidade    ON prestadores(cidade);
 CREATE INDEX IF NOT EXISTS idx_prestadores_status    ON prestadores(status);
