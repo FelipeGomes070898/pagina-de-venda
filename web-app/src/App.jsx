@@ -11,12 +11,20 @@ import { Legal } from './pages/legal/Legal';
 import { Marketplace } from './pages/marketplace/Marketplace';
 import { ProfessionalProfile } from './pages/profile/ProfessionalProfile';
 import { MeuPerfil } from './pages/profile/MeuPerfil';
+import { DadosPessoais } from './pages/profile/DadosPessoais';
+import { MeuHistorico } from './pages/profile/MeuHistorico';
+import { DadosPrestador } from './pages/profile/DadosPrestador';
+import { MapaTrabalhosPagina } from './pages/profile/MapaTrabalhosPagina';
+import { AreaServico } from './pages/profile/AreaServico';
+import { AlbumTrabalhos } from './pages/profile/AlbumTrabalhos';
+import { PrivacidadeDados } from './pages/profile/PrivacidadeDados';
 import { MeusChats } from './pages/chats/MeusChats';
 import { Carteira } from './pages/carteira/Carteira';
 import { Chat } from './pages/chat/Chat';
 import { Review } from './pages/review/Review';
 import { ReviewCliente } from './pages/review/ReviewCliente';
 import { AjudaBar } from './components/AjudaBar';
+import { PerfilBar } from './components/PerfilBar';
 
 export default function App() {
   const usuario = useAuthStore((s) => s.usuario);
@@ -29,6 +37,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AjudaBar />
+      <PerfilBar />
       <Routes>
         <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/cadastro" element={usuario ? <Navigate to="/" replace /> : <Register />} />
@@ -61,6 +70,62 @@ export default function App() {
           element={
             <RotaProtegida>
               <MeuPerfil />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/dados-pessoais"
+          element={
+            <RotaProtegida>
+              <DadosPessoais />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/historico"
+          element={
+            <RotaProtegida>
+              <MeuHistorico />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/prestador"
+          element={
+            <RotaProtegida>
+              <DadosPrestador />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/mapa-trabalhos"
+          element={
+            <RotaProtegida>
+              <MapaTrabalhosPagina />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/area-servico"
+          element={
+            <RotaProtegida>
+              <AreaServico />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/album"
+          element={
+            <RotaProtegida>
+              <AlbumTrabalhos />
+            </RotaProtegida>
+          }
+        />
+        <Route
+          path="/perfil/privacidade"
+          element={
+            <RotaProtegida>
+              <PrivacidadeDados />
             </RotaProtegida>
           }
         />
