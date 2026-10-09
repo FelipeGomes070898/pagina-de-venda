@@ -76,6 +76,11 @@ export function Chat() {
     try {
       const dados = await listarConversa(pedidoId);
       setConversa(dados);
+      // Limpa qualquer erro de uma ação anterior (enviar mensagem,
+      // confirmar pagamento etc.) assim que uma consulta der certo —
+      // sem isso, um erro antigo ficava preso na tela pra sempre, até
+      // mesmo depois de tudo voltar a funcionar.
+      setErro(null);
     } catch (erro) {
       setErro(mensagemErro(erro, 'Não foi possível carregar a conversa.'));
     } finally {
@@ -89,13 +94,27 @@ export function Chat() {
     return () => clearInterval(intervalo);
   }, [carregar]);
 
+  // Só rola pro fim quando chega mensagem/proposta NOVA de verdade —
+  // antes rolava a cada 5s (a cada poll), mesmo sem nada novo, o que
+  // puxava a pessoa de volta pro fim toda vez que ela tentava subir
+  // pra reler uma mensagem antiga.
+  const quantidadeAnteriorRef = useRef(0);
   useEffect(() => {
-    listaRef.current?.scrollTo({ top: listaRef.current.scrollHeight });
+    if (!conversa) return;
+    const quantidade = conversa.mensagens.length + conversa.propostas.length;
+    if (quantidade > quantidadeAnteriorRef.current) {
+      listaRef.current?.scrollTo({ top: listaRef.current.scrollHeight });
+    }
+    quantidadeAnteriorRef.current = quantidade;
   }, [conversa]);
 
   async function aoEnviarMensagem(e) {
     e.preventDefault();
-    if (!texto.trim()) return;
+    // Apertar Enter dentro do campo envia o form direto, sem passar
+    // pelo botão (que fica `disabled` enquanto `enviando` é true) — sem
+    // essa checagem, duas teclas Enter bem rápidas mandavam a mesma
+    // mensagem duas vezes.
+    if (!texto.trim() || enviando) return;
     setEnviando(true);
     try {
       await enviarMensagem(pedidoId, texto.trim());
@@ -380,14 +399,21 @@ export function Chat() {
   );
 }
 
+function formatarHora(isoString) {
+  const data = new Date(isoString);
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
 function BalaoMensagem({ mensagem, meuTipo }) {
   if (mensagem.remetente_tipo === 'sistema') {
     return <p style={styles.mensagemSistema}>{mensagem.conteudo}</p>;
   }
   const minhaMensagem = mensagem.remetente_tipo === meuTipo;
   return (
-    <div style={{ display: 'flex', justifyContent: minhaMensagem ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: minhaMensagem ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
       <div style={{ ...styles.balao, ...(minhaMensagem ? styles.balaoMeu : {}) }}>{mensagem.conteudo}</div>
+      <span style={styles.horaMensagem}>{formatarHora(mensagem.criado_em)}</span>
     </div>
   );
 }
@@ -452,6 +478,7 @@ const styles = {
     color: '#fff',
     borderRadius: '16px 16px 4px 16px',
   },
+  horaMensagem: { color: 'var(--konectaja-muted)', fontSize: 10.5, marginTop: 3 },
   cartaoProposta: {
     maxWidth: 220,
     margin: '0 auto 10px',

@@ -85,6 +85,10 @@ export function ChatScreen({ route, navigation }: Props) {
     try {
       const dados = await listarConversa(pedidoId);
       setConversa(dados);
+      // Limpa qualquer erro de uma ação anterior assim que uma consulta
+      // der certo — sem isso, um erro antigo ficava preso na tela pra
+      // sempre, até mesmo depois de tudo voltar a funcionar.
+      setErro(null);
     } catch {
       setErro('Não foi possível carregar a conversa.');
     } finally {
@@ -98,14 +102,26 @@ export function ChatScreen({ route, navigation }: Props) {
     return () => clearInterval(intervalo);
   }, [carregar]);
 
+  // Rola pro fim quando chega mensagem/proposta NOVA de verdade — antes
+  // só rolava depois que EU mandava uma mensagem; uma resposta do outro
+  // lado chegando pelo poll de 5s não aparecia na tela sem rolar manual.
+  const quantidadeAnteriorRef = useRef(0);
+  useEffect(() => {
+    if (!conversa) return;
+    const quantidade = conversa.mensagens.length + conversa.propostas.length;
+    if (quantidade > quantidadeAnteriorRef.current) {
+      listaRef.current?.scrollToEnd({ animated: true });
+    }
+    quantidadeAnteriorRef.current = quantidade;
+  }, [conversa]);
+
   async function aoEnviarMensagem() {
-    if (!texto.trim()) return;
+    if (!texto.trim() || enviando) return;
     setEnviando(true);
     try {
       await enviarMensagem(pedidoId, texto.trim());
       setTexto('');
       await carregar();
-      listaRef.current?.scrollToEnd({ animated: true });
     } catch {
       setErro('Não foi possível enviar a mensagem.');
     } finally {
@@ -418,6 +434,12 @@ export function ChatScreen({ route, navigation }: Props) {
   );
 }
 
+function formatarHora(isoString: string): string {
+  const data = new Date(isoString);
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
 function BalaoMensagem({
   mensagem,
   meuTipo,
@@ -437,6 +459,7 @@ function BalaoMensagem({
           {mensagem.conteudo}
         </Text>
       </View>
+      <Text style={styles.horaMensagem}>{formatarHora(mensagem.criado_em)}</Text>
     </View>
   );
 }
@@ -522,6 +545,7 @@ const styles = StyleSheet.create({
   balaoMeu: { backgroundColor: colors.laranjaEscuro, borderColor: colors.laranjaEscuro },
   balaoTexto: { color: colors.textForte, fontSize: 14 },
   balaoTextoMeu: { color: '#fff' },
+  horaMensagem: { color: colors.muted, fontSize: 10, marginTop: 3 },
   cartaoProposta: {
     alignSelf: 'center',
     backgroundColor: colors.bg2,

@@ -31,7 +31,10 @@ export function MeusChats() {
   // tempos enquanto ela estiver aberta.
   const carregar = useCallback(() => {
     listarMinhasConversas()
-      .then(setConversas)
+      .then((lista) => {
+        setConversas(lista);
+        setErro(null);
+      })
       .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar suas conversas.')))
       .finally(() => setCarregando(false));
   }, []);
