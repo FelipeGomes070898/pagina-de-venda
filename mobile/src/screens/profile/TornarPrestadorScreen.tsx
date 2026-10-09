@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { SubPaginaHeader } from '@/components/common/SubPaginaHeader';
 import { useCategoryStore } from '@/store/categoryStore';
 import { useAuthStore } from '@/store/authStore';
 import { ModeloCobranca, tornarPrestador } from '@/services/authService';
@@ -58,12 +59,7 @@ export function TornarPrestadorScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10}>
-          <Text style={styles.voltar}>‹ Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.titulo}>Quero também trabalhar</Text>
-      </View>
+      <SubPaginaHeader titulo="Quero também trabalhar" />
 
       <ScrollView contentContainerStyle={styles.corpo}>
         <Text style={styles.ajuda}>
@@ -137,16 +133,6 @@ export function TornarPrestadorScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  voltar: { color: colors.azul, fontSize: 14, fontWeight: '600' },
-  titulo: { color: colors.textForte, fontSize: 17, fontWeight: '800' },
   corpo: { padding: spacing.lg, paddingBottom: spacing.xxl },
   ajuda: { color: colors.muted, fontSize: 12.5, lineHeight: 18, marginBottom: spacing.lg },
   rotulo: { color: colors.textForte, fontSize: 13, fontWeight: '700', marginBottom: spacing.sm, marginTop: spacing.sm },

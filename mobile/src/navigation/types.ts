@@ -19,4 +19,11 @@ export type RootStackParamList = {
   ReviewCliente: { pedidoId: string; clienteNome: string };
   TornarPrestador: undefined;
   MapaTrabalhadores: undefined;
+  DadosPessoais: undefined;
+  MeuHistorico: undefined;
+  DadosPrestador: undefined;
+  MapaTrabalhosPerfil: undefined;
+  AreaServico: undefined;
+  AlbumTrabalhos: undefined;
+  PrivacidadeDados: undefined;
 };

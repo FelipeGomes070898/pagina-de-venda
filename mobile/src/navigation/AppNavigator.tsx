@@ -15,6 +15,13 @@ import { ReviewScreen } from '@/screens/orders/ReviewScreen';
 import { ReviewClienteScreen } from '@/screens/orders/ReviewClienteScreen';
 import { TornarPrestadorScreen } from '@/screens/profile/TornarPrestadorScreen';
 import { MapaTrabalhadoresScreen } from '@/screens/marketplace/MapaTrabalhadoresScreen';
+import { DadosPessoaisScreen } from '@/screens/profile/DadosPessoaisScreen';
+import { MeuHistoricoScreen } from '@/screens/profile/MeuHistoricoScreen';
+import { DadosPrestadorScreen } from '@/screens/profile/DadosPrestadorScreen';
+import { MapaTrabalhosPerfilScreen } from '@/screens/profile/MapaTrabalhosPerfilScreen';
+import { AreaServicoScreen } from '@/screens/profile/AreaServicoScreen';
+import { AlbumTrabalhosScreen } from '@/screens/profile/AlbumTrabalhosScreen';
+import { PrivacidadeDadosScreen } from '@/screens/profile/PrivacidadeDadosScreen';
 import { useAuthStore } from '@/store/authStore';
 import { configurarAberturaPorNotificacao } from '@/services/notificationService';
 
@@ -81,6 +88,13 @@ export function AppNavigator() {
             <Stack.Screen name="ReviewCliente" component={ReviewClienteScreen} />
             <Stack.Screen name="TornarPrestador" component={TornarPrestadorScreen} />
             <Stack.Screen name="MapaTrabalhadores" component={MapaTrabalhadoresScreen} />
+            <Stack.Screen name="DadosPessoais" component={DadosPessoaisScreen} />
+            <Stack.Screen name="MeuHistorico" component={MeuHistoricoScreen} />
+            <Stack.Screen name="DadosPrestador" component={DadosPrestadorScreen} />
+            <Stack.Screen name="MapaTrabalhosPerfil" component={MapaTrabalhosPerfilScreen} />
+            <Stack.Screen name="AreaServico" component={AreaServicoScreen} />
+            <Stack.Screen name="AlbumTrabalhos" component={AlbumTrabalhosScreen} />
+            <Stack.Screen name="PrivacidadeDados" component={PrivacidadeDadosScreen} />
           </>
         )}
 

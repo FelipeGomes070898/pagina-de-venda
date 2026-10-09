@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
+import { SubPaginaHeader } from '@/components/common/SubPaginaHeader';
 import { Boneco } from '@/utils/bonecos';
 import { listarMapaPrestadores, PrestadorMapa } from '@/services/marketplaceService';
 import { obterLocalizacaoComPermissao } from '@/services/locationService';
@@ -78,12 +79,7 @@ export function MapaTrabalhadoresScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10}>
-          <Text style={styles.voltar}>‹ Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.titulo}>Trabalhadores por perto</Text>
-      </View>
+      <SubPaginaHeader titulo="Trabalhadores por perto" />
 
       <ScrollView contentContainerStyle={styles.corpo}>
         <Text style={styles.ajuda}>
@@ -171,16 +167,6 @@ export function MapaTrabalhadoresScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  voltar: { color: colors.azul, fontSize: 14, fontWeight: '600' },
-  titulo: { color: colors.textForte, fontSize: 17, fontWeight: '800' },
   corpo: { padding: spacing.lg, paddingBottom: spacing.xxl, alignItems: 'center' },
   ajuda: { color: colors.muted, fontSize: 12.5, lineHeight: 18, marginBottom: spacing.md, textAlign: 'center' },
   erro: { color: colors.red, fontSize: 13, marginBottom: spacing.sm },

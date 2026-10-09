@@ -1,30 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import { MainTabParamList, RootStackParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
-import { meuPerfil, exportarDados, excluirConta, trocarPapel, MeuPerfil } from '@/services/authService';
-import { adicionarServico, removerServico } from '@/services/servicoPrestadorService';
-import { listarMinhasConversas, definirAvatarPrestador } from '@/services/marketplaceService';
-import { mascararCPF, mascararTelefoneBR } from '@/utils/masks';
-import { DocumentoLegalModal } from '@/components/common/DocumentoLegalModal';
-import { MapaTrabalhos } from '@/components/common/MapaTrabalhos';
-import { Boneco, OPCOES_BONECO } from '@/utils/bonecos';
+import { meuPerfil, trocarPapel, MeuPerfil } from '@/services/authService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'PerfilTab'>,
@@ -36,81 +18,37 @@ const ROTULO_TIPO: Record<string, string> = {
   prestador: 'Prestador de serviço',
 };
 
-const ROTULO_COBRANCA: Record<string, string> = {
-  percentual: '5% por serviço concluído',
-  fixo_mensal: 'R$ 25,00 fixo por mês',
-};
-
+// Hub do perfil: a identidade (foto/nome/tipo) fica aqui, o resto vira
+// um menu de sub-telas — espelha web-app/src/pages/profile/MeuPerfil.jsx.
+// Cada seção tinha informação/formulário demais pra caber numa tela só
+// sem virar uma rolagem infinita.
 export function PerfilScreen({ navigation }: Props) {
   const usuario = useAuthStore((s) => s.usuario);
   const logout = useAuthStore((s) => s.logout);
   const definirSessao = useAuthStore((s) => s.definirSessao);
 
   const [perfil, setPerfil] = useState<MeuPerfil | null>(null);
-  const [trocandoPapel, setTrocandoPapel] = useState(false);
-  const [salvandoAvatar, setSalvandoAvatar] = useState(false);
-  const [locaisTrabalho, setLocaisTrabalho] = useState<
-    { id: string; lat: number; lng: number; endereco: string | null; criado_em: string }[]
-  >([]);
   const [carregando, setCarregando] = useState(true);
-  const [novaCategoria, setNovaCategoria] = useState('');
-  const [novoValor, setNovoValor] = useState('');
-  const [adicionandoServico, setAdicionandoServico] = useState(false);
-  const [docAberto, setDocAberto] = useState<'termos' | 'privacidade' | null>(null);
-  const [mostrarExcluir, setMostrarExcluir] = useState(false);
-  const [senhaExcluir, setSenhaExcluir] = useState('');
-  const [excluindo, setExcluindo] = useState(false);
-  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
+  const [trocandoPapel, setTrocandoPapel] = useState(false);
 
   useEffect(() => {
     meuPerfil()
       .then(setPerfil)
       .catch(() => {})
       .finally(() => setCarregando(false));
-
-    if (usuario?.tipo === 'prestador') {
-      listarMinhasConversas()
-        .then((pedidos) =>
-          setLocaisTrabalho(
-            pedidos
-              .filter((p) => p.status === 'concluido' && p.lat != null && p.lng != null)
-              .map((p) => ({ id: p.id, lat: Number(p.lat), lng: Number(p.lng), endereco: p.endereco, criado_em: p.criado_em })),
-          ),
-        )
-        .catch(() => {});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Troca de "modo" (cliente ⇄ prestador) sem deslogar — a conta já
-  // tem os dois papéis vinculados (ver tornar-se-prestador abaixo).
+  // tem os dois papéis vinculados (ver TornarPrestadorScreen).
   async function aoTrocarPapel() {
     setTrocandoPapel(true);
     try {
       const { token, usuario: novoUsuario } = await trocarPapel();
       definirSessao({ token, usuario: novoUsuario });
-      // O perfil local (temPapelPrestador/temPapelCliente, dados de
-      // prestador etc.) ainda descreve o papel antigo — recarrega pra
-      // refletir o papel novo sem precisar sair da tela.
-      const novoPerfil = await meuPerfil();
-      setPerfil(novoPerfil);
     } catch {
       Alert.alert('Erro', 'Não foi possível trocar de modo agora.');
     } finally {
       setTrocandoPapel(false);
-    }
-  }
-
-  async function aoEscolherBoneco(valor: 'masculino' | 'feminino') {
-    if (salvandoAvatar || perfil?.avatarGenero === valor) return;
-    setSalvandoAvatar(true);
-    try {
-      await definirAvatarPrestador(valor);
-      setPerfil((p) => (p ? { ...p, avatarGenero: valor } : p));
-    } catch {
-      Alert.alert('Erro', 'Não foi possível salvar seu boneco agora.');
-    } finally {
-      setSalvandoAvatar(false);
     }
   }
 
@@ -121,62 +59,7 @@ export function PerfilScreen({ navigation }: Props) {
     ]);
   }
 
-  async function aoAdicionarServico() {
-    if (!novaCategoria.trim()) return;
-    setAdicionandoServico(true);
-    try {
-      const servico = await adicionarServico({
-        categoria: novaCategoria.trim(),
-        valor: novoValor ? Number(novoValor.replace(',', '.')) : undefined,
-      });
-      setPerfil((p) => (p ? { ...p, servicos: [...(p.servicos ?? []), servico] } : p));
-      setNovaCategoria('');
-      setNovoValor('');
-    } catch {
-      Alert.alert('Erro', 'Não foi possível adicionar esse serviço.');
-    } finally {
-      setAdicionandoServico(false);
-    }
-  }
-
-  async function aoRemoverServico(servicoId: string) {
-    try {
-      await removerServico(servicoId);
-      setPerfil((p) => (p ? { ...p, servicos: p.servicos?.filter((s) => s.id !== servicoId) } : p));
-    } catch {
-      Alert.alert('Erro', 'Não foi possível remover esse serviço.');
-    }
-  }
-
-  // LGPD "portabilidade" — compartilha os dados cadastrais (sem salvar
-  // arquivo em disco, pra não depender de nenhuma lib nova).
-  async function aoBaixarDados() {
-    try {
-      const resultado = await exportarDados();
-      await Share.share({
-        title: 'Meus dados — Konecta Já',
-        message: JSON.stringify(resultado, null, 2),
-      });
-    } catch {
-      Alert.alert('Erro', 'Não foi possível preparar seus dados.');
-    }
-  }
-
-  // LGPD "direito ao esquecimento" — exige a senha atual.
-  async function aoConfirmarExclusao() {
-    if (!senhaExcluir) return;
-    setExcluindo(true);
-    setErroExcluir(null);
-    try {
-      await excluirConta(senhaExcluir);
-      setMostrarExcluir(false);
-      logout();
-    } catch (erro: any) {
-      setErroExcluir(erro.response?.data?.erro || 'Não foi possível excluir sua conta.');
-    } finally {
-      setExcluindo(false);
-    }
-  }
+  const souPrestador = usuario?.tipo === 'prestador';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
@@ -195,22 +78,16 @@ export function PerfilScreen({ navigation }: Props) {
         <Text style={styles.nome}>{usuario?.nome || 'Usuário'}</Text>
         <Text style={styles.tipo}>{ROTULO_TIPO[usuario?.tipo || ''] || usuario?.tipo}</Text>
 
-        {usuario?.tipo === 'cliente' && !perfil?.temPapelPrestador && (
-          <TouchableOpacity
-            style={styles.botaoPapel}
-            onPress={() => navigation.navigate('TornarPrestador')}
-          >
+        {!souPrestador && !perfil?.temPapelPrestador && (
+          <TouchableOpacity style={styles.botaoPapel} onPress={() => navigation.navigate('TornarPrestador')}>
             <Text style={styles.botaoPapelTexto}>+ Quero também trabalhar</Text>
           </TouchableOpacity>
         )}
 
-        {((usuario?.tipo === 'cliente' && perfil?.temPapelPrestador) ||
-          (usuario?.tipo === 'prestador' && perfil?.temPapelCliente)) && (
+        {((souPrestador && perfil?.temPapelCliente) || (!souPrestador && perfil?.temPapelPrestador)) && (
           <TouchableOpacity style={styles.botaoPapel} onPress={aoTrocarPapel} disabled={trocandoPapel}>
             <Text style={styles.botaoPapelTexto}>
-              {trocandoPapel
-                ? 'Trocando...'
-                : `Mudar para modo ${usuario?.tipo === 'cliente' ? 'prestador' : 'cliente'}`}
+              {trocandoPapel ? 'Trocando...' : `⇄ Mudar para modo ${souPrestador ? 'cliente' : 'prestador'}`}
             </Text>
           </TouchableOpacity>
         )}
@@ -219,237 +96,112 @@ export function PerfilScreen({ navigation }: Props) {
       {carregando ? (
         <ActivityIndicator color={colors.laranja} style={{ marginTop: spacing.lg }} />
       ) : (
-        perfil && (
-          <>
-            <View style={styles.secao}>
-              <Text style={styles.secaoTitulo}>Dados de cadastro</Text>
-              <Campo label="E-mail" valor={perfil.email} />
-              <Campo label="Telefone" valor={perfil.telefone ? mascararTelefoneBR(perfil.telefone) : '—'} />
-              <Campo label="CPF" valor={perfil.cpf ? mascararCPF(perfil.cpf) : '—'} />
-              <Campo label="Cidade" valor={perfil.cidade || '—'} />
-              <Campo label="Estado" valor={perfil.estado || '—'} />
+        souPrestador &&
+        (perfil?.fotos?.length ?? 0) > 0 && (
+          <TouchableOpacity style={styles.albumPreview} onPress={() => navigation.navigate('AlbumTrabalhos')}>
+            <View style={styles.albumCabecalho}>
+              <Text style={styles.albumTitulo}>Álbum de trabalhos</Text>
+              <Text style={styles.albumVerTudo}>Ver tudo ›</Text>
             </View>
-
-            {perfil.tipo === 'cliente' && (
-              <View style={styles.secao}>
-                <Text style={styles.secaoTitulo}>Seu histórico</Text>
-                <Campo label="Serviços contratados" valor={String(perfil.total_servicos ?? 0)} />
-                <Campo
-                  label="Avaliação dos prestadores"
-                  valor={
-                    perfil.total_avaliacoes
-                      ? `★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`
-                      : 'Ainda sem avaliações'
-                  }
-                />
-              </View>
-            )}
-
-            {perfil.tipo === 'prestador' && (
-              <View style={styles.secao}>
-                <Text style={styles.secaoTitulo}>Dados de prestador</Text>
-                <Campo label="Serviço oferecido" valor={perfil.segmento || '—'} />
-                <Campo
-                  label="Valor do serviço"
-                  valor={perfil.valor_servico != null ? `R$ ${Number(perfil.valor_servico).toFixed(2)}` : '—'}
-                />
-                <Campo
-                  label="Cobrança da plataforma"
-                  valor={(perfil.modelo_cobranca && ROTULO_COBRANCA[perfil.modelo_cobranca]) || '—'}
-                />
-                <Campo
-                  label="Avaliação"
-                  valor={`★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
-                />
-                <Campo label="Serviços concluídos" valor={String(perfil.total_servicos ?? 0)} />
-              </View>
-            )}
-
-            {perfil.tipo === 'prestador' && (
-              <View style={styles.secao}>
-                <Text style={styles.secaoTitulo}>Seu boneco no mapa</Text>
-                <Text style={styles.albumAjuda}>
-                  Esse é o ícone que aparece representando você no mapa de trabalhadores.
-                </Text>
-                <View style={styles.listaBonecos}>
-                  {OPCOES_BONECO.map((opcao) => {
-                    const ativo = (perfil.avatarGenero || 'neutro') === opcao.valor;
-                    return (
-                      <TouchableOpacity
-                        key={opcao.valor}
-                        style={[styles.bonecoOpcao, ativo && styles.bonecoOpcaoAtiva]}
-                        onPress={() => aoEscolherBoneco(opcao.valor)}
-                        disabled={salvandoAvatar}
-                      >
-                        <Boneco genero={opcao.valor} tamanho={44} />
-                        <Text style={styles.bonecoRotulo}>{opcao.rotulo}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+            <View style={styles.albumGrade}>
+              {perfil!.fotos!.slice(0, 6).map((foto, i) => (
+                <View key={foto.id} style={styles.albumItem}>
+                  <Image source={{ uri: foto.url }} style={styles.albumFoto} />
+                  {i === 5 && perfil!.fotos!.length > 6 && (
+                    <View style={styles.albumMais}>
+                      <Text style={styles.albumMaisTexto}>+{perfil!.fotos!.length - 6}</Text>
+                    </View>
+                  )}
                 </View>
-              </View>
-            )}
-
-            {perfil.tipo === 'prestador' && (
-              <View style={styles.secao}>
-                <Text style={styles.secaoTitulo}>Mapa dos trabalhos realizados</Text>
-                <Text style={styles.albumAjuda}>Onde você já prestou serviço, com base nos pedidos concluídos.</Text>
-                <MapaTrabalhos pontos={locaisTrabalho} />
-              </View>
-            )}
-
-            {perfil.tipo === 'prestador' && (
-              <View style={styles.secao}>
-                <Text style={styles.secaoTitulo}>Área de serviço</Text>
-                <Text style={styles.albumAjuda}>
-                  Outros trabalhos que você também faz, além do seu serviço principal — aparecem no marketplace
-                  pros clientes (e outros prestadores) encontrarem.
-                </Text>
-
-                {(perfil.servicos?.length ?? 0) > 0 && (
-                  <View style={styles.listaServicos}>
-                    {perfil.servicos!.map((servico) => (
-                      <View key={servico.id} style={styles.itemServico}>
-                        <View>
-                          <Text style={styles.itemServicoCategoria}>{servico.categoria}</Text>
-                          {servico.valor != null && (
-                            <Text style={styles.itemServicoValor}>R$ {Number(servico.valor).toFixed(2)}</Text>
-                          )}
-                        </View>
-                        <TouchableOpacity onPress={() => aoRemoverServico(servico.id)}>
-                          <Text style={styles.itemServicoRemover}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                <View style={styles.formServico}>
-                  <TextInput
-                    style={styles.inputServicoCategoria}
-                    placeholder="Ex.: Encanador, Diarista..."
-                    placeholderTextColor={colors.muted}
-                    value={novaCategoria}
-                    onChangeText={setNovaCategoria}
-                  />
-                  <TextInput
-                    style={styles.inputServicoValor}
-                    placeholder="Diária (R$)"
-                    placeholderTextColor={colors.muted}
-                    value={novoValor}
-                    onChangeText={setNovoValor}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                <TouchableOpacity
-                  style={styles.botaoAdicionarServico}
-                  onPress={aoAdicionarServico}
-                  disabled={adicionandoServico}
-                >
-                  <Text style={styles.botaoAdicionarServicoTexto}>
-                    {adicionandoServico ? '...' : '+ Adicionar'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {perfil.tipo === 'prestador' && (perfil.fotos?.length ?? 0) > 0 && (
-              <View style={styles.secao}>
-                <Text style={styles.secaoTitulo}>Álbum de trabalhos</Text>
-                <View style={styles.albumGrade}>
-                  {perfil.fotos!.map((foto) => (
-                    <Image key={foto.id} source={{ uri: foto.url }} style={styles.albumFoto} />
-                  ))}
-                </View>
-                <Text style={styles.albumAjuda}>
-                  Pra adicionar ou remover fotos, use o site da Konecta Já pelo navegador por enquanto.
-                </Text>
-              </View>
-            )}
-          </>
+              ))}
+            </View>
+          </TouchableOpacity>
         )
       )}
 
-      <View style={styles.secao}>
-        <Text style={styles.secaoTitulo}>Privacidade e dados (LGPD)</Text>
-        <TouchableOpacity onPress={() => setDocAberto('privacidade')}>
-          <Text style={styles.linkPrivacidade}>Ver Política de Privacidade</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setDocAberto('termos')}>
-          <Text style={styles.linkPrivacidade}>Ver Termos de Uso</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.botaoSecundario} onPress={aoBaixarDados}>
-          <Text style={styles.botaoSecundarioTexto}>Baixar meus dados</Text>
-        </TouchableOpacity>
+      <View style={styles.menu}>
+        <ItemMenu
+          emoji="👤"
+          titulo="Dados pessoais"
+          descricao="E-mail, telefone, CPF, cidade"
+          onPress={() => navigation.navigate('DadosPessoais')}
+        />
+
+        {souPrestador ? (
+          <>
+            <ItemMenu
+              emoji="💼"
+              titulo="Dados de prestador"
+              descricao="Serviço, valor, cobrança, avaliação"
+              onPress={() => navigation.navigate('DadosPrestador')}
+            />
+            <ItemMenu
+              emoji="📍"
+              titulo="Mapa dos trabalhos"
+              descricao="Onde você já prestou serviço"
+              onPress={() => navigation.navigate('MapaTrabalhosPerfil')}
+            />
+            <ItemMenu
+              emoji="🔧"
+              titulo="Área de serviço"
+              descricao="Outros trabalhos que você também faz"
+              onPress={() => navigation.navigate('AreaServico')}
+            />
+            <ItemMenu
+              emoji="📷"
+              titulo="Álbum de trabalhos"
+              descricao="Fotos de serviços já feitos"
+              onPress={() => navigation.navigate('AlbumTrabalhos')}
+            />
+          </>
+        ) : (
+          <ItemMenu
+            emoji="💼"
+            titulo="Meu histórico"
+            descricao="Serviços contratados e avaliações"
+            onPress={() => navigation.navigate('MeuHistorico')}
+          />
+        )}
+
+        <ItemMenu
+          emoji="🛡️"
+          titulo="Privacidade e dados"
+          descricao="LGPD, baixar dados, excluir conta"
+          onPress={() => navigation.navigate('PrivacidadeDados')}
+        />
       </View>
 
       <TouchableOpacity style={styles.opcao} onPress={aoSair}>
         <Text style={styles.opcaoTextoSair}>Sair da conta</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.opcaoExcluir} onPress={() => setMostrarExcluir(true)}>
-        <Text style={styles.opcaoTextoExcluir}>Excluir minha conta</Text>
-      </TouchableOpacity>
-
-      <DocumentoLegalModal
-        visivel={docAberto !== null}
-        docInicial={docAberto ?? 'termos'}
-        onFechar={() => setDocAberto(null)}
-      />
-
-      <Modal visible={mostrarExcluir} transparent animationType="fade">
-        <View style={styles.modalFundo}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitulo}>Excluir sua conta</Text>
-            <Text style={styles.modalTexto}>
-              Isso remove seus dados pessoais (nome, e-mail, telefone, CPF, foto) do Konecta Já e
-              bloqueia o acesso à conta imediatamente. Pedidos já feitos continuam existindo pra
-              outra parte envolvida, mas sem te identificar. Essa ação não pode ser desfeita.
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Confirme sua senha"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              value={senhaExcluir}
-              onChangeText={setSenhaExcluir}
-            />
-            {erroExcluir && <Text style={styles.erroExcluir}>{erroExcluir}</Text>}
-            <View style={styles.modalBotoes}>
-              <TouchableOpacity
-                style={styles.botaoSecundario}
-                onPress={() => {
-                  setMostrarExcluir(false);
-                  setSenhaExcluir('');
-                  setErroExcluir(null);
-                }}
-                disabled={excluindo}
-              >
-                <Text style={styles.botaoSecundarioTexto}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.botaoExcluirConfirmar}
-                onPress={aoConfirmarExclusao}
-                disabled={excluindo}
-              >
-                <Text style={styles.botaoExcluirConfirmarTexto}>
-                  {excluindo ? 'Excluindo...' : 'Excluir conta'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
 
-function Campo({ label, valor }: { label: string; valor: string }) {
+function ItemMenu({
+  emoji,
+  titulo,
+  descricao,
+  onPress,
+}: {
+  emoji: string;
+  titulo: string;
+  descricao: string;
+  onPress: () => void;
+}) {
   return (
-    <View style={styles.campo}>
-      <Text style={styles.campoLabel}>{label}</Text>
-      <Text style={styles.campoValor}>{valor}</Text>
-    </View>
+    <TouchableOpacity style={styles.itemMenu} onPress={onPress}>
+      <View style={styles.itemMenuIcone}>
+        <Text style={{ fontSize: 17 }}>{emoji}</Text>
+      </View>
+      <View style={styles.itemMenuTextos}>
+        <Text style={styles.itemMenuTitulo}>{titulo}</Text>
+        <Text style={styles.itemMenuDescricao} numberOfLines={1}>
+          {descricao}
+        </Text>
+      </View>
+      <Text style={styles.itemMenuSeta}>›</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -491,21 +243,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   botaoPapelTexto: { color: colors.laranjaEscuro, fontWeight: '700', fontSize: 12.5 },
-  listaBonecos: { flexDirection: 'row', gap: 10, marginTop: spacing.sm },
-  bonecoOpcao: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.bg3,
-  },
-  bonecoOpcaoAtiva: { borderColor: colors.laranja, backgroundColor: colors.laranjaSoft },
-  bonecoRotulo: { color: colors.textForte, fontSize: 11.5, fontWeight: '600' },
-  secao: {
+  albumPreview: {
     backgroundColor: colors.bg2,
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -513,64 +251,46 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },
-  secaoTitulo: { color: colors.textForte, fontWeight: '700', fontSize: 14, marginBottom: spacing.sm },
-  campo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  campoLabel: { color: colors.muted, fontSize: 13 },
-  campoValor: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
-  listaServicos: { gap: 8, marginBottom: spacing.sm },
-  itemServico: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.bg3,
-    borderRadius: radius.sm,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  itemServicoCategoria: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
-  itemServicoValor: { color: colors.laranja, fontWeight: '700', fontSize: 12, marginTop: 2 },
-  itemServicoRemover: { color: colors.muted, fontSize: 14, paddingHorizontal: 8 },
-  formServico: { flexDirection: 'row', gap: 8, marginTop: spacing.sm },
-  inputServicoCategoria: {
-    flex: 1.4,
-    height: 44,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
-    color: colors.textForte,
-    paddingHorizontal: 12,
-    fontSize: 13,
-  },
-  inputServicoValor: {
-    flex: 1,
-    height: 44,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
-    color: colors.textForte,
-    paddingHorizontal: 12,
-    fontSize: 13,
-  },
-  botaoAdicionarServico: {
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.laranja,
+  albumCabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  albumTitulo: { color: colors.textForte, fontWeight: '700', fontSize: 15 },
+  albumVerTudo: { color: colors.laranjaEscuro, fontWeight: '700', fontSize: 12.5 },
+  albumGrade: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  albumItem: { width: 64, height: 64, borderRadius: radius.sm, overflow: 'hidden' },
+  albumFoto: { width: '100%', height: '100%' },
+  albumMais: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(28,25,23,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.sm,
   },
-  botaoAdicionarServicoTexto: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  albumGrade: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  albumFoto: { width: 80, height: 80, borderRadius: radius.sm },
-  albumAjuda: { color: colors.muted, fontSize: 11, marginTop: spacing.sm },
+  albumMaisTexto: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  menu: { gap: 10, marginBottom: spacing.lg },
+  itemMenu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+  },
+  itemMenuIcone: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
+    backgroundColor: colors.bg3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemMenuTextos: { flex: 1 },
+  itemMenuTitulo: { color: colors.textForte, fontWeight: '700', fontSize: 14 },
+  itemMenuDescricao: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  itemMenuSeta: { color: colors.muted, fontSize: 20 },
   opcao: {
     backgroundColor: colors.bg2,
     borderRadius: radius.md,
@@ -580,61 +300,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   opcaoTextoSair: { color: colors.textForte, fontWeight: '700', fontSize: 14 },
-  opcaoExcluir: { padding: spacing.md, alignItems: 'center', marginTop: spacing.sm },
-  opcaoTextoExcluir: { color: colors.red, fontWeight: '600', fontSize: 13 },
-  linkPrivacidade: {
-    color: colors.azul,
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  botaoSecundario: {
-    height: 40,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  botaoSecundarioTexto: { color: colors.textForte, fontWeight: '600', fontSize: 13 },
-  modalFundo: {
-    flex: 1,
-    backgroundColor: 'rgba(28, 25, 23, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 360,
-    backgroundColor: colors.bg2,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    gap: 12,
-  },
-  modalTitulo: { color: colors.textForte, fontSize: 18, fontWeight: '800' },
-  modalTexto: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  modalInput: {
-    height: 46,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg3,
-    color: colors.textForte,
-    paddingHorizontal: 12,
-    fontSize: 14,
-  },
-  erroExcluir: { color: colors.red, fontSize: 13 },
-  modalBotoes: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4 },
-  botaoExcluirConfirmar: {
-    height: 40,
-    borderRadius: radius.sm,
-    backgroundColor: colors.red,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  botaoExcluirConfirmarTexto: { color: '#fff', fontWeight: '700', fontSize: 13 },
 });
