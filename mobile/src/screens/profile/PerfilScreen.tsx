@@ -18,8 +18,10 @@ import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { meuPerfil, exportarDados, excluirConta, MeuPerfil } from '@/services/authService';
 import { adicionarServico, removerServico } from '@/services/servicoPrestadorService';
+import { listarMinhasConversas } from '@/services/marketplaceService';
 import { mascararCPF, mascararTelefoneBR } from '@/utils/masks';
 import { DocumentoLegalModal } from '@/components/common/DocumentoLegalModal';
+import { MapaTrabalhos } from '@/components/common/MapaTrabalhos';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'PerfilTab'>;
 
@@ -38,6 +40,9 @@ export function PerfilScreen(_props: Props) {
   const logout = useAuthStore((s) => s.logout);
 
   const [perfil, setPerfil] = useState<MeuPerfil | null>(null);
+  const [locaisTrabalho, setLocaisTrabalho] = useState<
+    { id: string; lat: number; lng: number; endereco: string | null; criado_em: string }[]
+  >([]);
   const [carregando, setCarregando] = useState(true);
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novoValor, setNovoValor] = useState('');
@@ -53,6 +58,19 @@ export function PerfilScreen(_props: Props) {
       .then(setPerfil)
       .catch(() => {})
       .finally(() => setCarregando(false));
+
+    if (usuario?.tipo === 'prestador') {
+      listarMinhasConversas()
+        .then((pedidos) =>
+          setLocaisTrabalho(
+            pedidos
+              .filter((p) => p.status === 'concluido' && p.lat != null && p.lng != null)
+              .map((p) => ({ id: p.id, lat: Number(p.lat), lng: Number(p.lng), endereco: p.endereco, criado_em: p.criado_em })),
+          ),
+        )
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function aoSair() {
@@ -183,6 +201,14 @@ export function PerfilScreen(_props: Props) {
                   valor={`★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes ?? 0} avaliações)`}
                 />
                 <Campo label="Serviços concluídos" valor={String(perfil.total_servicos ?? 0)} />
+              </View>
+            )}
+
+            {perfil.tipo === 'prestador' && (
+              <View style={styles.secao}>
+                <Text style={styles.secaoTitulo}>Mapa dos trabalhos realizados</Text>
+                <Text style={styles.albumAjuda}>Onde você já prestou serviço, com base nos pedidos concluídos.</Text>
+                <MapaTrabalhos pontos={locaisTrabalho} />
               </View>
             )}
 

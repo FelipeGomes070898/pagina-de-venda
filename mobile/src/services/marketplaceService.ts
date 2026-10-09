@@ -38,6 +38,8 @@ export interface Pedido {
   prestador_id: string | null;
   descricao: string | null;
   endereco: string | null;
+  lat: number | null;
+  lng: number | null;
   valor: number | null;
   status: string;
   criado_em: string;

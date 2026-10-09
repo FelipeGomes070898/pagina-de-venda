@@ -6,6 +6,8 @@ import { meuPerfil, atualizarFotoPerfil, exportarDados, excluirConta } from '../
 import { adicionarFotoTrabalho, removerFotoTrabalho } from '../../services/fotoTrabalhoService';
 import { adicionarServico, removerServico } from '../../services/servicoPrestadorService';
 import { enviarImagem } from '../../services/uploadService';
+import { listarMinhasConversas } from '../../services/marketplaceService';
+import { MapaTrabalhos } from '../../components/MapaTrabalhos';
 import { mascararCPF, mascararTelefoneBR } from '../../utils/masks';
 import { CATEGORIAS } from '../../constants/categorias';
 import { mensagemErro } from '../../utils/erro';
@@ -22,6 +24,7 @@ export function MeuPerfil() {
   const navigate = useNavigate();
 
   const [perfil, setPerfil] = useState(null);
+  const [locaisTrabalho, setLocaisTrabalho] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
@@ -46,6 +49,14 @@ export function MeuPerfil() {
       .then(setPerfil)
       .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar seus dados.')))
       .finally(() => setCarregando(false));
+
+    if (usuario.tipo === 'prestador') {
+      listarMinhasConversas()
+        .then((pedidos) =>
+          setLocaisTrabalho(pedidos.filter((p) => p.status === 'concluido' && p.lat != null && p.lng != null)),
+        )
+        .catch(() => {});
+    }
   }
 
   async function aoEscolherFotoPerfil(e) {
@@ -253,6 +264,12 @@ export function MeuPerfil() {
                 valor={`★ ${Number(perfil.avaliacao ?? 5).toFixed(1)} (${perfil.total_avaliacoes} avaliações)`}
               />
               <Campo label="Serviços concluídos" valor={String(perfil.total_servicos)} />
+            </div>
+
+            <div style={styles.secao}>
+              <h2 style={styles.secaoTitulo}>Mapa dos trabalhos realizados</h2>
+              <p style={styles.albumAjuda}>Onde você já prestou serviço, com base nos pedidos concluídos.</p>
+              <MapaTrabalhos pedidos={locaisTrabalho} />
             </div>
 
             <div style={styles.secao}>

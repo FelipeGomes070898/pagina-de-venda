@@ -66,3 +66,17 @@ export async function buscarDetalhesLugar(placeId: string): Promise<EnderecoDeta
     return null;
   }
 }
+
+// Mapa dos trabalhos realizados: sem lib nativa de mapa no projeto
+// (ver regra do projeto de não adicionar dependência nativa nova), a
+// Static Maps API desenha um PNG com um pino por local — carregado
+// como uma <Image> comum, sem SDK nenhum.
+export function urlMapaEstatico(pontos: { lat: number; lng: number }[], largura = 640, altura = 360): string | null {
+  if (!API_KEY || pontos.length === 0) return null;
+
+  const marcadores = pontos
+    .map((p) => `color:0xd97706|${p.lat},${p.lng}`)
+    .join('&markers=');
+
+  return `https://maps.googleapis.com/maps/api/staticmap?size=${largura}x${altura}&markers=${marcadores}&key=${API_KEY}`;
+}
