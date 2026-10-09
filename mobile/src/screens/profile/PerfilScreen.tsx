@@ -7,6 +7,7 @@ import { MainTabParamList, RootStackParamList } from '@/navigation/types';
 import { colors, radius, sombra, spacing } from '@/theme/tokens';
 import { useAuthStore } from '@/store/authStore';
 import { meuPerfil, trocarPapel, MeuPerfil } from '@/services/authService';
+import { AppIcon, NomeIcone } from '@/components/common/AppIcon';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'PerfilTab'>,
@@ -121,7 +122,7 @@ export function PerfilScreen({ navigation }: Props) {
 
       <View style={styles.menu}>
         <ItemMenu
-          emoji="👤"
+          icone="pessoa"
           titulo="Dados pessoais"
           descricao="E-mail, telefone, CPF, cidade"
           onPress={() => navigation.navigate('DadosPessoais')}
@@ -130,25 +131,25 @@ export function PerfilScreen({ navigation }: Props) {
         {souPrestador ? (
           <>
             <ItemMenu
-              emoji="💼"
+              icone="mala"
               titulo="Dados de prestador"
               descricao="Serviço, valor, cobrança, avaliação"
               onPress={() => navigation.navigate('DadosPrestador')}
             />
             <ItemMenu
-              emoji="📍"
+              icone="pino"
               titulo="Mapa dos trabalhos"
               descricao="Onde você já prestou serviço"
               onPress={() => navigation.navigate('MapaTrabalhosPerfil')}
             />
             <ItemMenu
-              emoji="🔧"
+              icone="ferramenta"
               titulo="Área de serviço"
               descricao="Outros trabalhos que você também faz"
               onPress={() => navigation.navigate('AreaServico')}
             />
             <ItemMenu
-              emoji="📷"
+              icone="foto"
               titulo="Álbum de trabalhos"
               descricao="Fotos de serviços já feitos"
               onPress={() => navigation.navigate('AlbumTrabalhos')}
@@ -156,7 +157,7 @@ export function PerfilScreen({ navigation }: Props) {
           </>
         ) : (
           <ItemMenu
-            emoji="💼"
+            icone="mala"
             titulo="Meu histórico"
             descricao="Serviços contratados e avaliações"
             onPress={() => navigation.navigate('MeuHistorico')}
@@ -164,7 +165,7 @@ export function PerfilScreen({ navigation }: Props) {
         )}
 
         <ItemMenu
-          emoji="🛡️"
+          icone="escudo"
           titulo="Privacidade e dados"
           descricao="LGPD, baixar dados, excluir conta"
           onPress={() => navigation.navigate('PrivacidadeDados')}
@@ -179,12 +180,12 @@ export function PerfilScreen({ navigation }: Props) {
 }
 
 function ItemMenu({
-  emoji,
+  icone,
   titulo,
   descricao,
   onPress,
 }: {
-  emoji: string;
+  icone: NomeIcone;
   titulo: string;
   descricao: string;
   onPress: () => void;
@@ -192,7 +193,7 @@ function ItemMenu({
   return (
     <TouchableOpacity style={styles.itemMenu} onPress={onPress}>
       <View style={styles.itemMenuIcone}>
-        <Text style={{ fontSize: 17 }}>{emoji}</Text>
+        <AppIcon nome={icone} cor={colors.laranjaEscuro} tamanho={18} />
       </View>
       <View style={styles.itemMenuTextos}>
         <Text style={styles.itemMenuTitulo}>{titulo}</Text>

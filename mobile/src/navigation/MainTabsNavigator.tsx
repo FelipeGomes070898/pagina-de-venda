@@ -1,5 +1,4 @@
 import React from 'react';
-import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
 import { HomeScreen } from '@/screens/home/HomeScreen';
@@ -7,16 +6,17 @@ import { BuscaScreen } from '@/screens/busca/BuscaScreen';
 import { ChatsListScreen } from '@/screens/chat/ChatsListScreen';
 import { CarteiraScreen } from '@/screens/carteira/CarteiraScreen';
 import { PerfilScreen } from '@/screens/profile/PerfilScreen';
+import { AppIcon, NomeIcone } from '@/components/common/AppIcon';
 import { colors } from '@/theme/tokens';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const ICONES: Record<keyof MainTabParamList, string> = {
-  MarketplaceTab: '🏠',
-  BuscaTab: '🔍',
-  ChatsTab: '💬',
-  CarteiraTab: '👛',
-  PerfilTab: '👤',
+const NOMES_ICONE: Record<keyof MainTabParamList, NomeIcone> = {
+  MarketplaceTab: 'inicio',
+  BuscaTab: 'busca',
+  ChatsTab: 'chats',
+  CarteiraTab: 'carteira',
+  PerfilTab: 'perfil',
 };
 
 export function MainTabsNavigator() {
@@ -34,9 +34,7 @@ export function MainTabsNavigator() {
           paddingBottom: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        tabBarIcon: ({ color }) => (
-          <Text style={{ fontSize: 20, color }}>{ICONES[route.name]}</Text>
-        ),
+        tabBarIcon: ({ color }) => <AppIcon nome={NOMES_ICONE[route.name]} cor={color} />,
       })}
     >
       <Tab.Screen name="MarketplaceTab" component={HomeScreen} options={{ tabBarLabel: 'Início' }} />
