@@ -23,6 +23,7 @@ export function MeuPerfil() {
   const [erro, setErro] = useState(null);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const [trocandoPapel, setTrocandoPapel] = useState(false);
+  const [menuAberto, setMenuAberto] = useState(false);
   const inputFotoPerfil = useRef(null);
 
   useEffect(() => {
@@ -86,6 +87,10 @@ export function MeuPerfil() {
     <div style={styles.pagina}>
       <BottomNav />
 
+      <button style={styles.botaoMenu} onClick={() => setMenuAberto(true)} aria-label="Abrir menu do perfil">
+        <IconeHamburguer />
+      </button>
+
       <div style={styles.container}>
         <button
           type="button"
@@ -121,22 +126,33 @@ export function MeuPerfil() {
 
         {erro && <p style={styles.erro}>{erro}</p>}
 
-        <div style={styles.menu}>
-          <ItemMenu to="/perfil/dados-pessoais" icone={<IconePessoa />} titulo="Dados pessoais" descricao="E-mail, telefone, CPF, cidade" />
+        {souPrestador && (
+          <div style={styles.albumSecao}>
+            <div style={styles.albumCabecalho}>
+              <h2 style={styles.albumTitulo}>Álbum de trabalhos</h2>
+              <Link to="/perfil/album" style={styles.albumVerTudo}>
+                Ver tudo
+              </Link>
+            </div>
 
-          {souPrestador ? (
-            <>
-              <ItemMenu to="/perfil/prestador" icone={<IconeMala />} titulo="Dados de prestador" descricao="Serviço, valor, cobrança, avaliação" />
-              <ItemMenu to="/perfil/mapa-trabalhos" icone={<IconePino />} titulo="Mapa dos trabalhos" descricao="Onde você já prestou serviço" />
-              <ItemMenu to="/perfil/area-servico" icone={<IconeFerramenta />} titulo="Área de serviço" descricao="Outros trabalhos que você também faz" />
-              <ItemMenu to="/perfil/album" icone={<IconeFoto />} titulo="Álbum de trabalhos" descricao="Fotos de serviços já feitos" />
-            </>
-          ) : (
-            <ItemMenu to="/perfil/historico" icone={<IconeMala />} titulo="Meu histórico" descricao="Serviços contratados e avaliações" />
-          )}
-
-          <ItemMenu to="/perfil/privacidade" icone={<IconeEscudo />} titulo="Privacidade e dados" descricao="LGPD, baixar dados, excluir conta" />
-        </div>
+            {(perfil.fotos?.length ?? 0) > 0 ? (
+              <Link to="/perfil/album" style={styles.albumGrade}>
+                {perfil.fotos.slice(0, 6).map((foto, i) => (
+                  <div key={foto.id} style={styles.albumItem}>
+                    <img src={foto.url} alt={foto.legenda || 'Trabalho realizado'} style={styles.albumFoto} />
+                    {i === 5 && perfil.fotos.length > 6 && (
+                      <div style={styles.albumMais}>+{perfil.fotos.length - 6}</div>
+                    )}
+                  </div>
+                ))}
+              </Link>
+            ) : (
+              <Link to="/perfil/album" style={styles.albumVazio}>
+                + Adicionar fotos dos seus trabalhos
+              </Link>
+            )}
+          </div>
+        )}
 
         {!souPrestador && !perfil.temPapelPrestador && (
           <Link to="/perfil/tornar-prestador" style={styles.botaoTornarPrestador}>
@@ -158,13 +174,85 @@ export function MeuPerfil() {
           Sair da conta
         </button>
       </div>
+
+      {menuAberto && (
+        <div style={styles.drawerFundo} onClick={() => setMenuAberto(false)}>
+          <div style={styles.drawerPainel} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.drawerCabecalho}>
+              <span style={styles.drawerTitulo}>Menu</span>
+              <button style={styles.drawerFechar} onClick={() => setMenuAberto(false)} aria-label="Fechar">
+                <IconeFechar />
+              </button>
+            </div>
+
+            <div style={styles.menu}>
+              <ItemMenu
+                to="/perfil/dados-pessoais"
+                icone={<IconePessoa />}
+                titulo="Dados pessoais"
+                descricao="E-mail, telefone, CPF, cidade"
+                aoClicar={() => setMenuAberto(false)}
+              />
+
+              {souPrestador ? (
+                <>
+                  <ItemMenu
+                    to="/perfil/prestador"
+                    icone={<IconeMala />}
+                    titulo="Dados de prestador"
+                    descricao="Serviço, valor, cobrança, avaliação"
+                    aoClicar={() => setMenuAberto(false)}
+                  />
+                  <ItemMenu
+                    to="/perfil/mapa-trabalhos"
+                    icone={<IconePino />}
+                    titulo="Mapa dos trabalhos"
+                    descricao="Onde você já prestou serviço"
+                    aoClicar={() => setMenuAberto(false)}
+                  />
+                  <ItemMenu
+                    to="/perfil/area-servico"
+                    icone={<IconeFerramenta />}
+                    titulo="Área de serviço"
+                    descricao="Outros trabalhos que você também faz"
+                    aoClicar={() => setMenuAberto(false)}
+                  />
+                  <ItemMenu
+                    to="/perfil/album"
+                    icone={<IconeFoto />}
+                    titulo="Álbum de trabalhos"
+                    descricao="Fotos de serviços já feitos"
+                    aoClicar={() => setMenuAberto(false)}
+                  />
+                </>
+              ) : (
+                <ItemMenu
+                  to="/perfil/historico"
+                  icone={<IconeMala />}
+                  titulo="Meu histórico"
+                  descricao="Serviços contratados e avaliações"
+                  aoClicar={() => setMenuAberto(false)}
+                />
+              )}
+
+              <ItemMenu
+                to="/perfil/privacidade"
+                icone={<IconeEscudo />}
+                titulo="Privacidade e dados"
+                descricao="LGPD, baixar dados, excluir conta"
+                aoClicar={() => setMenuAberto(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ItemMenu({ to, icone, titulo, descricao }) {
+function ItemMenu({ to, icone, titulo, descricao, aoClicar }) {
   return (
-    <Link to={to} style={styles.itemMenu}>
+    <Link to={to} style={styles.itemMenu} onClick={aoClicar}>
       <div style={styles.itemMenuIcone}>{icone}</div>
       <div style={styles.itemMenuTextos}>
         <div style={styles.itemMenuTitulo}>{titulo}</div>
@@ -172,6 +260,21 @@ function ItemMenu({ to, icone, titulo, descricao }) {
       </div>
       <IconeSeta />
     </Link>
+  );
+}
+
+function IconeHamburguer() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  );
+}
+function IconeFechar() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
   );
 }
 
@@ -279,7 +382,87 @@ const styles = {
   nome: { color: 'var(--konectaja-text-forte)', fontSize: 20, textAlign: 'center', margin: 0 },
   tipo: { color: 'var(--konectaja-muted)', fontSize: 14, textAlign: 'center', marginTop: 4 },
   erro: { color: 'var(--konectaja-red)', fontSize: 13, textAlign: 'center', marginTop: 12 },
-  menu: { display: 'flex', flexDirection: 'column', gap: 10, marginTop: 28 },
+  botaoMenu: {
+    position: 'fixed',
+    top: 16,
+    left: 16,
+    zIndex: 60,
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    border: '1px solid var(--konectaja-border)',
+    background: 'var(--konectaja-bg2)',
+    color: 'var(--konectaja-text-forte)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: 'var(--konectaja-shadow-md)',
+  },
+  albumSecao: { marginTop: 28 },
+  albumCabecalho: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  albumTitulo: { color: 'var(--konectaja-text-forte)', fontSize: 16, margin: 0 },
+  albumVerTudo: { color: 'var(--konectaja-laranja-escuro)', fontWeight: 700, fontSize: 12.5, textDecoration: 'none' },
+  albumGrade: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 8,
+    textDecoration: 'none',
+  },
+  albumItem: { position: 'relative', aspectRatio: '1', borderRadius: 12, overflow: 'hidden' },
+  albumFoto: { width: '100%', height: '100%', objectFit: 'cover' },
+  albumMais: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(28,25,23,0.55)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 800,
+    fontSize: 16,
+  },
+  albumVazio: {
+    display: 'block',
+    textAlign: 'center',
+    padding: '22px 16px',
+    borderRadius: 14,
+    border: '1px dashed var(--konectaja-border)',
+    background: 'var(--konectaja-bg3)',
+    color: 'var(--konectaja-muted)',
+    fontWeight: 600,
+    fontSize: 13,
+    textDecoration: 'none',
+  },
+  drawerFundo: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(28,25,23,.35)',
+    zIndex: 70,
+    display: 'flex',
+    justifyContent: 'flex-start',
+  },
+  drawerPainel: {
+    width: 320,
+    maxWidth: '85vw',
+    height: '100%',
+    background: 'var(--konectaja-bg)',
+    borderRight: '1px solid var(--konectaja-border)',
+    boxShadow: 'var(--konectaja-shadow-lg)',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '18px 18px 24px',
+    overflowY: 'auto',
+  },
+  drawerCabecalho: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
+  drawerTitulo: { fontWeight: 800, fontSize: 16, color: 'var(--konectaja-text-forte)' },
+  drawerFechar: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--konectaja-muted)',
+    display: 'flex',
+    padding: 4,
+  },
+  menu: { display: 'flex', flexDirection: 'column', gap: 10 },
   itemMenu: {
     display: 'flex',
     alignItems: 'center',
