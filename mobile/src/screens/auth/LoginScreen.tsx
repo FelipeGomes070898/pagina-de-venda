@@ -13,7 +13,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { KonectaLogo } from '@/components/common/KonectaLogo';
 import { PrimaryButton } from '@/components/common/PrimaryButton';
 import { GoogleLoginButton } from '@/components/common/GoogleLoginButton';
 import { PasswordInput } from '@/components/common/PasswordInput';
@@ -99,13 +98,10 @@ export function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.cabecalho}>
-          <KonectaLogo size="sm" />
-          <Text style={styles.titulo}>{t('login.title')}</Text>
-          <Text style={styles.subtitulo}>{t('login.subtitle')}</Text>
-        </View>
-
         <View style={styles.card}>
+          <Text style={styles.marca}>{t('login.title')}</Text>
+          <Text style={styles.subtitulo}>{t('login.subtitle')}</Text>
+
           <View style={styles.abas}>
             {ABAS.map((item) => (
               <TouchableOpacity
@@ -139,19 +135,21 @@ export function LoginScreen({ navigation }: Props) {
 
           {erro && <Text style={styles.erro}>{erro}</Text>}
 
-          <View style={styles.linhaOpcoes}>
-            <View style={styles.lembrarWrapper}>
-              <Switch
-                value={lembrarLogin}
-                onValueChange={setLembrarLogin}
-                trackColor={{ true: colors.laranja, false: colors.border }}
-                thumbColor={colors.textForte}
-              />
-              <Text style={styles.lembrarTexto}>{t('login.remember_me')}</Text>
-            </View>
-            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.link}>{t('login.forgot_password')}</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.esqueciSenha}
+            onPress={() => navigation.navigate('ForgotPassword')}
+          >
+            <Text style={styles.link}>{t('login.forgot_password')}</Text>
+          </TouchableOpacity>
+
+          <View style={styles.lembrarWrapper}>
+            <Switch
+              value={lembrarLogin}
+              onValueChange={setLembrarLogin}
+              trackColor={{ true: colors.laranja, false: colors.border }}
+              thumbColor={colors.textForte}
+            />
+            <Text style={styles.lembrarTexto}>{t('login.remember_me')}</Text>
           </View>
 
           <PrimaryButton label={t('login.submit')} onPress={aoSubmeter} loading={carregando} />
@@ -172,15 +170,15 @@ export function LoginScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
-  container: { flexGrow: 1, padding: spacing.lg, paddingTop: spacing.xxl, alignItems: 'center' },
-  cabecalho: { alignItems: 'center', marginBottom: spacing.lg },
-  titulo: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.textForte,
-    marginTop: spacing.lg,
+  container: { flexGrow: 1, padding: spacing.lg, justifyContent: 'center', alignItems: 'center' },
+  marca: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: colors.laranjaEscuro,
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
-  subtitulo: { fontSize: 14, color: colors.muted },
+  subtitulo: { fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: 2, marginBottom: spacing.md },
   card: {
     width: '100%',
     backgroundColor: colors.bg2,
@@ -215,14 +213,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   erro: { color: colors.red, fontSize: 13, alignSelf: 'flex-start', marginBottom: spacing.sm },
-  linhaOpcoes: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  lembrarWrapper: { flexDirection: 'row', alignItems: 'center' },
+  esqueciSenha: { width: '100%', alignItems: 'flex-end', marginBottom: spacing.sm },
+  lembrarWrapper: { width: '100%', flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg },
   lembrarTexto: { color: colors.text, fontSize: 13, marginLeft: spacing.xs },
   link: { color: colors.azul, fontSize: 13, fontWeight: '600' },
   rodape: { flexDirection: 'row', marginTop: spacing.lg },
