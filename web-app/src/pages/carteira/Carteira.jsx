@@ -26,11 +26,19 @@ function formatarValor(valor) {
   return `${sinal}R$ ${numero.toFixed(2)}`;
 }
 
+// Mesmo tamanho de página do backend (ver CarteiraTransacao.extrato) —
+// serve só pra saber se a última página veio "cheia" (provavelmente
+// tem mais) ou "incompleta" (essa foi a última).
+const ITENS_POR_PAGINA_EXTRATO = 30;
+
 export function Carteira() {
   const souPrestador = useAuthStore((s) => s.usuario?.tipo === 'prestador');
 
   const [saldo, setSaldo] = useState(null);
   const [extrato, setExtrato] = useState([]);
+  const [paginaExtrato, setPaginaExtrato] = useState(1);
+  const [temMaisExtrato, setTemMaisExtrato] = useState(false);
+  const [carregandoMaisExtrato, setCarregandoMaisExtrato] = useState(false);
   const [porMes, setPorMes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
@@ -52,16 +60,36 @@ export function Carteira() {
     setErro(null);
     Promise.all([
       meuSaldo(),
-      meuExtrato(),
+      meuExtrato(1),
       souPrestador ? meuDashboard() : Promise.resolve({ porMes: [] }),
     ])
       .then(([saldoResp, extratoResp, dashboardResp]) => {
         setSaldo(saldoResp.saldo);
         setExtrato(extratoResp);
+        setPaginaExtrato(1);
+        setTemMaisExtrato(extratoResp.length === ITENS_POR_PAGINA_EXTRATO);
         setPorMes(dashboardResp.porMes);
       })
       .catch((erro) => setErro(mensagemErro(erro, 'Não foi possível carregar sua carteira.')))
       .finally(() => setCarregando(false));
+  }
+
+  // Extrato só vem com as últimas 30 por padrão (ver CarteiraTransacao.extrato
+  // no backend) — sem isso, quem tem mais movimentação que isso nunca
+  // conseguia ver nada além das mais recentes.
+  async function carregarMaisExtrato() {
+    setCarregandoMaisExtrato(true);
+    try {
+      const proximaPagina = paginaExtrato + 1;
+      const novosItens = await meuExtrato(proximaPagina);
+      setExtrato((atual) => [...atual, ...novosItens]);
+      setPaginaExtrato(proximaPagina);
+      setTemMaisExtrato(novosItens.length === ITENS_POR_PAGINA_EXTRATO);
+    } catch (erro) {
+      setErro(mensagemErro(erro, 'Não foi possível carregar mais movimentações.'));
+    } finally {
+      setCarregandoMaisExtrato(false);
+    }
   }
 
   function abrirModal(tipo) {
@@ -156,30 +184,41 @@ export function Carteira() {
         ) : extrato.length === 0 ? (
           <p style={styles.info}>Nenhuma movimentação ainda.</p>
         ) : (
-          extrato.map((item) => (
-            <div key={item.id} style={styles.itemExtrato}>
-              <div>
-                <div style={styles.itemTipo}>{ROTULOS_TIPO[item.tipo] || item.tipo}</div>
-                <div style={styles.itemData}>
-                  {new Date(item.criado_em).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                  {item.status === 'pendente' && ' · pendente'}
+          <>
+            {extrato.map((item) => (
+              <div key={item.id} style={styles.itemExtrato}>
+                <div>
+                  <div style={styles.itemTipo}>{ROTULOS_TIPO[item.tipo] || item.tipo}</div>
+                  <div style={styles.itemData}>
+                    {new Date(item.criado_em).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {item.status === 'pendente' && ' · pendente'}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...styles.itemValor,
+                    color: Number(item.valor) >= 0 ? 'var(--konectaja-verde)' : 'var(--konectaja-text-forte)',
+                  }}
+                >
+                  {formatarValor(item.valor)}
                 </div>
               </div>
-              <div
-                style={{
-                  ...styles.itemValor,
-                  color: Number(item.valor) >= 0 ? 'var(--konectaja-verde)' : 'var(--konectaja-text-forte)',
-                }}
+            ))}
+            {temMaisExtrato && (
+              <button
+                style={styles.botaoCarregarMais}
+                onClick={carregarMaisExtrato}
+                disabled={carregandoMaisExtrato}
               >
-                {formatarValor(item.valor)}
-              </div>
-            </div>
-          ))
+                {carregandoMaisExtrato ? 'Carregando...' : 'Carregar mais'}
+              </button>
+            )}
+          </>
         )}
       </main>
 
@@ -513,6 +552,19 @@ const styles = {
   itemTipo: { color: 'var(--konectaja-text-forte)', fontWeight: 700, fontSize: 13.5 },
   itemData: { color: 'var(--konectaja-muted)', fontSize: 11.5, marginTop: 2, textTransform: 'capitalize' },
   itemValor: { fontWeight: 800, fontSize: 14 },
+  botaoCarregarMais: {
+    display: 'block',
+    width: '100%',
+    background: 'var(--konectaja-bg2)',
+    border: '1px solid var(--konectaja-border)',
+    borderRadius: 14,
+    padding: '12px 16px',
+    marginTop: 8,
+    color: 'var(--konectaja-text-forte)',
+    fontWeight: 700,
+    fontSize: 13.5,
+    cursor: 'pointer',
+  },
   modalFundo: {
     position: 'fixed',
     inset: 0,

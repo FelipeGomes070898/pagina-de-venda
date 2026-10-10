@@ -46,6 +46,11 @@ function formatarValor(valor: number): string {
   return `${sinal}R$ ${valor.toFixed(2)}`;
 }
 
+// Mesmo tamanho de página do backend (ver CarteiraTransacao.extrato) — serve só
+// pra saber se a última página veio "cheia" (provavelmente tem mais) ou
+// "incompleta" (essa foi a última).
+const ITENS_POR_PAGINA_EXTRATO = 30;
+
 export function CarteiraScreen() {
   const souPrestador = useAuthStore((s) => s.usuario?.tipo === 'prestador');
 
@@ -55,6 +60,9 @@ export function CarteiraScreen() {
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [paginaExtrato, setPaginaExtrato] = useState(1);
+  const [temMaisExtrato, setTemMaisExtrato] = useState(false);
+  const [carregandoMaisExtrato, setCarregandoMaisExtrato] = useState(false);
 
   const [modal, setModal] = useState<'depositar' | 'sacar' | null>(null);
   const [valorDigitado, setValorDigitado] = useState('');
@@ -69,17 +77,37 @@ export function CarteiraScreen() {
     try {
       const [saldoResp, extratoResp, dashboardResp] = await Promise.all([
         meuSaldo(),
-        meuExtrato(),
+        meuExtrato(1),
         souPrestador ? meuDashboard() : Promise.resolve({ porMes: [] }),
       ]);
       setSaldo(saldoResp.saldo);
       setExtrato(extratoResp);
+      setPaginaExtrato(1);
+      setTemMaisExtrato(extratoResp.length === ITENS_POR_PAGINA_EXTRATO);
       setPorMes(dashboardResp.porMes);
     } catch {
       setErro('Não foi possível carregar sua carteira.');
     } finally {
       setCarregando(false);
       setAtualizando(false);
+    }
+  }
+
+  // Extrato só vem com as últimas 30 por padrão (ver CarteiraTransacao.extrato
+  // no backend) — sem isso, quem tem mais movimentação que isso nunca
+  // conseguia ver nada além das mais recentes.
+  async function carregarMaisExtrato() {
+    setCarregandoMaisExtrato(true);
+    try {
+      const proximaPagina = paginaExtrato + 1;
+      const novosItens = await meuExtrato(proximaPagina);
+      setExtrato((atual) => [...atual, ...novosItens]);
+      setPaginaExtrato(proximaPagina);
+      setTemMaisExtrato(novosItens.length === ITENS_POR_PAGINA_EXTRATO);
+    } catch {
+      setErro('Não foi possível carregar mais movimentações.');
+    } finally {
+      setCarregandoMaisExtrato(false);
     }
   }
 
@@ -215,6 +243,19 @@ export function CarteiraScreen() {
         )}
         ListEmptyComponent={
           !carregando ? <Text style={styles.vazio}>Nenhuma movimentação ainda.</Text> : null
+        }
+        ListFooterComponent={
+          temMaisExtrato ? (
+            <TouchableOpacity
+              style={styles.botaoCarregarMais}
+              onPress={carregarMaisExtrato}
+              disabled={carregandoMaisExtrato}
+            >
+              <Text style={styles.botaoCarregarMaisTexto}>
+                {carregandoMaisExtrato ? 'Carregando...' : 'Carregar mais'}
+              </Text>
+            </TouchableOpacity>
+          ) : null
         }
       />
 
@@ -567,6 +608,16 @@ const styles = StyleSheet.create({
   itemTipo: { color: colors.textForte, fontWeight: '700', fontSize: 13.5 },
   itemData: { color: colors.muted, fontSize: 11.5, marginTop: 2, textTransform: 'capitalize' },
   itemValor: { fontWeight: '800', fontSize: 14 },
+  botaoCarregarMais: {
+    backgroundColor: colors.bg2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  botaoCarregarMaisTexto: { color: colors.textForte, fontWeight: '700', fontSize: 13.5 },
   modalFundo: {
     flex: 1,
     backgroundColor: 'rgba(28, 25, 23, 0.5)',

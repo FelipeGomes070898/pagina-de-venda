@@ -5,8 +5,8 @@ export async function meuSaldo() {
   return data;
 }
 
-export async function meuExtrato() {
-  const { data } = await api.get('/api/carteira/extrato');
+export async function meuExtrato(pagina = 1) {
+  const { data } = await api.get('/api/carteira/extrato', { params: { page: pagina } });
   return data;
 }
 

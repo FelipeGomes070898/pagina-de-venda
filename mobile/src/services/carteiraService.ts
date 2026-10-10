@@ -17,8 +17,8 @@ export async function meuSaldo(): Promise<{ saldo: number }> {
   return data;
 }
 
-export async function meuExtrato(): Promise<TransacaoCarteira[]> {
-  const { data } = await api.get('/api/carteira/extrato');
+export async function meuExtrato(pagina = 1): Promise<TransacaoCarteira[]> {
+  const { data } = await api.get('/api/carteira/extrato', { params: { page: pagina } });
   return data;
 }
 

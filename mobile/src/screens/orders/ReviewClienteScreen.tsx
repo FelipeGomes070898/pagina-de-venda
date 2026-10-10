@@ -67,7 +67,9 @@ export function ReviewClienteScreen({ route, navigation }: Props) {
             style={[styles.tag, tagsSelecionadas.includes(tag) && styles.tagAtiva]}
             onPress={() => alternarTag(tag)}
           >
-            <Text style={styles.tagTexto}>{tag}</Text>
+            <Text style={[styles.tagTexto, tagsSelecionadas.includes(tag) && styles.tagTextoAtivo]}>
+              {tag}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -112,6 +114,7 @@ const styles = StyleSheet.create({
   },
   tagAtiva: { backgroundColor: colors.laranja, borderColor: colors.laranja },
   tagTexto: { color: colors.text, fontSize: 12 },
+  tagTextoAtivo: { color: '#fff' },
   input: {
     minHeight: 80,
     backgroundColor: colors.bg2,
