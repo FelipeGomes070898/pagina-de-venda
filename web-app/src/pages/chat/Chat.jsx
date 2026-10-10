@@ -67,7 +67,6 @@ export function Chat() {
   const [finalizando, setFinalizando] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
   const [pagandoComSaldo, setPagandoComSaldo] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState(null);
   const [cancelando, setCancelando] = useState(false);
 
   const listaRef = useRef(null);
@@ -180,7 +179,7 @@ export function Chat() {
   async function aoConfirmarPagamento(quando) {
     setConfirmandoPagamento(true);
     try {
-      await confirmarPagamento(pedidoId, { quando, forma: formaPagamento });
+      await confirmarPagamento(pedidoId, { quando, forma: 'pix_direto' });
       await carregar();
     } catch (erro) {
       setErro(mensagemErro(erro, 'Não foi possível confirmar o pagamento.'));
@@ -288,43 +287,31 @@ export function Chat() {
               {conversa.pedido.pago_via_carteira
                 ? 'Pago com a Carteira do Konecta Já'
                 : `Pagamento confirmado por você (${
-                    conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'
-                  }, ${conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})`}
+                    conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'
+                  })`}
             </p>
-          ) : !formaPagamento ? (
+          ) : (
             <>
-              <p style={styles.enderecoRotulo}>Como você vai pagar o prestador?</p>
-              <div style={styles.linhaEnvio}>
+              <p style={styles.enderecoRotulo}>Já pagou o prestador? Diga como foi:</p>
+              <div style={styles.linhaPagamento}>
                 <button style={styles.botaoPagamento} onClick={aoPagarComSaldo} disabled={pagandoComSaldo}>
                   {pagandoComSaldo ? 'Pagando...' : 'Pagar com a Carteira'}
                 </button>
-                <button style={styles.botaoPagamento} onClick={() => setFormaPagamento('pix_direto')}>
-                  Pix direto pro prestador
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p style={styles.enderecoRotulo}>Pagou antes do serviço ou depois?</p>
-              <div style={styles.linhaEnvio}>
                 <button
                   style={styles.botaoPagamento}
                   onClick={() => aoConfirmarPagamento('antecipado')}
                   disabled={confirmandoPagamento}
                 >
-                  Antes do serviço
+                  Já paguei antes
                 </button>
                 <button
                   style={styles.botaoPagamento}
                   onClick={() => aoConfirmarPagamento('apos')}
                   disabled={confirmandoPagamento}
                 >
-                  Depois do serviço
+                  Já paguei depois
                 </button>
               </div>
-              <button style={styles.botaoVoltarPagamento} onClick={() => setFormaPagamento(null)}>
-                ← Voltar
-              </button>
             </>
           )}
         </div>
@@ -497,8 +484,17 @@ const styles = {
   enderecoWrapper: { maxWidth: 640, margin: '0 auto', width: '100%', padding: '0 16px 8px' },
   enderecoRotulo: { color: 'var(--konectaja-green)', fontSize: 12, fontWeight: 600, marginBottom: 6 },
   pagamentoWrapper: { maxWidth: 640, margin: '0 auto', width: '100%', padding: '0 16px 8px' },
+  linhaPagamento: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    maxWidth: 640,
+    margin: '0 auto',
+    width: '100%',
+    padding: '0 16px 8px',
+  },
   botaoPagamento: {
-    flex: 1,
+    flex: '1 1 140px',
     height: 44,
     borderRadius: 12,
     border: '1px solid var(--konectaja-laranja)',
@@ -506,13 +502,6 @@ const styles = {
     color: 'var(--konectaja-laranja)',
     fontWeight: 700,
     fontSize: 12,
-  },
-  botaoVoltarPagamento: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--konectaja-muted)',
-    fontSize: 11,
-    padding: '4px 0',
   },
   enderecoConfirmado: {
     color: 'var(--konectaja-verde)',

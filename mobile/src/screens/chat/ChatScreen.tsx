@@ -76,7 +76,6 @@ export function ChatScreen({ route, navigation }: Props) {
   const [enviandoEndereco, setEnviandoEndereco] = useState(false);
   const [confirmandoPagamento, setConfirmandoPagamento] = useState(false);
   const [pagandoComSaldo, setPagandoComSaldo] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState<'app' | 'pix_direto' | null>(null);
   const [cancelando, setCancelando] = useState(false);
 
   const listaRef = useRef<FlatList>(null);
@@ -186,7 +185,7 @@ export function ChatScreen({ route, navigation }: Props) {
   async function aoConfirmarPagamento(quando: 'antecipado' | 'apos') {
     setConfirmandoPagamento(true);
     try {
-      await confirmarPagamento(pedidoId, { quando, forma: formaPagamento });
+      await confirmarPagamento(pedidoId, { quando, forma: 'pix_direto' });
       await carregar();
     } catch {
       setErro('Não foi possível confirmar o pagamento.');
@@ -309,13 +308,13 @@ export function ChatScreen({ route, navigation }: Props) {
               {conversa.pedido.pago_via_carteira
                 ? 'Pago com a Carteira do Konecta Já'
                 : `Pagamento confirmado por você (${
-                    conversa.pedido.pagamento_forma === 'app' ? 'pelo app' : 'Pix direto pro prestador'
-                  }, ${conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'})`}
+                    conversa.pedido.pagamento_quando === 'antecipado' ? 'antes do serviço' : 'depois do serviço'
+                  })`}
             </Text>
-          ) : !formaPagamento ? (
+          ) : (
             <>
-              <Text style={styles.enderecoRotulo}>Como você vai pagar o prestador?</Text>
-              <View style={styles.linhaEnvio}>
+              <Text style={styles.enderecoRotulo}>Já pagou o prestador? Diga como foi:</Text>
+              <View style={styles.linhaPagamento}>
                 <TouchableOpacity
                   style={styles.botaoPagamento}
                   onPress={aoPagarComSaldo}
@@ -325,33 +324,21 @@ export function ChatScreen({ route, navigation }: Props) {
                     {pagandoComSaldo ? 'Pagando...' : 'Pagar com a Carteira'}
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.botaoPagamento} onPress={() => setFormaPagamento('pix_direto')}>
-                  <Text style={styles.botaoPagamentoTexto}>Pix direto</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.enderecoRotulo}>Pagou antes do serviço ou depois?</Text>
-              <View style={styles.linhaEnvio}>
                 <TouchableOpacity
                   style={styles.botaoPagamento}
                   onPress={() => aoConfirmarPagamento('antecipado')}
                   disabled={confirmandoPagamento}
                 >
-                  <Text style={styles.botaoPagamentoTexto}>Paguei antes</Text>
+                  <Text style={styles.botaoPagamentoTexto}>Já paguei antes</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.botaoPagamento}
                   onPress={() => aoConfirmarPagamento('apos')}
                   disabled={confirmandoPagamento}
                 >
-                  <Text style={styles.botaoPagamentoTexto}>Paguei depois</Text>
+                  <Text style={styles.botaoPagamentoTexto}>Já paguei depois</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => setFormaPagamento(null)}>
-                <Text style={styles.botaoVoltarPagamento}>← Voltar</Text>
-              </TouchableOpacity>
             </>
           )}
         </View>
@@ -621,8 +608,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },
+  linhaPagamento: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: 8,
+  },
   botaoPagamento: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 100,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.laranja,
@@ -631,7 +626,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   botaoPagamentoTexto: { color: colors.laranja, fontWeight: '700', fontSize: 12 },
-  botaoVoltarPagamento: { color: colors.muted, fontSize: 11, paddingVertical: 4 },
   linhaEnvio: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
